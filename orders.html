@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4CF1">
+<meta name="robots" content="noindex">
+<title>Riwayat Transaksi — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+<div class="content">
+
+  <div class="row wrap mb16">
+    <div class="search-wrap" style="max-width:300px">
+      <input type="text" id="q" class="input" placeholder="Cari no. invoice / pembeli…" oninput="render()">
+    </div>
+    <select class="select" id="fRange" onchange="render()" style="width:auto">
+      <option value="today">Hari ini</option>
+      <option value="yesterday">Kemarin</option>
+      <option value="week">7 hari</option>
+      <option value="month" selected>Bulan ini</option>
+      <option value="all">Semua</option>
+    </select>
+    <select class="select" id="fStatus" onchange="render()" style="width:auto">
+      <option value="">Semua status</option>
+      <option value="paid">Lunas</option>
+      <option value="pending">Menunggu bayar</option>
+      <option value="expired">Kedaluwarsa</option>
+      <option value="failed">Gagal</option>
+      <option value="void">Void</option>
+    </select>
+    <select class="select" id="fMethod" onchange="render()" style="width:auto">
+      <option value="">Semua metode</option>
+      <option value="cash">Tunai</option>
+      <option value="qris">QRIS</option>
+      <option value="transfer">Transfer</option>
+    </select>
+  </div>
+
+  <div class="grid g4 keep mb16" id="stats"></div>
+
+  <div id="pendingWarn" class="card mb16 hide" style="background:var(--warn-faint);border-color:var(--warn)">
+    <div class="row">
+      <div style="flex:1">
+        <div class="fw7 mb8">Ada transaksi yang masih menunggu pembayaran</div>
+        <div class="fs13 c-mid" style="line-height:1.6">
+          Klik ikon mata untuk memeriksa statusnya langsung ke penyedia pembayaran.
+          Transaksi QRIS yang tidak dibayar akan otomatis kedaluwarsa.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p0">
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>No. Invoice</th>
+          <th class="hide-mobile">Waktu</th>
+          <th class="hide-mobile">Kasir</th>
+          <th>Metode</th>
+          <th>Status</th>
+          <th class="num">Total</th>
+          <th style="width:60px"></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal" id="mDet">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3>Detail Transaksi</h3>
+      <button class="modal-x" onclick="UI.closeModal('mDet')">&times;</button>
+    </div>
+    <div class="modal-bd" style="background:var(--surface-2)">
+      <div id="detHost"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="window.print()">&#128424; Cetak</button>
+      <button class="btn btn-primary hide" id="checkBtn" onclick="recheck()">Periksa Status</button>
+      <button class="btn btn-danger hide"  id="voidBtn"  onclick="doVoid()">Void Transaksi</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!Auth.guard()) throw 'redirect';
+var U = Auth.user();
+var orders = [], payments = [], curId = null;
+
+UI.shell('orders', 'Riwayat Transaksi');
+
+var MNAME = { cash: 'Tunai', qris: 'QRIS', transfer: 'Transfer' };
+
+async function load() {
+  UI.loading(true);
+  var a = await API.from('orders').select('*').order('created_at', false).limit(500);
+  var b = await API.from('payments').select('*').order('created_at', false).limit(500);
+  UI.loading(false);
+
+  if (a.error) return UI.toast(a.error.message, 'error');
+  orders   = a.data || [];
+  payments = b.data || [];
+  render();
+}
+
+function payOf(orderId) {
+  return payments.filter(function (p) { return p.order_id === orderId; })[0] || null;
+}
+
+function filtered() {
+  var q  = document.getElementById('q').value.toLowerCase().trim();
+  var rg = UI.range(document.getElementById('fRange').value);
+  var fs = document.getElementById('fStatus').value;
+  var fm = document.getElementById('fMethod').value;
+
+  return orders.filter(function (o) {
+    var d = new Date(o.created_at);
+    if (d < rg[0] || d >= rg[1]) return false;
+    if (fs && o.status !== fs) return false;
+    if (fm && o.payment_method !== fm) return false;
+    if (!q) return true;
+    return (o.order_no || '').toLowerCase().includes(q) ||
+           (o.customer_name || '').toLowerCase().includes(q);
+  });
+}
+
+function render() {
+  var list = filtered();
+  var paid = list.filter(function (o) { return o.status === 'paid'; });
+
+  var rev  = paid.reduce(function (s, o) { return s + Number(o.total || 0); }, 0);
+  var cost = paid.reduce(function (s, o) { return s + Number(o.cost_total || 0); }, 0);
+  var avg  = paid.length ? rev / paid.length : 0;
+
+  /* Laba hanya ditampilkan ke owner */
+  var profitTile = U.role === 'owner'
+    ? '<div class="stat"><div class="stat-lbl">Laba Kotor</div>' +
+      '<div class="stat-val c-ok" style="font-size:20px">' + UI.rp(rev - cost) + '</div></div>'
+    : '<div class="stat"><div class="stat-lbl">Rata-rata</div>' +
+      '<div class="stat-val" style="font-size:20px">' + UI.rp(avg) + '</div></div>';
+
+  document.getElementById('stats').innerHTML =
+    '<div class="stat accent"><div class="stat-lbl">Penjualan Lunas</div>' +
+      '<div class="stat-val" style="font-size:20px">' + UI.rp(rev) + '</div></div>' +
+    '<div class="stat"><div class="stat-lbl">Transaksi Lunas</div>' +
+      '<div class="stat-val">' + paid.length + '</div></div>' +
+    profitTile +
+    '<div class="stat"><div class="stat-lbl">Belum Selesai</div>' +
+      '<div class="stat-val c-warn">' +
+      list.filter(function (o) { return o.status === 'pending'; }).length + '</div></div>';
+
+  var hasPending = list.some(function (o) { return o.status === 'pending'; });
+  document.getElementById('pendingWarn').classList.toggle('hide', !hasPending);
+
+  if (!list.length) {
+    document.getElementById('rows').innerHTML =
+      '<tr><td colspan="7">' +
+      UI.empty('&#129534;', 'Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini') +
+      '</td></tr>';
+    return;
+  }
+
+  document.getElementById('rows').innerHTML = list.map(function (o) {
+    var dim = o.status === 'void' || o.status === 'expired' || o.status === 'failed';
+    return '<tr' + (dim ? ' style="opacity:.55"' : '') + '>' +
+      '<td><div class="fw7 mono">' + UI.esc(o.order_no) + '</div>' +
+        '<div class="fs12 c-dim only-mobile">' + UI.dt(o.created_at) + '</div></td>' +
+      '<td class="hide-mobile c-mid fs13 nowrap">' + UI.dt(o.created_at) + '</td>' +
+      '<td class="hide-mobile c-mid fs13">' + UI.esc(o.cashier_name || '—') + '</td>' +
+      '<td><span class="badge">' + (MNAME[o.payment_method] || o.payment_method) + '</span></td>' +
+      '<td>' + UI.statusBadge(o.status) + '</td>' +
+      '<td class="num fw8 mono">' + UI.rp(o.total) + '</td>' +
+      '<td><button class="btn btn-ghost btn-icon" onclick="detail(\'' + o.id +
+        '\')" title="Lihat">&#128065;</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+async function detail(id) {
+  curId = id;
+  var o = orders.find(function (x) { return x.id === id; });
+  if (!o) return;
+
+  UI.loading(true);
+  var r = await API.from('order_items').select('*').eq('order_id', id);
+  UI.loading(false);
+
+  var items = r.data || [];
+  var pay   = payOf(id);
+
+  document.getElementById('detHost').innerHTML =
+    (o.status !== 'paid'
+      ? '<div class="qr-notice mb16" style="background:var(--surface);border:1px solid var(--border)">' +
+        '<strong>Status: ' + (UI.ORDER_STATUS[o.status] || {}).label + '</strong>' +
+        (o.status === 'pending'
+          ? 'Transaksi ini belum lunas. Stok belum dipotong.'
+          : 'Transaksi ini tidak diselesaikan. Stok tidak dipotong.') +
+        '</div>'
+      : '') +
+    '<div class="receipt">' +
+      '<div class="r-c"><div class="r-biz">' + UI.esc(U.business_name) + '</div>' +
+      '<div style="font-size:11px">' + UI.dt(o.created_at) + '</div></div>' +
+      '<hr>' +
+      '<div class="r-row"><span>No.</span><span>' + UI.esc(o.order_no) + '</span></div>' +
+      '<div class="r-row"><span>Kasir</span><span>' + UI.esc(o.cashier_name || '—') + '</span></div>' +
+      '<div class="r-row"><span>Pembeli</span><span>' + UI.esc(o.customer_name || 'Umum') + '</span></div>' +
+      '<hr>' +
+      items.map(function (i) {
+        return '<div class="r-item"><div class="r-item-n">' + UI.esc(i.name) + '</div>' +
+          '<div class="r-row"><span>' + UI.num(i.qty) + ' x ' + UI.rp(i.price) + '</span>' +
+          '<span>' + UI.rp(i.subtotal) + '</span></div></div>';
+      }).join('') +
+      '<hr>' +
+      '<div class="r-row"><span>Subtotal</span><span>' + UI.rp(o.subtotal) + '</span></div>' +
+      (Number(o.discount) ? '<div class="r-row"><span>Diskon</span><span>-' + UI.rp(o.discount) + '</span></div>' : '') +
+      (Number(o.tax)      ? '<div class="r-row"><span>Pajak</span><span>' + UI.rp(o.tax) + '</span></div>' : '') +
+      '<div class="r-row b" style="font-size:14px;margin-top:4px"><span>TOTAL</span>' +
+      '<span>' + UI.rp(o.total) + '</span></div>' +
+      '<hr>' +
+      '<div class="r-row"><span>' + (MNAME[o.payment_method] || o.payment_method) + '</span>' +
+      '<span>' + UI.rp(o.paid_amount) + '</span></div>' +
+      (Number(o.change_amount) ? '<div class="r-row"><span>Kembali</span><span>' + UI.rp(o.change_amount) + '</span></div>' : '') +
+      (o.ref_note ? '<div class="r-row"><span>Ref</span><span>' + UI.esc(o.ref_note) + '</span></div>' : '') +
+      (pay && pay.gateway_txn_id
+        ? '<div class="r-row"><span>ID Gateway</span><span style="font-size:10px">' +
+          UI.esc(pay.gateway_txn_id) + '</span></div>'
+        : '') +
+      (o.status === 'void' ? '<hr><div class="r-c" style="font-weight:700">** TRANSAKSI DIVOID **</div>' : '') +
+    '</div>';
+
+  /* Tombol mana yang relevan */
+  var canCheck = o.status === 'pending' && o.payment_method === 'qris' && !!pay;
+  var canVoid  = o.status === 'paid' && U.role === 'owner';
+
+  document.getElementById('checkBtn').classList.toggle('hide', !canCheck);
+  document.getElementById('voidBtn').classList.toggle('hide', !canVoid);
+
+  UI.openModal('mDet');
+}
+
+/* Periksa status pembayaran langsung ke penyedia */
+async function recheck() {
+  var pay = payOf(curId);
+  if (!pay) return;
+
+  UI.loading(true);
+  var r = await API.invoke('payment-status', { gateway_order_id: pay.gateway_order_id });
+  UI.loading(false);
+
+  if (r.error) return UI.toast(r.error.message, 'error');
+
+  var st = r.data.status;
+  if (st === 'paid') {
+    UI.toast('Pembayaran ternyata sudah masuk. Transaksi dilunasi.', 'ok');
+  } else if (st === 'pending') {
+    UI.toast('Masih menunggu pembayaran', 'warn');
+  } else {
+    UI.toast('Status: ' + ((UI.ORDER_STATUS[st] || {}).label || st), 'warn');
+  }
+
+  UI.closeModal('mDet');
+  load();
+}
+
+function doVoid() {
+  UI.confirm({
+    title: 'Void transaksi ini?',
+    text: 'Stok produk akan dikembalikan dan transaksi ditandai void. ' +
+          'Dana TIDAK otomatis dikembalikan ke pembeli — refund QRIS harus ' +
+          'diproses terpisah di dashboard Midtrans.',
+    ok: 'Ya, void', danger: true,
+  }).then(async function (ok) {
+    if (!ok) return;
+    UI.loading(true);
+    var r = await API.rpc('void_order', { p_order_id: curId });
+    UI.loading(false);
+    if (r.error) return UI.toast(r.error.message, 'error');
+    UI.toast('Transaksi divoid, stok dikembalikan', 'ok');
+    UI.closeModal('mDet');
+    load();
+  });
+}
+
+load();
+</script>
+</body>
+</html>

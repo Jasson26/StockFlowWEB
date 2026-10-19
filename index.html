@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4CF1">
+<meta name="robots" content="noindex">
+<title>Masuk — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="auth">
+  <div class="auth-art">
+    <h2>Kelola toko Anda,<br>dari mana saja.</h2>
+    <p>Sistem kasir dan manajemen inventaris untuk UMKM Indonesia. Berjalan di HP, tablet, dan komputer.</p>
+    <div class="auth-feats">
+      <div class="auth-feat"><i>&#128722;</i> Kasir cepat dengan grid produk</div>
+      <div class="auth-feat"><i>&#128241;</i> QRIS resmi &mdash; terkonfirmasi otomatis</div>
+      <div class="auth-feat"><i>&#128230;</i> Stok terpotong tiap transaksi</div>
+      <div class="auth-feat"><i>&#128274;</i> Data tiap toko terisolasi</div>
+    </div>
+  </div>
+
+  <div class="auth-form">
+    <div class="auth-inner">
+      <div class="auth-logo">
+        <div class="sb-mark">S</div><span>StockFlow</span>
+      </div>
+
+      <div id="cfgWarn" class="hide" style="background:var(--warn-faint);border:1px solid var(--warn);border-radius:var(--r);padding:14px;margin-bottom:20px;font-size:13.5px;line-height:1.6">
+        <strong>Setup belum selesai.</strong><br>
+        Buka <code>js/config.js</code> dan isi <code>SUPABASE_URL</code> + <code>SUPABASE_ANON_KEY</code>.
+        Panduan lengkap ada di <code>README.md</code>.
+      </div>
+
+      <div id="cfgProblem" class="hide" style="background:var(--danger-faint);border:1px solid var(--danger);border-radius:var(--r);padding:14px;margin-bottom:20px;font-size:13.5px;line-height:1.6">
+        <strong>Ada yang salah di js/config.js</strong><br>
+        <span id="cfgProblemMsg"></span>
+      </div>
+
+      <div id="expiredWarn" class="hide" style="background:var(--warn-faint);border-radius:var(--r);padding:12px;margin-bottom:18px;font-size:13.5px">
+        Sesi Anda berakhir. Silakan masuk kembali.
+      </div>
+
+      <!-- ============ MASUK ============ -->
+      <div id="vLogin">
+        <h1>Masuk</h1>
+        <p class="sub">Masukkan email dan password akun Anda.</p>
+
+        <form onsubmit="doLogin();return false">
+          <div class="field">
+            <label class="label" for="lEmail">EMAIL</label>
+            <input type="email" id="lEmail" class="input" placeholder="nama@email.com"
+                   autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label class="label" for="lPass">PASSWORD</label>
+            <input type="password" id="lPass" class="input" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+                   autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="loginBtn">Masuk</button>
+        </form>
+
+        <p class="tc mt16 fs13">
+          <a href="#" onclick="show('vForgot');return false" class="c-mid">Lupa password?</a>
+        </p>
+
+        <p class="tc mt16 c-mid fs13">
+          Belum punya akun? <a href="#" onclick="show('vSignup');return false" class="fw7">Daftar toko baru</a>
+        </p>
+
+        <div style="border-top:1px solid var(--border);margin-top:22px;padding-top:18px">
+          <button class="btn btn-block" onclick="startDemo()">&#127919; Coba Mode Demo</button>
+          <div class="hint tc">Jelajahi semua fitur dengan data contoh, termasuk simulasi pembayaran QRIS.</div>
+        </div>
+      </div>
+
+      <!-- ============ DAFTAR ============ -->
+      <div id="vSignup" class="hide">
+        <h1>Daftar Toko</h1>
+        <p class="sub">Buat akun owner untuk toko Anda.</p>
+
+        <form onsubmit="doSignup();return false">
+          <div class="field">
+            <label class="label" for="sBiz">NAMA TOKO</label>
+            <input type="text" id="sBiz" class="input" placeholder="Toko Maju Jaya" required>
+          </div>
+          <div class="field">
+            <label class="label" for="sName">NAMA ANDA</label>
+            <input type="text" id="sName" class="input" placeholder="Nama lengkap"
+                   autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label class="label" for="sEmail">EMAIL</label>
+            <input type="email" id="sEmail" class="input" placeholder="nama@email.com"
+                   autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label class="label" for="sPass">PASSWORD</label>
+            <input type="password" id="sPass" class="input" placeholder="Minimal 8 karakter"
+                   autocomplete="new-password" required>
+            <div class="hint">Gunakan password yang belum Anda pakai di layanan lain.</div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="signupBtn">
+            Daftar &amp; Mulai
+          </button>
+        </form>
+
+        <p class="tc mt24 c-mid fs13">
+          Sudah punya akun? <a href="#" onclick="show('vLogin');return false" class="fw7">Masuk di sini</a>
+        </p>
+      </div>
+
+      <!-- ============ LENGKAPI TOKO ============ -->
+      <div id="vSetup" class="hide">
+        <h1>Selesaikan Pendaftaran</h1>
+        <p class="sub">Akun Anda sudah aktif. Tinggal satu langkah lagi.</p>
+
+        <div style="background:var(--ok-faint);border-radius:var(--r);padding:13px;margin-bottom:20px;font-size:13.5px;line-height:1.6">
+          Masuk sebagai <strong id="setupEmail">&mdash;</strong>
+        </div>
+
+        <form onsubmit="doSetup();return false">
+          <div class="field">
+            <label class="label" for="cBiz">NAMA TOKO</label>
+            <input type="text" id="cBiz" class="input" placeholder="Toko Maju Jaya" required>
+          </div>
+          <div class="field">
+            <label class="label" for="cName">NAMA ANDA</label>
+            <input type="text" id="cName" class="input" placeholder="Nama lengkap" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="setupBtn">
+            Buat Toko &amp; Mulai
+          </button>
+        </form>
+
+        <p class="tc mt16 fs13">
+          <a href="#" onclick="Auth.logout();return false" class="c-mid">Keluar dan pakai akun lain</a>
+        </p>
+      </div>
+
+      <!-- ============ LUPA PASSWORD ============ -->
+      <div id="vForgot" class="hide">
+        <h1>Lupa Password</h1>
+        <p class="sub">Kami kirim tautan pengaturan ulang ke email Anda.</p>
+
+        <form onsubmit="doForgot();return false">
+          <div class="field">
+            <label class="label" for="fEmail">EMAIL</label>
+            <input type="email" id="fEmail" class="input" placeholder="nama@email.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg mt8">Kirim Tautan</button>
+        </form>
+
+        <div id="forgotDone" class="hide mt16" style="background:var(--ok-faint);border-radius:var(--r);padding:14px;font-size:13.5px;line-height:1.6">
+          Jika email tersebut terdaftar, tautan pengaturan ulang sudah dikirim.
+          Periksa juga folder spam.
+        </div>
+
+        <p class="tc mt24 c-mid fs13">
+          <a href="#" onclick="show('vLogin');return false" class="fw7">Kembali ke halaman masuk</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (Auth.isLogged()) location.replace('pos.html');
+
+/* Datang dari link konfirmasi email: sesi ada, toko belum dibuat.
+   Langsung tawarkan penyelesaiannya daripada memaksa login ulang. */
+var _resumeSetup = !Demo.on() && Auth.needsSetup();
+if (!SF_CONFIGURED && !Demo.on()) document.getElementById('cfgWarn').classList.remove('hide');
+
+if (SF_CONFIG_PROBLEM && !Demo.on()) {
+  document.getElementById('cfgProblemMsg').textContent = SF_CONFIG_PROBLEM;
+  document.getElementById('cfgProblem').classList.remove('hide');
+}
+if (new URLSearchParams(location.search).get('expired')) {
+  document.getElementById('expiredWarn').classList.remove('hide');
+}
+
+function show(id) {
+  ['vLogin', 'vSignup', 'vForgot', 'vSetup'].forEach(function (v) {
+    document.getElementById(v).classList.toggle('hide', v !== id);
+  });
+}
+
+/* Tampilkan layar "lengkapi toko" dan isi apa yang sudah diketahui */
+function showSetup(prefillName) {
+  var u = Auth.user() || {};
+  document.getElementById('setupEmail').textContent = u.email || '';
+  if (prefillName) document.getElementById('cName').value = prefillName;
+  show('vSetup');
+}
+
+async function doSetup() {
+  var bizName = document.getElementById('cBiz').value.trim();
+  var name    = document.getElementById('cName').value.trim();
+  if (!bizName || !name) return UI.toast('Lengkapi kedua kolom', 'error');
+
+  var btn = document.getElementById('setupBtn');
+  btn.disabled = true;
+  UI.loading(true);
+
+  var r = await Auth.completeSetup({ bizName: bizName, name: name });
+
+  UI.loading(false);
+  btn.disabled = false;
+
+  if (r.ok) {
+    UI.toast('Toko berhasil dibuat!', 'ok');
+    setTimeout(function () { location.href = 'products.html'; }, 450);
+  } else {
+    UI.toast(r.msg, 'error');
+  }
+}
+
+async function doLogin() {
+  var email = document.getElementById('lEmail').value.trim();
+  var pass  = document.getElementById('lPass').value;
+  if (!email || !pass) return UI.toast('Isi email dan password', 'error');
+
+  var btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  UI.loading(true);
+
+  var r = await Auth.login(email, pass);
+
+  UI.loading(false);
+  btn.disabled = false;
+
+  if (r.ok) {
+    UI.toast('Selamat datang!', 'ok');
+    setTimeout(function () { location.href = 'pos.html'; }, 350);
+  } else if (r.needSetup) {
+    /* Akun aktif tapi tokonya belum dibuat — selesaikan di sini */
+    UI.toast(r.msg, 'warn');
+    showSetup();
+  } else {
+    UI.toast(r.msg, 'error');
+  }
+}
+
+async function doSignup() {
+  var bizName = document.getElementById('sBiz').value.trim();
+  var name    = document.getElementById('sName').value.trim();
+  var email   = document.getElementById('sEmail').value.trim();
+  var pass    = document.getElementById('sPass').value;
+
+  if (!bizName || !name || !email) return UI.toast('Lengkapi semua kolom', 'error');
+  if (pass.length < 8) return UI.toast('Password minimal 8 karakter', 'error');
+  if (!/^\S+@\S+\.\S+$/.test(email)) return UI.toast('Format email tidak valid', 'error');
+
+  var btn = document.getElementById('signupBtn');
+  btn.disabled = true;
+  UI.loading(true);
+
+  var r = await Auth.signup({ bizName: bizName, name: name, email: email, password: pass });
+
+  UI.loading(false);
+  btn.disabled = false;
+
+  if (r.ok) {
+    UI.toast('Toko berhasil dibuat!', 'ok');
+    setTimeout(function () { location.href = 'products.html'; }, 450);
+  } else if (r.needConfirm) {
+    UI.toast(r.msg, 'warn');
+    show('vLogin');
+  } else {
+    UI.toast(r.msg, 'error');
+  }
+}
+
+async function doForgot() {
+  var email = document.getElementById('fEmail').value.trim();
+  if (!email) return UI.toast('Masukkan email', 'error');
+
+  UI.loading(true);
+  await Auth.resetPassword(email);
+  UI.loading(false);
+
+  /* Pesan selalu sama, terdaftar atau tidak, agar tidak membocorkan
+     email mana yang punya akun. */
+  document.getElementById('forgotDone').classList.remove('hide');
+}
+
+function startDemo() {
+  localStorage.setItem('sf5_demo', '1');
+  location.href = 'index.html?demo=1&autologin=1';
+}
+
+/* Sesi tertinggal dari konfirmasi email — lanjutkan pembuatan toko */
+if (_resumeSetup) showSetup();
+
+/* Masuk otomatis setelah mode demo menyala */
+if (Demo.on() && new URLSearchParams(location.search).get('autologin')) {
+  document.getElementById('lEmail').value = Demo.credentials.email;
+  document.getElementById('lPass').value  = Demo.credentials.password;
+  doLogin();
+}
+</script>
+</body>
+</html>

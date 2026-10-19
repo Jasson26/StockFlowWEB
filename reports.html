@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4CF1">
+<title>Laporan — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+<div class="content">
+
+  <div class="row wrap mb16">
+    <div class="chips">
+      <button class="chip on" data-r="today"     onclick="setRange('today')">Hari ini</button>
+      <button class="chip"    data-r="yesterday" onclick="setRange('yesterday')">Kemarin</button>
+      <button class="chip"    data-r="week"      onclick="setRange('week')">7 hari</button>
+      <button class="chip"    data-r="month"     onclick="setRange('month')">Bulan ini</button>
+      <button class="chip"    data-r="year"      onclick="setRange('year')">Tahun ini</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" onclick="exportCsv()">&#128229; Export CSV</button>
+  </div>
+
+  <!-- RINGKASAN KEUANGAN -->
+  <div class="grid g4 keep mb16" id="kpi"></div>
+
+  <div class="grid g2 mb16">
+    <!-- GRAFIK PENJUALAN -->
+    <div class="card">
+      <div class="row mb16"><h3 style="font-size:15.5px;font-weight:700">Tren Penjualan</h3></div>
+      <div id="chart" style="height:220px"></div>
+    </div>
+
+    <!-- LABA RUGI -->
+    <div class="card">
+      <div class="row mb16"><h3 style="font-size:15.5px;font-weight:700">Laba Rugi</h3>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" onclick="openExp()">+ Pengeluaran</button>
+      </div>
+      <div id="pl"></div>
+    </div>
+  </div>
+
+  <div class="grid g2">
+    <!-- PRODUK TERLARIS -->
+    <div class="card p0">
+      <div class="card-hd"><h3>Produk Terlaris</h3></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>Produk</th><th class="num">Terjual</th><th class="num">Omzet</th></tr></thead>
+          <tbody id="topRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STOK PERLU PERHATIAN -->
+    <div class="card p0">
+      <div class="card-hd"><h3>Stok Perlu Perhatian</h3></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>Produk</th><th class="num">Stok</th><th class="num">Min</th></tr></thead>
+          <tbody id="lowRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- MODAL PENGELUARAN -->
+<div class="modal" id="mExp">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3>Catat Pengeluaran</h3>
+      <button class="modal-x" onclick="UI.closeModal('mExp')">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <div class="field">
+        <label class="label">KATEGORI</label>
+        <select id="xCat" class="select">
+          <option>Sewa</option><option>Gaji</option><option>Listrik &amp; Air</option>
+          <option>Transportasi</option><option>Peralatan</option><option>Promosi</option>
+          <option>Lainnya</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="label">JUMLAH *</label>
+        <input type="number" id="xAmt" class="input" placeholder="0" min="0" style="font-size:18px;font-weight:700;text-align:right">
+      </div>
+      <div class="field">
+        <label class="label">CATATAN</label>
+        <input type="text" id="xNote" class="input" placeholder="Opsional">
+      </div>
+      <div id="expList" class="mt20"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mExp')">Tutup</button>
+      <button class="btn btn-primary" onclick="saveExp()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!Auth.guard(true)) throw 'redirect';
+var U = Auth.user();
+var orders = [], items = [], products = [], expenses = [], moves = [];
+var curRange = 'today';
+
+UI.shell('reports', 'Laporan');
+
+async function load() {
+  UI.loading(true);
+  var a = await API.from('orders').select('*').eq('status', 'paid').order('created_at', false).limit(2000);
+  var b = await API.from('products').select('*');
+  var c = await API.from('expenses').select('*').order('created_at', false).limit(500);
+  var d = await API.from('stock_movements').select('*').eq('type', 'damaged').limit(1000);
+  UI.loading(false);
+
+  orders   = a.data || [];
+  products = b.data || [];
+  expenses = c.data || [];
+  moves    = d.data || [];
+
+  /* Ambil item untuk order dalam rentang terluas yang mungkin dipakai */
+  var ids = orders.slice(0, 500).map(function (o) { return '"' + o.id + '"'; });
+  if (ids.length) {
+    var e = await API.from('order_items').select('*').inList('order_id', ids).limit(5000);
+    items = e.data || [];
+  }
+  render();
+}
+
+function setRange(k) {
+  curRange = k;
+  document.querySelectorAll('.chip[data-r]').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.r === k);
+  });
+  render();
+}
+
+function inRange(s) {
+  var r = UI.range(curRange);
+  var d = new Date(s);
+  return d >= r[0] && d < r[1];
+}
+
+function render() {
+  var os = orders.filter(function (o) { return inRange(o.created_at); });
+  var oid = {}; os.forEach(function (o) { oid[o.id] = true; });
+  var its = items.filter(function (i) { return oid[i.order_id]; });
+  var exp = expenses.filter(function (e) { return inRange(e.created_at); });
+  var dmg = moves.filter(function (m) { return inRange(m.created_at); });
+
+  var rev   = os.reduce(function (s, o) { return s + Number(o.total || 0); }, 0);
+  var hpp   = os.reduce(function (s, o) { return s + Number(o.cost_total || 0); }, 0);
+  var disc  = os.reduce(function (s, o) { return s + Number(o.discount || 0); }, 0);
+  var gross = rev - hpp;
+  var opex  = exp.reduce(function (s, e) { return s + Number(e.amount || 0); }, 0);
+  var loss  = dmg.reduce(function (s, m) {
+    var p = products.find(function (x) { return x.id === m.product_id; });
+    return s + (p ? Number(p.cost || 0) : 0) * Number(m.qty || 0);
+  }, 0);
+  var net   = gross - opex - loss;
+  var qty   = its.reduce(function (s, i) { return s + Number(i.qty || 0); }, 0);
+
+  /* ---------- KPI ---------- */
+  document.getElementById('kpi').innerHTML =
+    '<div class="stat accent"><div class="stat-lbl">OMZET</div><div class="stat-val" style="font-size:20px">' + UI.rp(rev) + '</div>' +
+      '<div class="stat-sub">' + os.length + ' transaksi</div></div>' +
+    '<div class="stat"><div class="stat-lbl">Laba Kotor</div><div class="stat-val c-ok" style="font-size:20px">' + UI.rp(gross) + '</div>' +
+      '<div class="stat-sub">Margin ' + (rev ? Math.round(gross / rev * 100) : 0) + '%</div></div>' +
+    '<div class="stat"><div class="stat-lbl">Laba Bersih</div><div class="stat-val ' + (net >= 0 ? 'c-ok' : 'c-danger') + '" style="font-size:20px">' + UI.rp(net) + '</div>' +
+      '<div class="stat-sub">Setelah biaya</div></div>' +
+    '<div class="stat"><div class="stat-lbl">Unit Terjual</div><div class="stat-val">' + UI.num(qty) + '</div>' +
+      '<div class="stat-sub">Rata-rata ' + UI.rp(os.length ? rev / os.length : 0) + '/transaksi</div></div>';
+
+  /* ---------- LABA RUGI ---------- */
+  var plRow = function (label, val, opt) {
+    opt = opt || {};
+    return '<div class="sumrow' + (opt.total ? ' total' : '') + '"' +
+      (opt.indent ? ' style="padding-left:14px"' : '') + '>' +
+      '<span>' + label + '</span><span class="mono' + (opt.cls ? ' ' + opt.cls : '') + '">' +
+      (opt.neg ? '-' : '') + UI.rp(Math.abs(val)) + '</span></div>';
+  };
+
+  document.getElementById('pl').innerHTML =
+    plRow('Penjualan', rev) +
+    plRow('Harga Pokok Penjualan', hpp, { neg: true, indent: true, cls: 'c-mid' }) +
+    '<div class="sumrow fw7" style="border-top:1px solid var(--border);padding-top:8px;color:var(--text)">' +
+      '<span>Laba Kotor</span><span class="mono c-ok">' + UI.rp(gross) + '</span></div>' +
+    plRow('Biaya Operasional', opex, { neg: true, indent: true, cls: 'c-mid' }) +
+    plRow('Kerugian Barang Rusak', loss, { neg: true, indent: true, cls: 'c-mid' }) +
+    '<div class="sumrow total"><span>Laba Bersih</span>' +
+      '<span class="mono ' + (net >= 0 ? 'c-ok' : 'c-danger') + '">' + UI.rp(net) + '</span></div>' +
+    (disc ? '<div class="fs12 c-dim tc">Total diskon diberikan: ' + UI.rp(disc) + '</div>' : '');
+
+  /* ---------- GRAFIK ---------- */
+  drawChart(os);
+
+  /* ---------- TERLARIS ---------- */
+  var agg = {};
+  its.forEach(function (i) {
+    var k = i.name;
+    if (!agg[k]) agg[k] = { qty: 0, rev: 0 };
+    agg[k].qty += Number(i.qty || 0);
+    agg[k].rev += Number(i.subtotal || 0);
+  });
+  var top = Object.keys(agg).map(function (k) { return { name: k, qty: agg[k].qty, rev: agg[k].rev }; })
+    .sort(function (a, b) { return b.qty - a.qty; }).slice(0, 8);
+
+  document.getElementById('topRows').innerHTML = top.length
+    ? top.map(function (t, idx) {
+        return '<tr><td><span class="badge' + (idx < 3 ? ' brand' : '') + '" style="margin-right:7px">' + (idx + 1) + '</span>' +
+          '<span class="fw7">' + UI.esc(t.name) + '</span></td>' +
+          '<td class="num fw7 mono">' + UI.num(t.qty) + '</td>' +
+          '<td class="num mono">' + UI.rp(t.rev) + '</td></tr>';
+      }).join('')
+    : '<tr><td colspan="3">' + UI.empty('&#128202;', 'Belum ada penjualan', 'Pada periode ini') + '</td></tr>';
+
+  /* ---------- STOK RENDAH ---------- */
+  var low = products.filter(function (p) {
+    return Number(p.stock) <= Number(p.min_stock || 0);
+  }).sort(function (a, b) { return Number(a.stock) - Number(b.stock); }).slice(0, 8);
+
+  document.getElementById('lowRows').innerHTML = low.length
+    ? low.map(function (p) {
+        var st = Number(p.stock) || 0;
+        return '<tr><td class="fw7">' + UI.esc(p.name) + '</td>' +
+          '<td class="num"><span class="badge ' + (st <= 0 ? 'danger' : 'warn') + '">' + UI.num(st) + '</span></td>' +
+          '<td class="num c-dim mono">' + UI.num(p.min_stock) + '</td></tr>';
+      }).join('')
+    : '<tr><td colspan="3">' + UI.empty('&#9989;', 'Semua stok aman', 'Tidak ada produk di bawah batas minimum') + '</td></tr>';
+}
+
+/* ---------- Grafik batang sederhana (SVG, tanpa library) ---------- */
+function drawChart(os) {
+  var days = curRange === 'today' || curRange === 'yesterday' ? 24 : (curRange === 'week' ? 7 : (curRange === 'year' ? 12 : 30));
+  var byHour = curRange === 'today' || curRange === 'yesterday';
+  var byMonth = curRange === 'year';
+
+  var buckets = new Array(days).fill(0);
+  var r = UI.range(curRange);
+
+  os.forEach(function (o) {
+    var d = new Date(o.created_at);
+    var idx;
+    if (byHour)       idx = d.getHours();
+    else if (byMonth) idx = d.getMonth();
+    else              idx = Math.floor((d - r[0]) / 86400000);
+    if (idx >= 0 && idx < days) buckets[idx] += Number(o.total || 0);
+  });
+
+  var max = Math.max.apply(null, buckets.concat([1]));
+  var W = 100, H = 100, gap = days > 20 ? 0.6 : 1.4;
+  var bw = (W - gap * (days - 1)) / days;
+
+  var bars = buckets.map(function (v, i) {
+    var h = max ? (v / max) * (H - 14) : 0;
+    var x = i * (bw + gap);
+    return '<rect x="' + x.toFixed(2) + '" y="' + (H - h).toFixed(2) + '" width="' + bw.toFixed(2) +
+      '" height="' + Math.max(h, v > 0 ? 0.8 : 0).toFixed(2) + '" rx="' + Math.min(bw / 3, 1).toFixed(2) +
+      '" fill="' + (v > 0 ? 'var(--brand)' : 'var(--border)') + '"><title>' +
+      (byHour ? i + ':00' : byMonth ? ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][i]
+        : new Date(r[0].getTime() + i * 86400000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })) +
+      ' — ' + UI.rp(v) + '</title></rect>';
+  }).join('');
+
+  var total = buckets.reduce(function (s, v) { return s + v; }, 0);
+
+  document.getElementById('chart').innerHTML = total
+    ? '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">' + bars + '</svg>' +
+      '<div class="row fs12 c-dim mt8"><span>' +
+      (byHour ? '00:00' : byMonth ? 'Jan' : UI.dateOnly(r[0].toISOString())) + '</span><div class="spacer"></div><span>' +
+      (byHour ? '23:00' : byMonth ? 'Des' : 'Sekarang') + '</span></div>'
+    : UI.empty('&#128200;', 'Belum ada data', 'Grafik muncul setelah ada transaksi');
+}
+
+/* ---------- Pengeluaran ---------- */
+function openExp() { renderExpList(); UI.openModal('mExp'); }
+
+function renderExpList() {
+  var exp = expenses.filter(function (e) { return inRange(e.created_at); });
+  document.getElementById('expList').innerHTML = exp.length
+    ? '<div class="label">PENGELUARAN PERIODE INI</div>' + exp.slice(0, 10).map(function (e) {
+        return '<div class="row" style="padding:10px;border-radius:var(--r);background:var(--surface-2);margin-bottom:7px">' +
+          '<div style="flex:1;min-width:0"><div class="fw7 fs13">' + UI.esc(e.category) + '</div>' +
+          '<div class="fs12 c-dim">' + UI.esc(e.note || UI.dateOnly(e.created_at)) + '</div></div>' +
+          '<span class="mono fw7">' + UI.rp(e.amount) + '</span>' +
+          '<button class="btn btn-ghost btn-icon c-danger" onclick="delExp(\'' + e.id + '\')">&#128465;</button></div>';
+      }).join('')
+    : '';
+}
+
+async function saveExp() {
+  var amt = Number(document.getElementById('xAmt').value) || 0;
+  if (amt <= 0) return UI.toast('Jumlah harus lebih dari 0', 'error');
+
+  UI.loading(true);
+  var r = await API.from('expenses').insert({
+    business_id: U.business_id,
+    category: document.getElementById('xCat').value,
+    amount: amt,
+    note: document.getElementById('xNote').value.trim() || null,
+    user_id: U.id,
+  }).select('*').single();
+  UI.loading(false);
+
+  if (r.error) return UI.toast(r.error.message, 'error');
+  document.getElementById('xAmt').value = '';
+  document.getElementById('xNote').value = '';
+  UI.toast('Pengeluaran dicatat', 'ok');
+  await load();
+  renderExpList();
+}
+
+function delExp(id) {
+  UI.confirm({ title: 'Hapus pengeluaran?', text: 'Data akan dihapus permanen.', ok: 'Hapus', danger: true })
+    .then(async function (ok) {
+      if (!ok) return;
+      UI.loading(true);
+      await API.from('expenses').remove().eq('id', id).run();
+      UI.loading(false);
+      await load();
+      renderExpList();
+    });
+}
+
+/* ---------- Export CSV ---------- */
+function exportCsv() {
+  var os = orders.filter(function (o) { return inRange(o.created_at); });
+  if (!os.length) return UI.toast('Tidak ada data untuk diexport', 'warn');
+
+  var head = ['No Invoice', 'Tanggal', 'Kasir', 'Pembeli', 'Metode', 'Subtotal', 'Diskon', 'Pajak', 'Total', 'HPP', 'Laba'];
+  var lines = [head.join(',')];
+
+  os.forEach(function (o) {
+    lines.push([
+      o.order_no,
+      new Date(o.created_at).toLocaleString('id-ID'),
+      '"' + (o.cashier_name || '') + '"',
+      '"' + (o.customer_name || '') + '"',
+      o.payment_method,
+      o.subtotal, o.discount, o.tax, o.total, o.cost_total,
+      Number(o.total) - Number(o.cost_total),
+    ].join(','));
+  });
+
+  var blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'laporan-stockflow-' + curRange + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  UI.toast('CSV diunduh', 'ok');
+}
+
+load();
+</script>
+</body>
+</html>

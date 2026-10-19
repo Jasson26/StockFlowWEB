@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4CF1">
+<title>Stok — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+<div class="content">
+
+  <div class="grid g3 mb16">
+    <button class="stat" style="text-align:left;cursor:pointer" onclick="openMove('in')">
+      <div class="stat-lbl c-ok">&#11015; STOK MASUK</div>
+      <div class="stat-val" style="font-size:17px">Catat Pembelian</div>
+      <div class="stat-sub">Barang datang dari supplier</div>
+    </button>
+    <button class="stat" style="text-align:left;cursor:pointer" onclick="openMove('out')">
+      <div class="stat-lbl c-warn">&#11014; STOK KELUAR</div>
+      <div class="stat-val" style="font-size:17px">Catat Pengeluaran</div>
+      <div class="stat-sub">Pemakaian, sampel, hadiah</div>
+    </button>
+    <button class="stat" style="text-align:left;cursor:pointer" onclick="openMove('adjust')">
+      <div class="stat-lbl c-brand">&#9878; KOREKSI</div>
+      <div class="stat-val" style="font-size:17px">Stock Opname</div>
+      <div class="stat-sub">Samakan dengan hitungan fisik</div>
+    </button>
+  </div>
+
+  <div class="card p0">
+    <div class="card-hd">
+      <h3>Riwayat Pergerakan Stok</h3>
+      <div class="spacer"></div>
+      <select class="select" id="fType" onchange="render()" style="width:auto">
+        <option value="">Semua jenis</option>
+        <option value="in">Masuk</option>
+        <option value="out">Keluar</option>
+        <option value="sale">Penjualan</option>
+        <option value="damaged">Rusak</option>
+        <option value="adjust">Koreksi</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>Waktu</th>
+          <th>Produk</th>
+          <th>Jenis</th>
+          <th class="num">Jumlah</th>
+          <th class="hide-mobile">Catatan</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- MODAL PERGERAKAN STOK -->
+<div class="modal" id="mMove">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 id="mTitle">Stok Masuk</h3>
+      <button class="modal-x" onclick="UI.closeModal('mMove')">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <div class="field">
+        <label class="label">PRODUK *</label>
+        <select id="mProd" class="select" onchange="onProd()"></select>
+      </div>
+
+      <div id="curStock" class="mb16 hide" style="background:var(--surface-2);border-radius:var(--r);padding:12px;font-size:13.5px"></div>
+
+      <div class="field">
+        <label class="label" id="qtyLbl">JUMLAH *</label>
+        <input type="number" id="mQty" class="input" placeholder="0" min="0" step="any" oninput="preview()">
+        <div class="hint" id="qtyHint"></div>
+      </div>
+
+      <div class="field hide" id="costWrap">
+        <label class="label">HARGA BELI PER UNIT</label>
+        <input type="number" id="mCost" class="input" placeholder="0" min="0">
+        <div class="hint">Jika diisi, harga beli produk akan diperbarui.</div>
+      </div>
+
+      <div class="field">
+        <label class="label">CATATAN</label>
+        <input type="text" id="mNote" class="input" placeholder="Misal: Beli dari Supplier A">
+      </div>
+
+      <div id="prevBox" class="hide" style="background:var(--brand-faint);border-radius:var(--r);padding:14px;text-align:center">
+        <div class="fs12 c-mid fw7">STOK SETELAH PERUBAHAN</div>
+        <div class="fs22 fw8 c-brand mono" id="prevVal">0</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mMove')">Batal</button>
+      <button class="btn btn-primary" onclick="save()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!Auth.guard()) throw 'redirect';
+var U = Auth.user();
+var products = [], moves = [], mode = 'in';
+
+UI.shell('inventory', 'Manajemen Stok');
+
+var TYPE = {
+  in:      { label: 'Masuk',     badge: 'ok',     sign: '+' },
+  out:     { label: 'Keluar',    badge: 'warn',   sign: '-' },
+  sale:    { label: 'Penjualan', badge: 'brand',  sign: '-' },
+  damaged: { label: 'Rusak',     badge: 'danger', sign: '-' },
+  adjust:  { label: 'Koreksi',   badge: '',       sign: '=' },
+};
+
+async function load() {
+  UI.loading(true);
+  var rp_ = await API.from('products').select('*').order('name');
+  var rm = await API.from('stock_movements').select('*')
+            .order('created_at', false).limit(200);
+  UI.loading(false);
+
+  products = rp_.data || [];
+  moves    = rm.data || [];
+
+  document.getElementById('mProd').innerHTML =
+    '<option value="">— Pilih produk —</option>' +
+    products.map(function (p) {
+      return '<option value="' + p.id + '">' + UI.esc(p.name) + ' (stok ' + UI.num(p.stock) + ')</option>';
+    }).join('');
+
+  render();
+}
+
+function pName(id) {
+  var p = products.find(function (x) { return x.id === id; });
+  return p ? p.name : '(produk dihapus)';
+}
+
+function render() {
+  var ft = document.getElementById('fType').value;
+  var list = ft ? moves.filter(function (m) { return m.type === ft; }) : moves;
+
+  if (!list.length) {
+    document.getElementById('rows').innerHTML =
+      '<tr><td colspan="5">' + UI.empty('&#128203;', 'Belum ada pergerakan stok', 'Catat stok masuk untuk memulai') + '</td></tr>';
+    return;
+  }
+
+  document.getElementById('rows').innerHTML = list.map(function (m) {
+    var t = TYPE[m.type] || { label: m.type, badge: '', sign: '' };
+    return '<tr>' +
+      '<td class="c-mid fs13 nowrap">' + UI.dt(m.created_at) + '</td>' +
+      '<td class="fw7">' + UI.esc(pName(m.product_id)) + '</td>' +
+      '<td><span class="badge ' + t.badge + '">' + t.label + '</span></td>' +
+      '<td class="num fw7 mono">' + t.sign + UI.num(m.qty) + '</td>' +
+      '<td class="hide-mobile c-dim fs13">' + UI.esc(m.note || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+/* ---------- Form ---------- */
+function openMove(m) {
+  mode = m;
+  var titles = { in: 'Catat Stok Masuk', out: 'Catat Stok Keluar', adjust: 'Koreksi Stok (Opname)' };
+  document.getElementById('mTitle').textContent = titles[m];
+  document.getElementById('qtyLbl').textContent = m === 'adjust' ? 'JUMLAH STOK FISIK SEBENARNYA *' : 'JUMLAH *';
+  document.getElementById('qtyHint').textContent = m === 'adjust'
+    ? 'Masukkan hasil hitungan fisik. Sistem akan menyesuaikan.'
+    : '';
+  document.getElementById('costWrap').classList.toggle('hide', m !== 'in');
+
+  document.getElementById('mProd').value = '';
+  document.getElementById('mQty').value = '';
+  document.getElementById('mCost').value = '';
+  document.getElementById('mNote').value = '';
+  document.getElementById('curStock').classList.add('hide');
+  document.getElementById('prevBox').classList.add('hide');
+
+  UI.openModal('mMove');
+}
+
+function onProd() {
+  var p = products.find(function (x) { return x.id === document.getElementById('mProd').value; });
+  var box = document.getElementById('curStock');
+  if (!p) { box.classList.add('hide'); return; }
+
+  box.classList.remove('hide');
+  box.innerHTML = '<div class="row"><span class="c-mid">Stok saat ini</span><div class="spacer"></div>' +
+    '<strong class="mono">' + UI.num(p.stock) + ' ' + UI.esc(p.unit || 'pcs') + '</strong></div>';
+  if (mode === 'in' && Number(p.cost)) document.getElementById('mCost').value = p.cost;
+  preview();
+}
+
+function preview() {
+  var p = products.find(function (x) { return x.id === document.getElementById('mProd').value; });
+  var q = Number(document.getElementById('mQty').value);
+  var box = document.getElementById('prevBox');
+
+  if (!p || !document.getElementById('mQty').value) { box.classList.add('hide'); return; }
+
+  var cur = Number(p.stock) || 0;
+  var next = mode === 'in' ? cur + q : mode === 'out' ? cur - q : q;
+
+  box.classList.remove('hide');
+  document.getElementById('prevVal').textContent =
+    UI.num(next) + ' ' + (p.unit || 'pcs') + (next < 0 ? ' ⚠' : '');
+}
+
+async function save() {
+  var pid = document.getElementById('mProd').value;
+  var q   = Number(document.getElementById('mQty').value);
+
+  if (!pid) return UI.toast('Pilih produk dulu', 'error');
+  if (document.getElementById('mQty').value === '' || q < 0) return UI.toast('Jumlah tidak valid', 'error');
+  if (mode !== 'adjust' && q <= 0) return UI.toast('Jumlah harus lebih dari 0', 'error');
+
+  var p = products.find(function (x) { return x.id === pid; });
+  var cur = Number(p.stock) || 0;
+  var next, qty;
+
+  if (mode === 'in')      { next = cur + q; qty = q; }
+  else if (mode === 'out') {
+    if (q > cur) return UI.toast('Stok tidak cukup (tersedia ' + UI.num(cur) + ')', 'error');
+    next = cur - q; qty = q;
+  } else { next = q; qty = Math.abs(q - cur); }
+
+  UI.loading(true);
+
+  var upd = { stock: next };
+  if (mode === 'in') {
+    var c = Number(document.getElementById('mCost').value);
+    if (c > 0) upd.cost = c;
+  }
+
+  var r1 = await API.from('products').update(upd).eq('id', pid).run();
+  if (r1.error) { UI.loading(false); return UI.toast(r1.error.message, 'error'); }
+
+  var note = document.getElementById('mNote').value.trim() ||
+    (mode === 'adjust' ? 'Opname: ' + UI.num(cur) + ' → ' + UI.num(next) : '');
+
+  await API.from('stock_movements').insert({
+    business_id: U.business_id, product_id: pid, type: mode,
+    qty: qty, cost: Number(document.getElementById('mCost').value) || 0,
+    note: note, user_id: U.id,
+  }).select('id');
+
+  UI.loading(false);
+  UI.toast('Stok diperbarui', 'ok');
+  UI.closeModal('mMove');
+  load();
+}
+
+load();
+</script>
+</body>
+</html>

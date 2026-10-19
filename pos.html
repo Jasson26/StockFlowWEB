@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4CF1">
+<meta name="robots" content="noindex">
+<title>Kasir — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+<div class="content flush">
+  <div class="pos">
+
+    <!-- ============ KIRI: KATALOG ============ -->
+    <div class="pos-left">
+      <div class="pos-bar">
+        <div class="row">
+          <div class="search-wrap">
+            <input type="text" id="q" class="input" placeholder="Cari nama produk, SKU, atau scan barcode…" autocomplete="off">
+          </div>
+          <button class="btn btn-icon hide-mobile" onclick="load()" title="Muat ulang">&#8635;</button>
+        </div>
+        <div class="chips" id="cats"></div>
+      </div>
+
+      <div class="pos-grid-wrap">
+        <div class="pos-grid" id="grid"></div>
+      </div>
+    </div>
+
+    <!-- ============ KANAN: KERANJANG ============ -->
+    <div class="pos-right" id="cartPanel">
+      <div class="cart-hd">
+        <h3>Keranjang</h3>
+        <span class="badge brand" id="cartCount">0 item</span>
+        <button class="btn btn-ghost btn-icon" onclick="clearCart()" title="Kosongkan">&#128465;</button>
+        <button class="btn btn-ghost btn-icon only-mobile" onclick="closeCart()" title="Tutup">&times;</button>
+      </div>
+
+      <div class="cart-items" id="cartItems"></div>
+
+      <div class="cart-ft">
+        <div class="sumrow"><span>Subtotal</span><span class="mono" id="sSub">Rp 0</span></div>
+        <div class="sumrow">
+          <span>Diskon</span>
+          <span class="row" style="gap:6px">
+            <input type="number" id="disc" class="input" value="0" min="0"
+                   style="width:110px;padding:5px 9px;text-align:right;font-size:13px"
+                   oninput="renderCart()">
+          </span>
+        </div>
+        <div class="sumrow" id="taxRow"><span>Pajak</span><span class="mono" id="sTax">Rp 0</span></div>
+        <div class="sumrow total"><span>Total</span><span class="mono" id="sTotal">Rp 0</span></div>
+        <button class="btn btn-primary btn-block btn-lg" id="payBtn" onclick="openPay()" disabled>
+          Bayar
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- FAB keranjang (HP) -->
+<button class="cart-fab hide" id="fab" onclick="openCart()">
+  <span>&#128722;</span>
+  <span class="cf-count" id="fabCount">0</span>
+  <span class="spacer"></span>
+  <span class="mono" id="fabTotal">Rp 0</span>
+</button>
+
+<!-- ============ MODAL PEMBAYARAN ============ -->
+<div class="modal" id="mPay">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 id="payTitle">Pembayaran</h3>
+      <button class="modal-x" onclick="closePay()">&times;</button>
+    </div>
+
+    <div class="modal-bd">
+      <!-- ---------- Tahap 1: pilih metode ---------- -->
+      <div id="stMethod">
+        <div class="tc mb20">
+          <div class="fs13 c-mid fw7">TOTAL TAGIHAN</div>
+          <div class="qr-amount mono" id="payTotal">Rp 0</div>
+        </div>
+
+        <div class="pay-opts">
+          <button class="pay-opt on" data-m="cash"     onclick="setMethod('cash')"><i>&#128181;</i>Tunai</button>
+          <button class="pay-opt"    data-m="qris"     onclick="setMethod('qris')"><i>&#128241;</i>QRIS</button>
+          <button class="pay-opt"    data-m="transfer" onclick="setMethod('transfer')"><i>&#127974;</i>Transfer</button>
+        </div>
+
+        <!-- TUNAI -->
+        <div id="payCash">
+          <div class="field">
+            <label class="label">UANG DITERIMA</label>
+            <input type="number" id="paid" class="input" placeholder="0" min="0"
+                   oninput="calcChange()" style="font-size:19px;font-weight:700;text-align:right">
+            <div class="cash-quick" id="quick"></div>
+          </div>
+          <div class="change-box" id="changeBox">
+            <div class="lbl">KEMBALIAN</div>
+            <div class="val mono" id="changeVal">Rp 0</div>
+          </div>
+        </div>
+
+        <!-- QRIS -->
+        <div id="payQris" class="hide">
+          <div id="qrisIntro"></div>
+        </div>
+
+        <!-- TRANSFER -->
+        <div id="payTf" class="hide">
+          <div class="field">
+            <label class="label">NO. REFERENSI / CATATAN</label>
+            <input type="text" id="tfRef" class="input" placeholder="Misal: BCA 1234567890">
+            <div class="hint">
+              Transfer dicatat manual &mdash; pastikan dana sudah masuk sebelum menyelesaikan.
+            </div>
+          </div>
+        </div>
+
+        <div class="field mt16">
+          <label class="label">NAMA PEMBELI (OPSIONAL)</label>
+          <input type="text" id="cust" class="input" placeholder="Umum">
+        </div>
+      </div>
+
+      <!-- ---------- Tahap 2: tampilkan QR ---------- -->
+      <div id="stQr" class="hide qr-stage">
+        <div class="qr-amount mono" id="qrAmount">Rp 0</div>
+        <div class="qr-inv mb12" id="qrInv">&mdash;</div>
+
+        <div class="qr-timer" id="qrTimer">&#9201; <span id="qrTime">15:00</span></div>
+
+        <div class="qr-frame">
+          <img id="qrImg" alt="Kode QRIS untuk pembayaran">
+        </div>
+
+        <div class="qr-wait">
+          <span class="qr-pulse"></span>
+          <span>Menunggu pembayaran pembeli…</span>
+        </div>
+
+        <div class="qr-wallets">
+          <span class="qr-wallet">GoPay</span>
+          <span class="qr-wallet">OVO</span>
+          <span class="qr-wallet">DANA</span>
+          <span class="qr-wallet">ShopeePay</span>
+          <span class="qr-wallet">LinkAja</span>
+          <span class="qr-wallet">m-Banking</span>
+        </div>
+        <div class="hint mt8">Pembeli bisa memindai dengan aplikasi apa pun yang mendukung QRIS.</div>
+      </div>
+
+      <!-- ---------- Tahap 3: hasil ---------- -->
+      <div id="stResult" class="hide qr-result tc"></div>
+    </div>
+
+    <div class="modal-ft" id="payFooter">
+      <button class="btn" onclick="closePay()" id="payCancel">Batal</button>
+      <button class="btn btn-ok" onclick="submitPay()" id="paySubmit">Selesaikan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL STRUK ============ -->
+<div class="modal" id="mRcpt">
+  <div class="modal-box narrow">
+    <div class="modal-hd">
+      <h3>Transaksi Berhasil</h3>
+      <button class="modal-x" onclick="closeRcpt()">&times;</button>
+    </div>
+    <div class="modal-bd" style="background:var(--surface-2)">
+      <div id="rcptHost"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="window.print()">&#128424; Cetak</button>
+      <button class="btn btn-primary" onclick="closeRcpt()">Transaksi Baru</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!Auth.guard()) throw 'redirect';
+
+var U         = Auth.user();
+var products  = [];
+var cats      = [];
+var cart      = [];
+var activeCat = 'all';
+var method    = 'cash';
+var busy      = false;
+var lastItems = [];
+
+/* State pembayaran QRIS yang sedang berjalan */
+var qr = { orderId: null, gatewayId: null, expiresAt: 0, pollTimer: null, tickTimer: null, orderNo: null };
+
+UI.shell('pos', 'Kasir',
+  '<span class="badge hide-mobile">' + UI.esc(U.business_name) + '</span>' +
+  '<button class="btn btn-ghost btn-icon hide-mobile" onclick="UI.toggleTheme()" title="Mode gelap">&#127769;</button>'
+);
+
+/* ============================================================
+   MUAT DATA
+   ============================================================ */
+async function load() {
+  UI.loading(true);
+  var rc  = await API.from('categories').select('*').order('sort_order');
+  var rp_ = await API.from('products').select('*').eq('active', true).order('name');
+  UI.loading(false);
+
+  if (rp_.error) return UI.toast(rp_.error.message, 'error');
+
+  cats     = rc.data || [];
+  products = rp_.data || [];
+  renderCats();
+  renderGrid();
+}
+
+function renderCats() {
+  var html = '<button class="chip' + (activeCat === 'all' ? ' on' : '') +
+             '" onclick="pickCat(\'all\')">Semua</button>';
+  html += cats.map(function (c) {
+    return '<button class="chip' + (activeCat === c.id ? ' on' : '') +
+           '" onclick="pickCat(\'' + c.id + '\')">' + UI.esc(c.name) + '</button>';
+  }).join('');
+  document.getElementById('cats').innerHTML = html;
+}
+
+function pickCat(id) { activeCat = id; renderCats(); renderGrid(); }
+
+function renderGrid() {
+  var q = document.getElementById('q').value.toLowerCase().trim();
+
+  var list = products.filter(function (p) {
+    if (activeCat !== 'all' && p.category_id !== activeCat) return false;
+    if (!q) return true;
+    return (p.name || '').toLowerCase().includes(q) ||
+           (p.sku || '').toLowerCase().includes(q) ||
+           (p.barcode || '').toLowerCase().includes(q);
+  });
+
+  var host = document.getElementById('grid');
+
+  if (!list.length) {
+    host.innerHTML = products.length
+      ? UI.empty('&#128269;', 'Produk tidak ditemukan', 'Coba kata kunci atau kategori lain')
+      : UI.empty('&#128230;', 'Belum ada produk', 'Tambahkan produk dulu di menu Produk');
+    host.style.gridTemplateColumns = '1fr';
+    return;
+  }
+  host.style.gridTemplateColumns = '';
+
+  host.innerHTML = list.map(function (p) {
+    var st  = Number(p.stock) || 0;
+    var cls = st <= 0 ? 'zero' : (st <= Number(p.min_stock || 0) ? 'low' : '');
+    return '<button class="pcard' + (st <= 0 ? ' out' : '') + '" onclick="add(\'' + p.id + '\')">' +
+      '<div class="pcard-img">' +
+        (p.image_url ? '<img src="' + UI.esc(p.image_url) + '" alt="" loading="lazy">' : '&#128230;') +
+      '</div>' +
+      '<div class="pcard-bd">' +
+        '<div class="pcard-name">' + UI.esc(p.name) + '</div>' +
+        '<div class="pcard-stock ' + cls + '">' +
+          (st <= 0 ? 'Stok habis' : 'Stok ' + UI.num(st) + ' ' + UI.esc(p.unit || 'pcs')) +
+        '</div>' +
+        '<div class="pcard-price">' + UI.rp(p.price) + '</div>' +
+      '</div></button>';
+  }).join('');
+}
+
+/* ============================================================
+   KERANJANG
+   ============================================================ */
+function add(id) {
+  var p = products.find(function (x) { return x.id === id; });
+  if (!p) return;
+
+  var st = Number(p.stock) || 0;
+  if (st <= 0) return UI.toast('Stok habis', 'warn');
+
+  var it = cart.find(function (x) { return x.id === id; });
+  if (it) {
+    if (it.qty + 1 > st) return UI.toast('Stok hanya ' + UI.num(st), 'warn');
+    it.qty++;
+  } else {
+    cart.push({
+      id: p.id, name: p.name, price: Number(p.price) || 0,
+      cost: Number(p.cost) || 0, qty: 1, stock: st,
+    });
+  }
+  renderCart();
+}
+
+function setQty(id, v) {
+  var it = cart.find(function (x) { return x.id === id; });
+  if (!it) return;
+  v = Math.floor(Number(v) || 0);
+  if (v <= 0)            cart = cart.filter(function (x) { return x.id !== id; });
+  else if (v > it.stock) { it.qty = it.stock; UI.toast('Stok hanya ' + UI.num(it.stock), 'warn'); }
+  else                   it.qty = v;
+  renderCart();
+}
+
+function bump(id, d) {
+  var it = cart.find(function (x) { return x.id === id; });
+  if (it) setQty(id, it.qty + d);
+}
+
+function clearCart() {
+  if (!cart.length) return;
+  UI.confirm({ title: 'Kosongkan keranjang?', text: 'Semua item akan dihapus.', ok: 'Kosongkan', danger: true })
+    .then(function (ok) {
+      if (ok) { cart = []; document.getElementById('disc').value = 0; renderCart(); }
+    });
+}
+
+function totals() {
+  var sub  = cart.reduce(function (s, i) { return s + i.price * i.qty; }, 0);
+  var disc = Math.max(0, Number(document.getElementById('disc').value) || 0);
+  if (disc > sub) disc = sub;
+  var tax = Math.round((sub - disc) * (Number(U.tax_percent) || 0) / 100);
+  return { sub: sub, disc: disc, tax: tax, total: sub - disc + tax };
+}
+
+function renderCart() {
+  var host = document.getElementById('cartItems');
+
+  if (!cart.length) {
+    host.innerHTML = UI.empty('&#128722;', 'Keranjang kosong', 'Pilih produk untuk mulai transaksi');
+  } else {
+    host.innerHTML = cart.map(function (i) {
+      return '<div class="citem">' +
+        '<div class="citem-info">' +
+          '<div class="citem-name">' + UI.esc(i.name) + '</div>' +
+          '<div class="citem-price">' + UI.rp(i.price) + ' / unit</div>' +
+        '</div>' +
+        '<div class="citem-right">' +
+          '<div class="citem-sub mono">' + UI.rp(i.price * i.qty) + '</div>' +
+          '<div class="qty">' +
+            '<button onclick="bump(\'' + i.id + '\',-1)">&minus;</button>' +
+            '<input type="number" value="' + i.qty + '" onchange="setQty(\'' + i.id + '\',this.value)">' +
+            '<button onclick="bump(\'' + i.id + '\',1)">+</button>' +
+          '</div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  var t = totals();
+  var n = cart.reduce(function (s, i) { return s + i.qty; }, 0);
+
+  document.getElementById('sSub').textContent      = UI.rp(t.sub);
+  document.getElementById('sTax').textContent      = UI.rp(t.tax);
+  document.getElementById('sTotal').textContent    = UI.rp(t.total);
+  document.getElementById('cartCount').textContent = n + ' item';
+  document.getElementById('payBtn').disabled       = !cart.length;
+  document.getElementById('taxRow').classList.toggle('hide', !Number(U.tax_percent));
+
+  document.getElementById('fabCount').textContent = n;
+  document.getElementById('fabTotal').textContent = UI.rp(t.total);
+  document.getElementById('fab').classList.toggle('hide', !cart.length);
+}
+
+function openCart()  { document.getElementById('cartPanel').classList.add('open'); }
+function closeCart() { document.getElementById('cartPanel').classList.remove('open'); }
+
+/* ============================================================
+   PEMBAYARAN — tahap 1: pilih metode
+   ============================================================ */
+function stage(which) {
+  document.getElementById('stMethod').classList.toggle('hide', which !== 'method');
+  document.getElementById('stQr').classList.toggle('hide',     which !== 'qr');
+  document.getElementById('stResult').classList.toggle('hide', which !== 'result');
+}
+
+function openPay() {
+  if (!cart.length) return;
+  var t = totals();
+
+  document.getElementById('payTitle').textContent = 'Pembayaran';
+  document.getElementById('payTotal').textContent = UI.rp(t.total);
+  document.getElementById('paid').value  = '';
+  document.getElementById('tfRef').value = '';
+  document.getElementById('cust').value  = '';
+
+  var steps = [t.total, 50000, 100000, 150000, 200000, 500000]
+    .filter(function (v, i) { return i === 0 || v >= t.total; })
+    .filter(function (v, i, a) { return a.indexOf(v) === i; })
+    .slice(0, 6);
+
+  document.getElementById('quick').innerHTML = steps.map(function (v) {
+    return '<button onclick="setPaid(' + v + ')">' + (v === t.total ? 'Uang pas' : UI.rp(v)) + '</button>';
+  }).join('');
+
+  stage('method');
+  document.getElementById('payFooter').classList.remove('hide');
+  document.getElementById('payCancel').textContent = 'Batal';
+  document.getElementById('paySubmit').classList.remove('hide');
+  document.getElementById('paySubmit').textContent = 'Selesaikan';
+
+  setMethod('cash');
+  calcChange();
+  UI.openModal('mPay');
+}
+
+function setMethod(m) {
+  method = m;
+  document.querySelectorAll('.pay-opt').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.m === m);
+  });
+  document.getElementById('payCash').classList.toggle('hide', m !== 'cash');
+  document.getElementById('payQris').classList.toggle('hide', m !== 'qris');
+  document.getElementById('payTf').classList.toggle('hide',   m !== 'transfer');
+
+  var btn = document.getElementById('paySubmit');
+  btn.textContent = m === 'qris' ? 'Tampilkan QR' : 'Selesaikan';
+
+  if (m === 'qris') {
+    var host = document.getElementById('qrisIntro');
+    if (U.qris_enabled) {
+      host.innerHTML =
+        '<div class="qr-wait" style="background:var(--ok-faint);color:var(--ok)">' +
+        '&#9989; <span>QRIS otomatis aktif. Pembayaran akan terkonfirmasi sendiri.</span></div>' +
+        '<div class="qr-wallets">' +
+          ['GoPay','OVO','DANA','ShopeePay','LinkAja','m-Banking']
+            .map(function (w) { return '<span class="qr-wallet">' + w + '</span>'; }).join('') +
+        '</div>' +
+        '<div class="hint tc mt8">Satu QR berlaku untuk semua aplikasi di atas.</div>';
+    } else if (U.qris_static_url) {
+      host.innerHTML =
+        '<div class="qr-notice"><strong>QRIS otomatis belum aktif.</strong>' +
+        'Yang ditampilkan adalah QRIS statis Anda. Pembayaran <em>tidak</em> terkonfirmasi ' +
+        'otomatis &mdash; periksa mutasi sebelum menyelesaikan transaksi.</div>' +
+        '<div class="qr-frame mt16"><img src="' + UI.esc(U.qris_static_url) + '" alt="QRIS statis"></div>';
+    } else {
+      host.innerHTML =
+        '<div class="qr-notice"><strong>QRIS belum disiapkan.</strong>' +
+        'Owner dapat mengaktifkannya di menu Pengaturan &rarr; QRIS.</div>';
+    }
+  }
+}
+
+function setPaid(v) { document.getElementById('paid').value = v; calcChange(); }
+
+function calcChange() {
+  var t    = totals();
+  var paid = Number(document.getElementById('paid').value) || 0;
+  var ch   = paid - t.total;
+  var box  = document.getElementById('changeBox');
+  box.classList.toggle('minus', ch < 0);
+  box.querySelector('.lbl').textContent = ch < 0 ? 'KURANG' : 'KEMBALIAN';
+  document.getElementById('changeVal').textContent = UI.rp(Math.abs(ch));
+}
+
+/* ============================================================
+   PEMBAYARAN — kirim
+   ============================================================ */
+async function submitPay() {
+  if (busy) return;
+
+  if (method === 'qris') {
+    if (!U.qris_enabled && !U.qris_static_url) {
+      return UI.toast('QRIS belum disiapkan. Buka Pengaturan.', 'error');
+    }
+    if (U.qris_enabled) return startQris();
+    /* QRIS statis: tidak ada konfirmasi otomatis, catat manual */
+    return finishManual('transfer', 'QRIS statis');
+  }
+
+  if (method === 'cash') {
+    var paid = Number(document.getElementById('paid').value) || 0;
+    if (paid < totals().total) return UI.toast('Uang diterima kurang dari total', 'error');
+    return finishManual('cash', null);
+  }
+
+  /* transfer */
+  var ref = document.getElementById('tfRef').value.trim();
+  UI.confirm({
+    title: 'Dana sudah masuk?',
+    text: 'Transfer dicatat manual. Pastikan Anda sudah melihat dana masuk di rekening sebelum melanjutkan.',
+    ok: 'Ya, sudah masuk',
+  }).then(function (ok) { if (ok) finishManual('transfer', ref); });
+}
+
+/* ---------- Tunai & transfer: langsung lunas ---------- */
+async function finishManual(payMethod, ref) {
+  busy = true;
+  UI.loading(true);
+
+  var t = totals();
+  lastItems = cart.map(function (i) { return { name: i.name, price: i.price, qty: i.qty }; });
+
+  var res = await API.rpc('checkout_cash', {
+    p_items: cart.map(function (i) {
+      return { product_id: i.id, name: i.name, price: i.price, cost: i.cost, qty: i.qty };
+    }),
+    p_discount: t.disc,
+    p_tax: t.tax,
+    p_paid: payMethod === 'cash' ? (Number(document.getElementById('paid').value) || t.total) : t.total,
+    p_customer: document.getElementById('cust').value.trim() || 'Umum',
+    p_method: payMethod,
+  });
+
+  UI.loading(false);
+  busy = false;
+
+  if (res.error) return UI.toast(res.error.message, 'error');
+
+  var o = res.data;
+  o.payment_method = payMethod;
+  o.ref_note = ref;
+
+  UI.closeModal('mPay');
+  showReceipt(o);
+  resetCart();
+  load();
+}
+
+/* ============================================================
+   PEMBAYARAN — alur QRIS
+   ============================================================ */
+async function startQris() {
+  busy = true;
+  UI.loading(true);
+
+  var t = totals();
+  lastItems = cart.map(function (i) { return { name: i.name, price: i.price, qty: i.qty }; });
+
+  /* 1. Buat order pending (stok belum dipotong) */
+  var ord = await API.rpc('order_create_pending', {
+    p_items: cart.map(function (i) {
+      return { product_id: i.id, name: i.name, price: i.price, cost: i.cost, qty: i.qty };
+    }),
+    p_discount: t.disc,
+    p_tax: t.tax,
+    p_customer: document.getElementById('cust').value.trim() || 'Umum',
+    p_method: 'qris',
+  });
+
+  if (ord.error) {
+    UI.loading(false); busy = false;
+    return UI.toast(ord.error.message, 'error');
+  }
+
+  /* 2. Minta tagihan QRIS dari gateway lewat Edge Function */
+  var pay = await API.invoke('payment-create', { order_id: ord.data.id });
+
+  UI.loading(false);
+  busy = false;
+
+  if (pay.error) {
+    /* Order pending sudah terbuat tapi gateway gagal — batalkan agar tidak menggantung */
+    await API.rpc('order_cancel_pending', { p_order_id: ord.data.id });
+    return UI.toast(pay.error.message, 'error');
+  }
+
+  /* 3. Tampilkan QR dan mulai polling */
+  qr.orderId   = ord.data.id;
+  qr.gatewayId = pay.data.gateway_order_id;
+  qr.orderNo   = ord.data.order_no;
+  qr.expiresAt = new Date(pay.data.expires_at).getTime();
+
+  document.getElementById('payTitle').textContent = 'Scan untuk Membayar';
+  document.getElementById('qrAmount').textContent = UI.rp(pay.data.amount);
+  document.getElementById('qrInv').textContent    = ord.data.order_no;
+  document.getElementById('qrImg').src            = pay.data.qr_url;
+
+  stage('qr');
+  document.getElementById('payCancel').textContent = 'Batalkan';
+  document.getElementById('paySubmit').classList.add('hide');
+
+  tick();
+  qr.tickTimer = setInterval(tick, 1000);
+  qr.pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+}
+
+/* Hitung mundur kedaluwarsa */
+function tick() {
+  var left = qr.expiresAt - Date.now();
+  var el   = document.getElementById('qrTimer');
+  document.getElementById('qrTime').textContent = UI.mmss(left);
+
+  el.classList.toggle('warn', left <= 180000 && left > 0);
+  el.classList.toggle('over', left <= 0);
+
+  if (left <= 0) {
+    stopQris();
+    /* Konfirmasi sekali lagi — pembeli mungkin bayar di detik terakhir */
+    poll(true);
+  }
+}
+
+/* Tanya status pembayaran */
+async function poll(isFinal) {
+  if (!qr.gatewayId) return;
+
+  var r = await API.invoke('payment-status', { gateway_order_id: qr.gatewayId });
+  if (r.error) return;   /* diam saja, coba lagi di siklus berikutnya */
+
+  var st = r.data.status;
+
+  if (st === 'paid') {
+    stopQris();
+    onQrisPaid(r.data.issuer);
+  } else if (st === 'expired' || st === 'failed' || st === 'cancelled') {
+    stopQris();
+    onQrisFailed(st);
+  } else if (isFinal) {
+    stopQris();
+    onQrisFailed('expired');
+  }
+}
+
+function stopQris() {
+  if (qr.pollTimer) { clearInterval(qr.pollTimer); qr.pollTimer = null; }
+  if (qr.tickTimer) { clearInterval(qr.tickTimer); qr.tickTimer = null; }
+}
+
+async function onQrisPaid(issuer) {
+  /* Ambil order final untuk struk */
+  var r = await API.from('orders').select('*').eq('id', qr.orderId).maybeSingle();
+  var o = r.data || {};
+
+  document.getElementById('stResult').innerHTML =
+    '<div class="qr-result-ico ok">&#10004;</div>' +
+    '<h4>Pembayaran Diterima</h4>' +
+    '<p>' + UI.rp(o.total || 0) + ' lewat QRIS' +
+    (issuer ? ' (' + UI.esc(String(issuer).toUpperCase()) + ')' : '') + '</p>';
+
+  stage('result');
+  document.getElementById('payCancel').textContent = 'Tutup';
+  document.getElementById('paySubmit').classList.remove('hide');
+  document.getElementById('paySubmit').textContent = 'Lihat Struk';
+  document.getElementById('paySubmit').onclick = function () {
+    UI.closeModal('mPay');
+    o.payment_method = 'qris';
+    o.ref_note = issuer;
+    showReceipt(o);
+    document.getElementById('paySubmit').onclick = submitPay;
+  };
+
+  UI.toast('Pembayaran diterima!', 'ok');
+  resetCart();
+  load();
+}
+
+function onQrisFailed(st) {
+  var msg = st === 'expired'
+    ? 'Kode QR sudah kedaluwarsa. Pembeli tidak menyelesaikan pembayaran.'
+    : 'Pembayaran tidak berhasil diproses oleh penyedia.';
+
+  document.getElementById('stResult').innerHTML =
+    '<div class="qr-result-ico warn">&#9888;</div>' +
+    '<h4>' + (st === 'expired' ? 'QR Kedaluwarsa' : 'Pembayaran Gagal') + '</h4>' +
+    '<p>' + msg + '<br>Keranjang tetap tersimpan &mdash; Anda bisa coba lagi.</p>';
+
+  stage('result');
+  document.getElementById('payCancel').textContent = 'Tutup';
+  document.getElementById('paySubmit').classList.remove('hide');
+  document.getElementById('paySubmit').textContent = 'Coba Lagi';
+  document.getElementById('paySubmit').onclick = function () {
+    document.getElementById('paySubmit').onclick = submitPay;
+    openPay();
+    setMethod('qris');
+  };
+}
+
+/* Batalkan QRIS yang sedang menunggu */
+async function cancelQris() {
+  stopQris();
+  if (qr.orderId) {
+    await API.rpc('order_cancel_pending', { p_order_id: qr.orderId });
+    qr.orderId = null; qr.gatewayId = null;
+  }
+}
+
+function closePay() {
+  /* Kalau sedang menunggu QRIS, konfirmasi dulu */
+  if (qr.pollTimer) {
+    UI.confirm({
+      title: 'Batalkan pembayaran?',
+      text: 'Kode QR akan dibatalkan. Kalau pembeli sudah membayar, JANGAN batalkan — ' +
+            'tunggu konfirmasi atau cek menu Riwayat.',
+      ok: 'Ya, batalkan', cancel: 'Tunggu lagi', danger: true,
+    }).then(async function (ok) {
+      if (!ok) return;
+      await cancelQris();
+      UI.closeModal('mPay');
+      UI.toast('Pembayaran dibatalkan', 'warn');
+    });
+    return;
+  }
+
+  stopQris();
+  qr.orderId = null; qr.gatewayId = null;
+  document.getElementById('paySubmit').onclick = submitPay;
+  UI.closeModal('mPay');
+}
+
+function resetCart() {
+  cart = [];
+  document.getElementById('disc').value = 0;
+  renderCart();
+  closeCart();
+}
+
+/* ============================================================
+   STRUK
+   ============================================================ */
+function showReceipt(o) {
+  var mName = { cash: 'Tunai', qris: 'QRIS', transfer: 'Transfer' }[o.payment_method] || o.payment_method;
+
+  var itemsHtml = lastItems.map(function (i) {
+    return '<div class="r-item"><div class="r-item-n">' + UI.esc(i.name) + '</div>' +
+      '<div class="r-row"><span>' + UI.num(i.qty) + ' x ' + UI.rp(i.price) + '</span>' +
+      '<span>' + UI.rp(i.price * i.qty) + '</span></div></div>';
+  }).join('');
+
+  document.getElementById('rcptHost').innerHTML =
+    '<div class="receipt">' +
+      '<div class="r-c"><div class="r-biz">' + UI.esc(U.business_name) + '</div>' +
+      '<div style="font-size:11px">' + UI.dt(new Date().toISOString()) + '</div></div>' +
+      '<hr>' +
+      '<div class="r-row"><span>No.</span><span>' + UI.esc(o.order_no) + '</span></div>' +
+      '<div class="r-row"><span>Kasir</span><span>' + UI.esc(U.name) + '</span></div>' +
+      '<hr>' +
+      itemsHtml +
+      '<hr>' +
+      '<div class="r-row"><span>Subtotal</span><span>' + UI.rp(o.subtotal) + '</span></div>' +
+      (Number(o.discount) ? '<div class="r-row"><span>Diskon</span><span>-' + UI.rp(o.discount) + '</span></div>' : '') +
+      (Number(o.tax)      ? '<div class="r-row"><span>Pajak</span><span>' + UI.rp(o.tax) + '</span></div>' : '') +
+      '<div class="r-row b" style="font-size:14px;margin-top:4px"><span>TOTAL</span>' +
+      '<span>' + UI.rp(o.total) + '</span></div>' +
+      '<hr>' +
+      '<div class="r-row"><span>' + mName + '</span><span>' + UI.rp(o.paid_amount || o.total) + '</span></div>' +
+      (Number(o.change_amount) ? '<div class="r-row"><span>Kembali</span><span>' + UI.rp(o.change_amount) + '</span></div>' : '') +
+      (o.ref_note ? '<div class="r-row"><span>Ref</span><span>' + UI.esc(o.ref_note) + '</span></div>' : '') +
+      '<hr>' +
+      '<div class="r-c" style="font-size:11px">' + UI.esc(U.receipt_note || 'Terima kasih') + '</div>' +
+    '</div>';
+
+  UI.openModal('mRcpt');
+}
+
+function closeRcpt() {
+  UI.closeModal('mRcpt');
+  document.getElementById('q').focus();
+}
+
+/* ============================================================
+   PENCARIAN / BARCODE
+   ============================================================ */
+var qEl = document.getElementById('q');
+qEl.addEventListener('input', renderGrid);
+
+qEl.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter') return;
+  var s = qEl.value.toLowerCase().trim();
+  if (!s) return;
+
+  var exact = products.filter(function (p) {
+    return (p.barcode || '').toLowerCase() === s || (p.sku || '').toLowerCase() === s;
+  });
+  var pool = exact.length ? exact : products.filter(function (p) {
+    return (p.name || '').toLowerCase().includes(s);
+  });
+
+  if (pool.length === 1) { add(pool[0].id); qEl.value = ''; renderGrid(); }
+  else if (!pool.length) UI.toast('Produk tidak ditemukan', 'warn');
+});
+
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeCart(); });
+
+/* Jangan tinggalkan pembayaran menggantung saat tab ditutup */
+window.addEventListener('beforeunload', function (e) {
+  if (qr.pollTimer) { e.preventDefault(); e.returnValue = ''; }
+});
+
+renderCart();
+load();
+</script>
+</body>
+</html>

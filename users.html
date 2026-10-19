@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4CF1">
+<meta name="robots" content="noindex">
+<title>Pengguna — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+<div class="content">
+
+  <div class="card mb16" style="background:var(--brand-faint);border-color:var(--brand)">
+    <div class="fw7 mb8">Hak akses</div>
+    <div class="fs13 c-mid" style="line-height:1.65">
+      <strong>Owner</strong> &mdash; akses penuh: kasir, produk, stok, laporan keuangan, pengguna, pengaturan, dan void transaksi.<br>
+      <strong>Staff</strong> &mdash; hanya kasir, riwayat, produk, stok, dan barang rusak.
+      Tidak bisa melihat laporan keuangan, mengelola pengguna, atau membatalkan transaksi yang sudah lunas.
+    </div>
+    <div class="fs12 c-dim mt12" style="line-height:1.6">
+      Pembatasan ini ditegakkan di database (Row Level Security), bukan hanya disembunyikan
+      di tampilan &mdash; staff tetap tidak bisa mengambil data keuangan walau mencoba lewat jalur lain.
+    </div>
+  </div>
+
+  <div class="row mb16">
+    <div class="spacer"></div>
+    <button class="btn btn-primary" onclick="openEdit()">+ Tambah Pengguna</button>
+  </div>
+
+  <div class="card p0">
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th style="width:48px"></th>
+          <th>Nama</th>
+          <th>Peran</th>
+          <th>Status</th>
+          <th class="hide-mobile">Dibuat</th>
+          <th style="width:90px"></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="mEdit">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 id="eTitle">Tambah Pengguna</h3>
+      <button class="modal-x" onclick="UI.closeModal('mEdit')">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <input type="hidden" id="eId">
+
+      <div class="field">
+        <label class="label">NAMA LENGKAP *</label>
+        <input type="text" id="eName" class="input" placeholder="Nama karyawan">
+      </div>
+
+      <div class="field" id="emailField">
+        <label class="label">EMAIL *</label>
+        <input type="email" id="eEmail" class="input" placeholder="email@contoh.com" autocomplete="off">
+        <div class="hint">Dipakai karyawan untuk masuk. Tidak bisa diubah setelah dibuat.</div>
+      </div>
+
+      <div class="field">
+        <label class="label" id="passLbl">PASSWORD *</label>
+        <input type="text" id="ePass" class="input" placeholder="Minimal 8 karakter" autocomplete="off">
+        <div class="hint" id="passHint">
+          Sampaikan ke karyawan lewat jalur pribadi, lalu minta mereka menggantinya
+          sendiri di menu Pengaturan.
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">PERAN *</label>
+        <select id="eRole" class="select">
+          <option value="staff">Staff &mdash; kasir &amp; inventori</option>
+          <option value="owner">Owner &mdash; akses penuh</option>
+        </select>
+      </div>
+
+      <div class="field" id="activeField">
+        <label class="label">STATUS</label>
+        <select id="eActive" class="select">
+          <option value="true">Aktif &mdash; bisa masuk</option>
+          <option value="false">Nonaktif &mdash; tidak bisa masuk</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mEdit')">Batal</button>
+      <button class="btn btn-primary" onclick="save()" id="saveBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!Auth.guard(true)) throw 'redirect';
+var U = Auth.user();
+var users = [];
+
+UI.shell('users', 'Kelola Pengguna');
+
+async function load() {
+  UI.loading(true);
+  var r = await API.from('profiles').select('*').order('created_at');
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  users = r.data || [];
+  render();
+}
+
+function render() {
+  if (!users.length) {
+    document.getElementById('rows').innerHTML =
+      '<tr><td colspan="6">' + UI.empty('&#128101;', 'Belum ada pengguna lain', 'Klik "+ Tambah Pengguna"') + '</td></tr>';
+    return;
+  }
+
+  document.getElementById('rows').innerHTML = users.map(function (u) {
+    var me = u.id === U.id;
+    return '<tr>' +
+      '<td><div class="sb-avatar" style="width:34px;height:34px;font-size:13px">' +
+        UI.initials(u.name) + '</div></td>' +
+      '<td><div class="fw7">' + UI.esc(u.name) +
+        (me ? ' <span class="badge">Anda</span>' : '') + '</div></td>' +
+      '<td><span class="badge ' + (u.role === 'owner' ? 'brand' : '') + '">' +
+        (u.role === 'owner' ? 'Owner' : 'Staff') + '</span></td>' +
+      '<td><span class="badge ' + (u.active ? 'ok' : 'danger') + '">' +
+        (u.active ? 'Aktif' : 'Nonaktif') + '</span></td>' +
+      '<td class="hide-mobile c-dim fs13">' + UI.dateOnly(u.created_at) + '</td>' +
+      '<td><div class="row" style="gap:4px;justify-content:flex-end">' +
+        '<button class="btn btn-ghost btn-icon" onclick="openEdit(\'' + u.id + '\')" title="Ubah">&#9999;</button>' +
+        (me ? '' : '<button class="btn btn-ghost btn-icon c-danger" onclick="del(\'' + u.id +
+                   '\')" title="Hapus">&#128465;</button>') +
+      '</div></td></tr>';
+  }).join('');
+}
+
+function openEdit(id) {
+  var u = id ? users.find(function (x) { return x.id === id; }) : null;
+
+  document.getElementById('eTitle').textContent = u ? 'Ubah Pengguna' : 'Tambah Pengguna';
+  document.getElementById('eId').value     = u ? u.id : '';
+  document.getElementById('eName').value   = u ? u.name : '';
+  document.getElementById('eEmail').value   = '';
+  document.getElementById('ePass').value   = '';
+  document.getElementById('eRole').value   = u ? u.role : 'staff';
+  document.getElementById('eActive').value = u ? String(u.active) : 'true';
+
+  /* Email hanya diisi saat membuat akun baru */
+  document.getElementById('emailField').classList.toggle('hide', !!u);
+  document.getElementById('activeField').classList.toggle('hide', !u);
+
+  document.getElementById('passLbl').textContent = u ? 'RESET PASSWORD' : 'PASSWORD *';
+  document.getElementById('passHint').textContent = u
+    ? 'Biarkan kosong jika tidak ingin mengubah password.'
+    : 'Sampaikan ke karyawan lewat jalur pribadi, lalu minta mereka menggantinya sendiri.';
+
+  UI.openModal('mEdit');
+}
+
+async function save() {
+  var id    = document.getElementById('eId').value;
+  var name  = document.getElementById('eName').value.trim();
+  var email = document.getElementById('eEmail').value.trim().toLowerCase();
+  var pass  = document.getElementById('ePass').value;
+  var role  = document.getElementById('eRole').value;
+  var act   = document.getElementById('eActive').value === 'true';
+
+  if (!name) return UI.toast('Nama wajib diisi', 'error');
+
+  if (!id) {
+    if (!/^\S+@\S+\.\S+$/.test(email)) return UI.toast('Format email tidak valid', 'error');
+    if (pass.length < 8) return UI.toast('Password minimal 8 karakter', 'error');
+  } else if (pass && pass.length < 8) {
+    return UI.toast('Password minimal 8 karakter', 'error');
+  }
+
+  var btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  UI.loading(true);
+
+  var r;
+  if (id) {
+    var body = { action: 'update', user_id: id, name: name, role: role, active: act };
+    if (pass) body.password = pass;
+    r = await API.invoke('create-staff', body);
+  } else {
+    r = await API.invoke('create-staff', {
+      action: 'create', name: name, email: email, password: pass, role: role,
+    });
+  }
+
+  UI.loading(false);
+  btn.disabled = false;
+
+  if (r.error) return UI.toast(r.error.message, 'error');
+
+  UI.toast(id ? 'Pengguna diperbarui' : 'Akun karyawan dibuat', 'ok');
+  UI.closeModal('mEdit');
+  load();
+}
+
+function del(id) {
+  var u = users.find(function (x) { return x.id === id; });
+  UI.confirm({
+    title: 'Hapus pengguna?',
+    text: '"' + u.name + '" tidak akan bisa masuk lagi dan akunnya dihapus permanen. ' +
+          'Riwayat transaksi yang pernah dia buat tetap tersimpan.',
+    ok: 'Hapus', danger: true,
+  }).then(async function (ok) {
+    if (!ok) return;
+    UI.loading(true);
+    var r = await API.invoke('create-staff', { action: 'delete', user_id: id });
+    UI.loading(false);
+    if (r.error) return UI.toast(r.error.message, 'error');
+    UI.toast('Pengguna dihapus', 'ok');
+    load();
+  });
+}
+
+load();
+</script>
+</body>
+</html>

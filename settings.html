@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4CF1">
+<meta name="robots" content="noindex">
+<title>Pengaturan — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+<div class="content">
+  <div style="max-width:720px">
+
+    <!-- ============ PROFIL SAYA ============ -->
+    <div class="card mb16">
+      <div class="row mb16">
+        <div class="sb-avatar" style="width:52px;height:52px;font-size:19px" id="avatar">?</div>
+        <div style="flex:1;min-width:0">
+          <div class="fw8 fs18" id="myName">&mdash;</div>
+          <div class="fs13 c-mid" id="myEmail">&mdash;</div>
+        </div>
+        <span class="badge brand" id="myRole">&mdash;</span>
+      </div>
+
+      <div class="field">
+        <label class="label">UBAH PASSWORD SAYA</label>
+        <div class="row">
+          <input type="password" id="newPass" class="input" placeholder="Password baru (min. 8 karakter)"
+                 autocomplete="new-password">
+          <button class="btn btn-primary" onclick="savePass()">Simpan</button>
+        </div>
+        <div class="hint">Password di-hash oleh Supabase &mdash; aplikasi tidak pernah menyimpannya.</div>
+      </div>
+
+      <div class="field mb0">
+        <label class="label">UBAH NAMA SAYA</label>
+        <div class="row">
+          <input type="text" id="myNameInput" class="input" placeholder="Nama Anda">
+          <button class="btn" onclick="saveName()">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ INFORMASI TOKO (owner) ============ -->
+    <div class="card mb16" id="bizCard">
+      <div class="card-hd" style="margin:-18px -18px 18px;padding:15px 18px"><h3>Informasi Toko</h3></div>
+
+      <div class="field">
+        <label class="label">NAMA TOKO</label>
+        <input type="text" id="bName" class="input">
+        <div class="hint">Tampil di struk dan di header aplikasi.</div>
+      </div>
+
+      <div class="grid g2">
+        <div class="field">
+          <label class="label">TELEPON</label>
+          <input type="text" id="bPhone" class="input" placeholder="08xxxxxxxxxx">
+        </div>
+        <div class="field">
+          <label class="label">PAJAK (%)</label>
+          <input type="number" id="bTax" class="input" placeholder="0" min="0" max="100" step="0.01">
+          <div class="hint">Isi 0 jika tidak memungut pajak.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">ALAMAT</label>
+        <textarea id="bAddr" class="textarea" placeholder="Alamat toko"></textarea>
+      </div>
+
+      <div class="field">
+        <label class="label">CATATAN DI STRUK</label>
+        <input type="text" id="bNote" class="input" placeholder="Terima kasih atas kunjungan Anda">
+      </div>
+
+      <button class="btn btn-primary btn-block" onclick="saveBiz()">Simpan Informasi Toko</button>
+    </div>
+
+    <!-- ============ QRIS (owner) ============ -->
+    <div class="card mb16" id="qrisCard">
+      <div class="card-hd" style="margin:-18px -18px 18px;padding:15px 18px"><h3>Pembayaran QRIS</h3></div>
+
+      <!-- Mode otomatis -->
+      <div class="row mb16" style="padding:14px;background:var(--surface-2);border-radius:var(--r)">
+        <div style="flex:1">
+          <div class="fw7">QRIS Otomatis <span class="badge ok" id="qrisBadge">&mdash;</span></div>
+          <div class="fs13 c-mid mt8" style="line-height:1.6">
+            QR dibuat per transaksi dengan nominal terisi, dan pembayaran terkonfirmasi
+            sendiri. Perlu kredensial Midtrans terpasang di Edge Function.
+          </div>
+        </div>
+        <button class="btn" id="qrisToggle" onclick="toggleQris()">&mdash;</button>
+      </div>
+
+      <div id="qrisHelp" class="qr-notice mb16 hide">
+        <strong>Sebelum mengaktifkan</strong>
+        Pastikan Edge Function sudah dideploy dan <code>MIDTRANS_SERVER_KEY</code> sudah diisi.
+        Langkah lengkapnya ada di <code>DEPLOY.md</code>. Kalau belum, pembayaran QRIS akan gagal
+        saat dicoba di kasir.
+      </div>
+
+      <!-- QRIS statis sebagai cadangan -->
+      <div style="border-top:1px solid var(--border);padding-top:18px">
+        <div class="fw7 mb8">QRIS Statis (cadangan)</div>
+        <p class="fs13 c-mid mb16" style="line-height:1.65">
+          Unggah gambar QRIS dari bank atau e-wallet Anda. Dipakai kalau QRIS otomatis
+          tidak aktif. Pembeli mengetik nominal sendiri dan
+          <strong>pembayaran tidak terkonfirmasi otomatis</strong> &mdash; Anda harus
+          memeriksa mutasi sebelum menyelesaikan transaksi.
+        </p>
+
+        <div class="tc">
+          <div id="qrisPrev" style="max-width:240px;margin:0 auto 14px;border-radius:var(--r);background:var(--surface-2);border:1.5px dashed var(--border-strong);padding:18px;min-height:150px;display:grid;place-items:center">
+            <span class="c-dim fs13">Belum ada QRIS statis</span>
+          </div>
+          <input type="file" id="qFile" accept="image/*" class="hide" onchange="pickQris(this)">
+          <div class="row" style="justify-content:center">
+            <button class="btn" onclick="document.getElementById('qFile').click()">&#128247; Pilih Gambar</button>
+            <button class="btn btn-danger hide" id="qDel" onclick="delQris()">Hapus</button>
+          </div>
+          <div class="hint mt8">Format JPG atau PNG, maksimal 5MB.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TAMPILAN ============ -->
+    <div class="card mb16">
+      <div class="card-hd" style="margin:-18px -18px 18px;padding:15px 18px"><h3>Tampilan</h3></div>
+      <div class="row">
+        <div style="flex:1">
+          <div class="fw7">Mode Gelap</div>
+          <div class="fs13 c-mid">Nyaman untuk mata saat cahaya redup.</div>
+        </div>
+        <button class="btn" id="themeBtn" onclick="flipTheme()">&mdash;</button>
+      </div>
+    </div>
+
+    <!-- ============ AKUN ============ -->
+    <div class="card">
+      <div class="row">
+        <div style="flex:1">
+          <div class="fw7">Keluar dari akun</div>
+          <div class="fs13 c-mid">Anda perlu masuk kembali dengan email dan password.</div>
+        </div>
+        <button class="btn btn-danger" onclick="Auth.logout()">Keluar</button>
+      </div>
+    </div>
+
+    <p class="tc c-dim fs12 mt24">StockFlow v5 &mdash; Kasir &amp; Inventori dengan QRIS resmi</p>
+
+  </div>
+</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!Auth.guard()) throw 'redirect';
+var U = Auth.user();
+var biz = null, qUrl = null;
+
+UI.shell('settings', 'Pengaturan');
+
+if (U.role !== 'owner') {
+  document.getElementById('bizCard').classList.add('hide');
+  document.getElementById('qrisCard').classList.add('hide');
+}
+
+document.getElementById('avatar').textContent      = UI.initials(U.name);
+document.getElementById('myName').textContent      = U.name;
+document.getElementById('myEmail').textContent     = U.email || '';
+document.getElementById('myRole').textContent      = U.role === 'owner' ? 'Owner' : 'Staff';
+document.getElementById('myNameInput').value       = U.name;
+
+function syncThemeBtn() {
+  var dark = (localStorage.getItem('sf5_theme') || 'light') === 'dark';
+  document.getElementById('themeBtn').textContent = dark ? 'Matikan' : 'Nyalakan';
+}
+function flipTheme() { UI.toggleTheme(); syncThemeBtn(); }
+syncThemeBtn();
+
+async function load() {
+  if (U.role !== 'owner') return;
+
+  UI.loading(true);
+  var r = await API.from('businesses').select('*').limit(1).maybeSingle();
+  UI.loading(false);
+  if (!r.data) return;
+
+  biz = r.data;
+  document.getElementById('bName').value  = biz.name || '';
+  document.getElementById('bPhone').value = biz.phone || '';
+  document.getElementById('bTax').value   = biz.tax_percent || 0;
+  document.getElementById('bAddr').value  = biz.address || '';
+  document.getElementById('bNote').value  = biz.receipt_note || '';
+
+  qUrl = biz.qris_static_url;
+  showQris();
+  syncQrisToggle();
+}
+
+/* ---------- QRIS otomatis ---------- */
+function syncQrisToggle() {
+  var on = !!(biz && biz.qris_enabled);
+  var b  = document.getElementById('qrisBadge');
+  b.textContent = on ? 'Aktif' : 'Nonaktif';
+  b.className   = 'badge ' + (on ? 'ok' : '');
+  document.getElementById('qrisToggle').textContent = on ? 'Matikan' : 'Aktifkan';
+  document.getElementById('qrisHelp').classList.toggle('hide', on);
+}
+
+async function toggleQris() {
+  var next = !(biz && biz.qris_enabled);
+
+  if (next) {
+    var ok = await UI.confirm({
+      title: 'Aktifkan QRIS otomatis?',
+      text: 'Pastikan Edge Function sudah dideploy dan kredensial Midtrans sudah diisi. ' +
+            'Kalau belum, pembayaran QRIS akan gagal di kasir.',
+      ok: 'Ya, aktifkan',
+    });
+    if (!ok) return;
+  }
+
+  UI.loading(true);
+  var r = await API.from('businesses').update({ qris_enabled: next }).eq('id', U.business_id).run();
+  UI.loading(false);
+
+  if (r.error) return UI.toast(r.error.message, 'error');
+
+  biz.qris_enabled = next;
+  syncQrisToggle();
+  await Auth.reload();
+  UI.toast(next ? 'QRIS otomatis aktif' : 'QRIS otomatis dimatikan', 'ok');
+}
+
+/* ---------- QRIS statis ---------- */
+function showQris() {
+  document.getElementById('qrisPrev').innerHTML = qUrl
+    ? '<img src="' + UI.esc(qUrl) + '" style="width:100%;border-radius:8px;background:#fff">'
+    : '<span class="c-dim fs13">Belum ada QRIS statis</span>';
+  document.getElementById('qDel').classList.toggle('hide', !qUrl);
+}
+
+function pickQris(inp) {
+  var f = inp.files && inp.files[0];
+  if (!f) return;
+  if (f.size > 5 * 1024 * 1024) return UI.toast('Gambar maksimal 5MB', 'error');
+
+  var r = new FileReader();
+  r.onload = async function (e) {
+    qUrl = e.target.result;
+    showQris();
+
+    UI.loading(true);
+    var url = await API.upload(f, 'qris/' + U.business_id);
+    if (!url) { UI.loading(false); return UI.toast('Gagal mengunggah', 'error'); }
+
+    var up = await API.from('businesses').update({ qris_static_url: url }).eq('id', U.business_id).run();
+    UI.loading(false);
+    if (up.error) return UI.toast(up.error.message, 'error');
+
+    qUrl = url;
+    showQris();
+    await Auth.reload();
+    UI.toast('QRIS statis tersimpan', 'ok');
+  };
+  r.readAsDataURL(f);
+}
+
+function delQris() {
+  UI.confirm({ title: 'Hapus QRIS statis?', text: 'Anda bisa mengunggahnya kembali nanti.', ok: 'Hapus', danger: true })
+    .then(async function (ok) {
+      if (!ok) return;
+      UI.loading(true);
+      var r = await API.from('businesses').update({ qris_static_url: null }).eq('id', U.business_id).run();
+      UI.loading(false);
+      if (r.error) return UI.toast(r.error.message, 'error');
+      qUrl = null;
+      document.getElementById('qFile').value = '';
+      showQris();
+      await Auth.reload();
+      UI.toast('QRIS statis dihapus', 'ok');
+    });
+}
+
+/* ---------- Simpan info toko ---------- */
+async function saveBiz() {
+  var name = document.getElementById('bName').value.trim();
+  if (!name) return UI.toast('Nama toko wajib diisi', 'error');
+
+  var tax = Number(document.getElementById('bTax').value) || 0;
+  if (tax < 0 || tax > 100) return UI.toast('Pajak harus antara 0 dan 100', 'error');
+
+  UI.loading(true);
+  var r = await API.from('businesses').update({
+    name: name,
+    phone: document.getElementById('bPhone').value.trim() || null,
+    tax_percent: tax,
+    address: document.getElementById('bAddr').value.trim() || null,
+    receipt_note: document.getElementById('bNote').value.trim() || null,
+  }).eq('id', U.business_id).run();
+  UI.loading(false);
+
+  if (r.error) return UI.toast(r.error.message, 'error');
+
+  await Auth.reload();
+  UI.toast('Informasi toko tersimpan', 'ok');
+  setTimeout(function () { location.reload(); }, 600);
+}
+
+/* ---------- Profil sendiri ---------- */
+async function saveName() {
+  var n = document.getElementById('myNameInput').value.trim();
+  if (!n) return UI.toast('Nama tidak boleh kosong', 'error');
+
+  UI.loading(true);
+  var r = await API.from('profiles').update({ name: n }).eq('id', U.id).run();
+  UI.loading(false);
+
+  if (r.error) return UI.toast(r.error.message, 'error');
+  await Auth.reload();
+  UI.toast('Nama diperbarui', 'ok');
+  setTimeout(function () { location.reload(); }, 600);
+}
+
+async function savePass() {
+  var p = document.getElementById('newPass').value;
+  if (p.length < 8) return UI.toast('Password minimal 8 karakter', 'error');
+
+  UI.loading(true);
+  var r = await Auth.changePassword(p);
+  UI.loading(false);
+
+  if (!r.ok) return UI.toast(r.msg, 'error');
+  document.getElementById('newPass').value = '';
+  UI.toast('Password diperbarui', 'ok');
+}
+
+load();
+</script>
+</body>
+</html>
