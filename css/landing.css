@@ -8,6 +8,9 @@
   --ink:        #1F2937;
   --ink-hover:  #111827;
 
+  /* Warna merek, hanya untuk logo dan nama StockFlow */
+  --brand:        #7C3AED;
+
   --accent:       #2563EB;
   --accent-hover: #1D4ED8;
   --accent-soft:  #EFF6FF;
@@ -92,7 +95,11 @@ h1, h2, h3 { letter-spacing: -0.025em; line-height: 1.15; font-weight: 700; }
   display: flex; align-items: center; gap: 9px;
   text-decoration: none; color: var(--ink);
 }
-.brand span { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+.brand span {
+  font-size: 19px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--brand); font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+}
 .nav .spacer { flex: 1; }
 .nav-links { display: flex; align-items: center; gap: 26px; margin-right: 10px; }
 .nav-links a { color: var(--text-mid); font-size: 15px; text-decoration: none; }

@@ -114,17 +114,19 @@ const Icons = (function () {
       'stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
   }
 
-  /* Logo StockFlow — bukan huruf dalam kotak, tapi tanda arus-stok */
+  /* Logo StockFlow: huruf S besar, miring, ungu. */
+  const PURPLE = '#7C3AED';
+
   function logo(size) {
     const s = size || 32;
-    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 32 32" fill="none" ' +
-      'aria-hidden="true" class="sf-logo">' +
-      '<rect width="32" height="32" rx="8" fill="currentColor"/>' +
-      '<path d="M9 20.5c0-1.4 1.1-2.5 2.5-2.5h9c1.4 0 2.5 1.1 2.5 2.5S21.9 23 20.5 23h-9A2.5 2.5 0 0 1 9 20.5Z" fill="#fff" opacity=".55"/>' +
-      '<path d="M9 14.5c0-1.4 1.1-2.5 2.5-2.5h5c1.4 0 2.5 1.1 2.5 2.5S17.9 17 16.5 17h-5A2.5 2.5 0 0 1 9 14.5Z" fill="#fff" opacity=".8"/>' +
-      '<path d="M9 8.5C9 7.1 10.1 6 11.5 6h2C14.9 6 16 7.1 16 8.5S14.9 11 13.5 11h-2A2.5 2.5 0 0 1 9 8.5Z" fill="#fff"/>' +
+    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 32 32" ' +
+      'fill="none" aria-hidden="true" class="sf-logo">' +
+      '<text x="16" y="25" text-anchor="middle" ' +
+        'font-family="Georgia, \'Times New Roman\', serif" ' +
+        'font-size="30" font-weight="700" font-style="italic" ' +
+        'fill="' + PURPLE + '">S</text>' +
       '</svg>';
   }
 
-  return { svg, logo, has: (n) => !!P[n] };
+  return { svg, logo, has: (n) => !!P[n], PURPLE };
 })();

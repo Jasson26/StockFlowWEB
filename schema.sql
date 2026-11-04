@@ -390,7 +390,10 @@ declare
   v_stock    numeric;
 begin
   if v_biz is null then raise exception 'Tidak punya akses toko'; end if;
-  if p_method not in ('cash','transfer') then
+  -- 'qris' diizinkan untuk QRIS statis (gambar yang diunggah owner): kasir
+  -- yang memastikan dana masuk, jadi order langsung lunas. QRIS otomatis
+  -- lewat Midtrans tetap memakai checkout_qris + webhook.
+  if p_method not in ('cash','transfer','qris') then
     raise exception 'Metode % tidak boleh lewat fungsi ini', p_method;
   end if;
   if jsonb_array_length(p_items) = 0 then raise exception 'Keranjang kosong'; end if;

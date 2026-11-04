@@ -179,13 +179,13 @@
       <div id="rcptHost"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn hide" onclick="btPrint()" id="btPrintBtn">
-        <span data-ico="printer" data-ico-size="16"></span>Cetak Struk
+      <button class="btn btn-primary" onclick="btPrint()" id="btPrintBtn">
+        <span data-ico="printer" data-ico-size="16"></span><span id="btPrintLbl">Cetak struk</span>
       </button>
-      <button class="btn" onclick="window.print()" id="webPrintBtn">
-        <span data-ico="print" data-ico-size="16"></span>Cetak
+      <button class="btn" onclick="window.print()" id="webPrintBtn" title="Buka dialog cetak browser">
+        <span data-ico="print" data-ico-size="16"></span>Print / PDF
       </button>
-      <button class="btn btn-primary" onclick="closeRcpt()">Transaksi Baru</button>
+      <button class="btn" onclick="closeRcpt()">Selesai</button>
     </div>
   </div>
 </div>
@@ -429,29 +429,28 @@ function setMethod(m) {
   document.getElementById('payTf').classList.toggle('hide',   m !== 'transfer');
 
   var btn = document.getElementById('paySubmit');
-  btn.textContent = m === 'qris' ? 'Tampilkan QR' : 'Selesaikan';
+  btn.textContent = m !== 'qris' ? 'Selesaikan'
+                  : (U.qris_enabled ? 'Tampilkan QR' : 'Sudah dibayar');
 
   if (m === 'qris') {
     var host = document.getElementById('qrisIntro');
     if (U.qris_enabled) {
       host.innerHTML =
         '<div class="qr-wait" style="background:var(--ok-faint);color:var(--ok)">' +
-        '&#9989; <span>QRIS otomatis aktif. Pembayaran akan terkonfirmasi sendiri.</span></div>' +
+        '&#9989; <span>Pembayaran terkonfirmasi otomatis.</span></div>' +
         '<div class="qr-wallets">' +
           ['GoPay','OVO','DANA','ShopeePay','LinkAja','m-Banking']
             .map(function (w) { return '<span class="qr-wallet">' + w + '</span>'; }).join('') +
-        '</div>' +
-        '<div class="hint tc mt8">Satu QR berlaku untuk semua aplikasi di atas.</div>';
+        '</div>';
     } else if (U.qris_static_url) {
+      /* QRIS yang diunggah owner. Pembeli pindai, kasir yang menutup transaksi. */
       host.innerHTML =
-        '<div class="qr-notice"><strong>QRIS otomatis belum aktif.</strong>' +
-        'Yang ditampilkan adalah QRIS statis Anda. Pembayaran <em>tidak</em> terkonfirmasi ' +
-        'otomatis &mdash; periksa mutasi sebelum menyelesaikan transaksi.</div>' +
-        '<div class="qr-frame mt16"><img src="' + UI.esc(U.qris_static_url) + '" alt="QRIS statis"></div>';
+        '<div class="qr-frame"><img src="' + UI.esc(U.qris_static_url) + '" alt="QRIS toko"></div>' +
+        '<div class="hint tc mt8">Minta pembeli memindai, lalu tekan <strong>Sudah dibayar</strong>.</div>';
     } else {
       host.innerHTML =
         '<div class="qr-notice"><strong>QRIS belum disiapkan.</strong>' +
-        'Owner dapat mengaktifkannya di menu Pengaturan &rarr; QRIS.</div>';
+        'Owner dapat mengunggah gambar QRIS di menu Pengaturan.</div>';
     }
   }
 }
@@ -479,8 +478,12 @@ async function submitPay() {
       return UI.toast('QRIS belum disiapkan. Buka Pengaturan.', 'error');
     }
     if (U.qris_enabled) return startQris();
-    /* QRIS statis: tidak ada konfirmasi otomatis, catat manual */
-    return finishManual('transfer', 'QRIS statis');
+    /* QRIS yang diunggah: kasir memastikan dananya masuk sebelum menutup */
+    return UI.confirm({
+      title: 'Pembayaran sudah masuk?',
+      text: 'Pastikan notifikasi pembayaran sudah muncul di HP Anda.',
+      ok: 'Ya, sudah',
+    }).then(function (ok) { if (ok) finishManual('qris', 'QRIS'); });
   }
 
   if (method === 'cash') {
@@ -781,23 +784,41 @@ function bizInfo() {
 }
 
 function syncPrintBtn() {
-  var on = Printer.connected();
-  document.getElementById('btPrintBtn').classList.toggle('hide', !on);
-  /* Dialog print browser tetap disediakan sebagai cadangan */
-  document.getElementById('webPrintBtn').classList.toggle('btn-primary', false);
+  var sup = Printer.support();
+  var btn = document.getElementById('btPrintBtn');
+  var lbl = document.getElementById('btPrintLbl');
+
+  /* Tombol tetap tampil walau sedang terputus: koneksi Bluetooth memang
+     hilang setiap pindah halaman, dan menekannya akan menyambung ulang. */
+  btn.classList.toggle('hide', !sup.ok);
+  if (lbl) lbl.textContent = Printer.connected() ? 'Cetak struk' : 'Hubungkan & cetak';
+
   UI.hydrateIcons(document);
 }
 
 async function btPrint() {
   if (!lastOrder) return;
+  var btn = document.getElementById('btPrintBtn');
+  btn.disabled = true;
+
   try {
+    /* Dipanggil dari klik, jadi gestur penggunanya sah untuk memilih perangkat */
+    if (!Printer.connected()) UI.toast('Menyambungkan printer...', 'warn');
+    await Printer.ensure();
+
     UI.loading(true);
     await Printer.printReceipt(lastOrder, lastItems, bizInfo());
     UI.loading(false);
     UI.toast('Struk dicetak', 'ok');
   } catch (e) {
     UI.loading(false);
-    UI.toast(e.message || 'Gagal mencetak', 'error');
+    /* Pengguna menutup dialog pemilihan perangkat, bukan kegagalan */
+    if (!(e && (e.name === 'NotFoundError' || /cancel|dibatalkan/i.test(e.message || '')))) {
+      UI.toast(e.message || 'Gagal mencetak', 'error');
+    }
+  } finally {
+    btn.disabled = false;
+    syncPrintBtn();
   }
 }
 
@@ -805,7 +826,15 @@ async function btPrint() {
 async function autoPrint(o) {
   var auto = false;
   try { auto = localStorage.getItem('sf5_print_auto') === '1'; } catch (e) {}
-  if (!auto || !Printer.connected()) return;
+  if (!auto) return;
+
+  /* Tanpa gestur pengguna hanya boleh sambung ulang diam-diam.
+     Kalau gagal, biarkan kasir menekan tombolnya sendiri. */
+  if (!Printer.connected()) {
+    await Printer.reconnect();
+    if (!Printer.connected()) return;
+  }
+
   try {
     await Printer.printReceipt(o, lastItems, bizInfo());
     UI.toast('Struk dicetak otomatis', 'ok');

@@ -108,6 +108,9 @@ const API = (function () {
   return {
     from: (t) => new Query(t),
 
+    /* Alasan kegagalan upload terakhir (diisi oleh upload()) */
+    uploadError: '',
+
     /* ---------- RPC (fungsi PostgreSQL) ---------- */
     async rpc(fn, args) {
       if (typeof Demo !== 'undefined' && Demo.on()) return Demo.rpc(fn, args || {});
@@ -181,19 +184,41 @@ const API = (function () {
       }
     },
 
-    /* ---------- Upload ke Storage ---------- */
+    /* ---------- Upload ke Storage ----------
+       Mengembalikan URL publik, atau null kalau gagal. Alasan kegagalan
+       disimpan di API.uploadError supaya bisa ditampilkan ke pengguna. */
     async upload(file, folder) {
+      API.uploadError = '';
+
       if (typeof Demo !== 'undefined' && Demo.on()) return Demo.upload(file);
-      if (!SF_CONFIGURED) return null;
+      if (!SF_CONFIGURED) {
+        API.uploadError = 'Supabase belum dikonfigurasi';
+        return null;
+      }
 
       const tk = await Auth.token();
-      if (!tk) return null;
+      if (!tk) {
+        API.uploadError = 'Sesi berakhir, masuk kembali';
+        return null;
+      }
+
+      /* Ekstensi diambil dari tipe MIME supaya nama berkas aneh
+         (tanpa titik, berspasi, huruf non-latin) tidak ikut ke path. */
+      const MIME = {
+        'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png',
+        'image/webp': 'webp', 'image/gif': 'gif', 'image/heic': 'heic',
+        'image/heif': 'heif',
+      };
+      let ext = MIME[(file.type || '').toLowerCase()];
+      if (!ext) {
+        const m = /\.([a-z0-9]{2,5})$/i.exec(file.name || '');
+        ext = m ? m[1].toLowerCase() : 'jpg';
+      }
+
+      const path = folder + '/' + Date.now() + '-' +
+                   Math.random().toString(36).slice(2, 8) + '.' + ext;
 
       try {
-        const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
-        const path = folder + '/' + Date.now() + '-' +
-                     Math.random().toString(36).slice(2, 8) + '.' + ext;
-
         const res = await fetch(
           SUPABASE_URL + '/storage/v1/object/' + STORAGE_BUCKET + '/' + path,
           {
@@ -207,9 +232,29 @@ const API = (function () {
             body: file,
           },
         );
-        if (!res.ok) return null;
+
+        if (!res.ok) {
+          let msg = '';
+          try {
+            const d = await res.json();
+            msg = d.message || d.error || '';
+          } catch (e) {}
+
+          if (res.status === 404 || /not found|bucket/i.test(msg)) {
+            API.uploadError = 'Bucket "' + STORAGE_BUCKET + '" belum dibuat di Supabase Storage';
+          } else if (res.status === 403 || res.status === 401) {
+            API.uploadError = 'Tidak diizinkan mengunggah. Cek policy bucket "' + STORAGE_BUCKET + '".';
+          } else if (res.status === 413) {
+            API.uploadError = 'Berkas terlalu besar untuk bucket ini';
+          } else {
+            API.uploadError = msg || ('Gagal mengunggah (HTTP ' + res.status + ')');
+          }
+          return null;
+        }
+
         return SUPABASE_URL + '/storage/v1/object/public/' + STORAGE_BUCKET + '/' + path;
       } catch (e) {
+        API.uploadError = 'Tidak bisa menghubungi server. Cek koneksi.';
         return null;
       }
     },

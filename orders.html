@@ -85,11 +85,11 @@
       <div id="detHost"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn hide" onclick="btReprint()" id="btPrintBtn">
-        <span data-ico="printer" data-ico-size="16"></span>Cetak Struk
+      <button class="btn" onclick="btReprint()" id="btPrintBtn">
+        <span data-ico="printer" data-ico-size="16"></span><span id="btPrintLbl">Cetak struk</span>
       </button>
-      <button class="btn" onclick="window.print()">
-        <span data-ico="print" data-ico-size="16"></span>Cetak
+      <button class="btn" onclick="window.print()" title="Buka dialog cetak browser">
+        <span data-ico="print" data-ico-size="16"></span>Print / PDF
       </button>
       <button class="btn btn-primary hide" id="checkBtn" onclick="recheck()">Periksa Status</button>
       <button class="btn btn-danger hide"  id="voidBtn"  onclick="doVoid()">Void Transaksi</button>
@@ -289,13 +289,21 @@ async function recheck() {
 
 /* ---------- Cetak ulang ke printer Bluetooth ---------- */
 function syncPrintBtn() {
-  document.getElementById('btPrintBtn').classList.toggle('hide', !Printer.connected());
+  var sup = Printer.support();
+  var btn = document.getElementById('btPrintBtn');
+  var lbl = document.getElementById('btPrintLbl');
+  btn.classList.toggle('hide', !sup.ok);
+  if (lbl) lbl.textContent = Printer.connected() ? 'Cetak struk' : 'Hubungkan & cetak';
   UI.hydrateIcons(document);
 }
 
 async function btReprint() {
   if (!curOrder) return;
+  var btn = document.getElementById('btPrintBtn');
+  btn.disabled = true;
   try {
+    if (!Printer.connected()) UI.toast('Menyambungkan printer...', 'warn');
+    await Printer.ensure();
     UI.loading(true);
     await Printer.printReceipt(curOrder, curItems.map(function (i) {
       return { name: i.name, price: i.price, qty: i.qty };
@@ -309,7 +317,12 @@ async function btReprint() {
     UI.toast('Struk dicetak', 'ok');
   } catch (e) {
     UI.loading(false);
-    UI.toast(e.message || 'Gagal mencetak', 'error');
+    if (!(e && (e.name === 'NotFoundError' || /cancel|dibatalkan/i.test(e.message || '')))) {
+      UI.toast(e.message || 'Gagal mencetak', 'error');
+    }
+  } finally {
+    btn.disabled = false;
+    syncPrintBtn();
   }
 }
 

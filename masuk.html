@@ -180,7 +180,7 @@ document.getElementById('artFeats').innerHTML = [
   return '<div class="auth-feat"><i>' + Icons.svg(f[0], 15) + '</i>' + f[1] + '</div>';
 }).join('');
 
-if (Auth.isLogged()) location.replace('beranda.html');
+if (Auth.isLogged()) location.replace('pos.html');
 
 /* Datang dari link konfirmasi email: sesi ada, toko belum dibuat.
    Langsung tawarkan penyelesaiannya daripada memaksa login ulang. */
@@ -226,7 +226,7 @@ async function doSetup() {
 
   if (r.ok) {
     UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'beranda.html'; }, 450);
+    setTimeout(function () { location.href = 'pos.html'; }, 450);
   } else {
     UI.toast(r.msg, 'error');
   }
@@ -248,7 +248,7 @@ async function doLogin() {
 
   if (r.ok) {
     UI.toast('Selamat datang!', 'ok');
-    setTimeout(function () { location.href = 'beranda.html'; }, 350);
+    setTimeout(function () { location.href = 'pos.html'; }, 350);
   } else if (r.needSetup) {
     /* Akun aktif tapi tokonya belum dibuat — selesaikan di sini */
     UI.toast(r.msg, 'warn');
@@ -279,7 +279,7 @@ async function doSignup() {
 
   if (r.ok) {
     UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'beranda.html'; }, 450);
+    setTimeout(function () { location.href = 'pos.html'; }, 450);
   } else if (r.needConfirm) {
     UI.toast(r.msg, 'warn');
     show('vLogin');

@@ -3,276 +3,246 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0C121C">
+<meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Pengaturan — StockFlow</title>
 <link rel="stylesheet" href="css/app.css">
+<style>
+/* Satu kartu, isinya baris-baris. Label kiri, kontrol kanan. */
+.sheet { max-width: 640px; margin: 0 auto; }
+.sheet .card { padding: 0; overflow: hidden; }
+
+.srow {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+}
+.srow:first-child { border-top: none; }
+.srow-lbl { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 550; }
+.srow-lbl small { display: block; font-size: 12.5px; font-weight: 400; color: var(--text-dim); margin-top: 1px; }
+.srow .input, .srow .select, .srow .textarea { box-shadow: none; }
+.srow-ctl { flex: none; display: flex; align-items: center; gap: 8px; }
+.srow.stack { flex-direction: column; align-items: stretch; gap: 8px; }
+.srow.split { gap: 10px; }
+.srow.split > * { flex: 1; min-width: 0; }
+
+/* Judul kelompok di dalam kartu */
+.sgrp {
+  padding: 16px 18px 8px;
+  font-size: 11.5px; font-weight: 650; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.sgrp:first-child { border-top: none; }
+
+/* Kepala profil */
+.sme { display: flex; align-items: center; gap: 13px; padding: 18px; }
+.sme-n { flex: 1; min-width: 0; }
+.sme-n b { display: block; font-size: 16px; font-weight: 650; }
+.sme-n span { display: block; font-size: 13px; color: var(--text-mid); }
+
+/* QRIS */
+.qr-box {
+  width: 150px; height: 150px; flex: none;
+  border: 1px dashed var(--border-mid); border-radius: var(--r);
+  background: var(--surface-2);
+  display: grid; place-items: center; overflow: hidden;
+}
+.qr-box img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.qr-box span { font-size: 12.5px; color: var(--text-dim); text-align: center; padding: 8px; }
+
+/* Bagian lanjutan yang dilipat */
+details.adv > summary {
+  list-style: none; cursor: pointer;
+  padding: 14px 18px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14.5px; font-weight: 550;
+}
+details.adv > summary::-webkit-details-marker { display: none; }
+details.adv > summary .chev { margin-left: auto; color: var(--text-dim); transition: transform .18s; }
+details.adv[open] > summary .chev { transform: rotate(90deg); }
+details.adv[open] > summary { background: var(--surface-2); }
+
+.danger-row { color: var(--danger); }
+@media (max-width: 560px) {
+  .srow { flex-wrap: wrap; }
+  .srow-ctl { width: 100%; }
+  .srow-ctl .btn { flex: 1; }
+  .qr-box { width: 100%; height: 190px; }
+}
+</style>
 </head>
 <body>
 
 <div id="app">
 <div class="content">
-  <div style="max-width:720px">
+<div class="sheet">
 
-    <!-- ============ PROFIL ============ -->
-    <div class="card mb16">
-      <div class="row mb16">
-        <div class="sb-avatar" style="width:48px;height:48px;font-size:17px" id="avatar">?</div>
-        <div style="flex:1;min-width:0">
-          <div class="fw7 fs18" id="myName">&mdash;</div>
-          <div class="fs13 c-mid" id="myEmail">&mdash;</div>
-        </div>
-        <span class="badge brand" id="myRole">&mdash;</span>
-      </div>
+<div class="card">
 
-      <div class="field">
-        <label class="label" for="myNameInput">NAMA SAYA</label>
-        <div class="row">
-          <input type="text" id="myNameInput" class="input" placeholder="Nama Anda">
-          <button class="btn" onclick="saveName()">Simpan</button>
-        </div>
-      </div>
-
-      <div class="field mb0">
-        <label class="label" for="newPass">UBAH PASSWORD</label>
-        <div class="row">
-          <input type="password" id="newPass" class="input" placeholder="Password baru (min. 8 karakter)"
-                 autocomplete="new-password">
-          <button class="btn" onclick="savePass()">Simpan</button>
-        </div>
-        <div class="hint">Password di-hash oleh Supabase &mdash; aplikasi tidak pernah menyimpannya.</div>
-      </div>
+  <!-- Profil -->
+  <div class="sme">
+    <div class="sb-avatar" style="width:44px;height:44px;font-size:16px" id="avatar">?</div>
+    <div class="sme-n">
+      <b id="myName">&mdash;</b>
+      <span id="myEmail">&mdash;</span>
     </div>
-
-    <!-- ============ TOKO (owner) ============ -->
-    <div class="card p0 mb16" id="bizCard">
-      <div class="card-hd"><h3>Informasi Toko</h3></div>
-      <div class="card-bd">
-        <div class="field">
-          <label class="label" for="bName">NAMA TOKO</label>
-          <input type="text" id="bName" class="input">
-          <div class="hint">Tampil di struk dan di header aplikasi.</div>
-        </div>
-
-        <div class="grid g2">
-          <div class="field">
-            <label class="label" for="bPhone">TELEPON</label>
-            <input type="text" id="bPhone" class="input" placeholder="08xxxxxxxxxx">
-          </div>
-          <div class="field">
-            <label class="label" for="bTax">PAJAK (%)</label>
-            <input type="number" id="bTax" class="input" placeholder="0" min="0" max="100" step="0.01">
-            <div class="hint">Isi 0 jika tidak memungut pajak.</div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label" for="bAddr">ALAMAT</label>
-          <textarea id="bAddr" class="textarea" placeholder="Alamat toko"></textarea>
-        </div>
-
-        <div class="field">
-          <label class="label" for="bNote">CATATAN DI STRUK</label>
-          <input type="text" id="bNote" class="input" placeholder="Terima kasih atas kunjungan Anda">
-        </div>
-
-        <button class="btn btn-primary btn-block" onclick="saveBiz()">Simpan Informasi Toko</button>
-      </div>
-    </div>
-
-    <!-- ============ PEMBAYARAN (owner) ============ -->
-    <div class="card p0 mb16" id="payCard">
-      <div class="card-hd"><h3>Pembayaran QRIS</h3></div>
-      <div class="card-bd">
-
-        <div id="credStatus" class="mb16"></div>
-
-        <p class="fs13 c-mid mb16" style="line-height:1.65">
-          Pasang Server Key Midtrans milik toko Anda. Dana pembayaran masuk
-          <strong>langsung ke rekening Anda</strong>, tidak melewati pihak lain.
-          Setelah terpasang, pembayaran terkonfirmasi otomatis dan kasir tidak perlu
-          mengecek mutasi.
-        </p>
-
-        <div class="field">
-          <label class="label" for="mKey">SERVER KEY MIDTRANS</label>
-          <input type="password" id="mKey" class="input" placeholder="Mid-server-..." autocomplete="off">
-          <div class="hint">
-            Dari dashboard Midtrans &rarr; Settings &rarr; Access Keys.
-            Setelah disimpan, key tidak dapat ditampilkan kembali &mdash; hanya bisa diganti.
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label" for="mEnv">LINGKUNGAN</label>
-          <select id="mEnv" class="select">
-            <option value="false">Sandbox &mdash; uji coba, uang tidak nyata</option>
-            <option value="true">Production &mdash; uang sungguhan</option>
-          </select>
-          <div class="hint">Pastikan sesuai dengan key yang Anda pakai. Key sandbox tidak bekerja di production.</div>
-        </div>
-
-        <div class="row">
-          <button class="btn btn-primary" onclick="saveCred()" style="flex:1">Simpan Kredensial</button>
-          <button class="btn btn-danger hide" id="credDel" onclick="delCred()">Hapus</button>
-        </div>
-
-        <div class="notice plain mt16" id="qrisToggleBox"></div>
-
-        <!-- QRIS statis -->
-        <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:18px">
-          <div class="fw6 mb8">QRIS Statis (cadangan)</div>
-          <p class="fs13 c-mid mb16" style="line-height:1.65">
-            Untuk toko yang belum punya akun Midtrans. Unggah gambar QRIS dari bank atau
-            e-wallet Anda. Pembeli mengetik nominal sendiri dan
-            <strong>pembayaran tidak terkonfirmasi otomatis</strong>.
-          </p>
-
-          <div class="tc">
-            <div id="qrisPrev" style="max-width:220px;margin:0 auto 13px;border-radius:var(--r-sm);background:var(--surface-2);border:1px dashed var(--border-mid);padding:16px;min-height:140px;display:grid;place-items:center"></div>
-            <input type="file" id="qFile" accept="image/*" class="hide" onchange="pickQris(this)">
-            <div class="row" style="justify-content:center">
-              <button class="btn btn-sm" onclick="document.getElementById('qFile').click()" id="qPickBtn"></button>
-              <button class="btn btn-sm btn-danger hide" id="qDel" onclick="delQris()">Hapus</button>
-            </div>
-            <div class="hint mt8">Format JPG atau PNG, maksimal 5MB.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- ============ PRINTER STRUK ============ -->
-    <div class="card p0 mb16">
-      <div class="card-hd">
-        <span data-ico="printer" data-ico-size="17" class="c-mid"></span>
-        <h3>Printer Struk Bluetooth</h3>
-      </div>
-      <div class="card-bd">
-
-        <div id="prnSupport" class="mb16"></div>
-
-        <div class="row mb16" style="padding:13px;background:var(--surface-2);border-radius:var(--r-sm)">
-          <span data-ico="bluetooth" data-ico-size="18" id="prnDot" class="c-dim"></span>
-          <div style="flex:1;min-width:0">
-            <div class="fw6" id="prnName">Belum terhubung</div>
-            <div class="fs13 c-mid" id="prnState">Hubungkan printer untuk mencetak struk langsung.</div>
-          </div>
-        </div>
-
-        <div class="row mb16" id="prnActions">
-          <button class="btn btn-primary" onclick="prnConnect()" id="prnConnectBtn" style="flex:1">
-            Hubungkan Printer
-          </button>
-          <button class="btn hide" onclick="prnTest()" id="prnTestBtn">Tes Cetak</button>
-          <button class="btn btn-danger hide" onclick="prnDisconnect()" id="prnOffBtn">Putuskan</button>
-        </div>
-
-        <div class="row" style="padding-top:14px;border-top:1px solid var(--border)">
-          <div style="flex:1">
-            <div class="fw6">Cetak otomatis setelah transaksi</div>
-            <div class="fs13 c-mid">Struk langsung keluar tanpa menekan tombol cetak.</div>
-          </div>
-          <button class="btn btn-sm" id="prnAutoBtn" onclick="prnToggleAuto()">&mdash;</button>
-        </div>
-
-        <details class="mt16">
-          <summary class="fs13 c-mid" style="cursor:pointer">Printer saya tidak terdeteksi</summary>
-          <div class="fs13 c-mid mt12" style="line-height:1.7">
-            <p class="mb8">Periksa berurutan:</p>
-            <ol style="margin-left:18px">
-              <li>Printer menyala dan lampunya tidak berkedip cepat (berkedip = sedang pairing)</li>
-              <li>Printer <strong>tidak</strong> sedang terhubung ke HP atau aplikasi lain</li>
-              <li>Bluetooth komputer atau HP aktif</li>
-              <li>Jarak di bawah 5 meter</li>
-            </ol>
-            <p class="mt12 mb8">
-              Kalau tetap tidak muncul, kemungkinan printer Anda hanya mendukung
-              <strong>Bluetooth Classic (SPP)</strong>. Browser tidak bisa menjangkau jenis itu
-              &mdash; hanya printer dengan <strong>Bluetooth 4.0 / BLE</strong> yang bisa.
-              Cek kemasan atau spesifikasi printer Anda.
-            </p>
-            <p>Sebagai cadangan, struk tetap bisa dicetak lewat dialog print browser.</p>
-          </div>
-        </details>
-      </div>
-    </div>
-
-    <!-- ============ TAMPILAN ============ -->
-    <div class="card p0 mb16">
-      <div class="card-hd"><h3>Tampilan</h3></div>
-      <div class="card-bd">
-        <div class="row">
-          <div style="flex:1">
-            <div class="fw6">Mode Gelap</div>
-            <div class="fs13 c-mid">Nyaman untuk mata saat cahaya redup.</div>
-          </div>
-          <button class="btn" id="themeBtn" onclick="flipTheme()">&mdash;</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ DATA ANDA ============ -->
-    <div class="card p0 mb16">
-      <div class="card-hd"><h3>Data Anda</h3></div>
-      <div class="card-bd">
-        <div class="row mb16">
-          <div style="flex:1">
-            <div class="fw6">Unduh semua data</div>
-            <div class="fs13 c-mid">
-              Produk, transaksi, stok, dan pengaturan dalam satu berkas JSON.
-            </div>
-          </div>
-          <button class="btn" onclick="exportData()" id="expBtn">Unduh</button>
-        </div>
-
-        <div class="row" id="expCsvRow">
-          <div style="flex:1">
-            <div class="fw6">Unduh transaksi (CSV)</div>
-            <div class="fs13 c-mid">Untuk dibuka di Excel atau Google Sheets.</div>
-          </div>
-          <button class="btn" onclick="exportCsv()">Unduh CSV</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ AKUN ============ -->
-    <div class="card p0 mb16">
-      <div class="card-hd"><h3>Akun</h3></div>
-      <div class="card-bd">
-        <div class="row">
-          <div style="flex:1">
-            <div class="fw6">Keluar dari akun</div>
-            <div class="fs13 c-mid">Anda perlu masuk kembali dengan email dan password.</div>
-          </div>
-          <button class="btn" onclick="Auth.logout()">Keluar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ ZONA BAHAYA (owner) ============ -->
-    <div class="card p0 mb16" id="dangerCard" style="border-color:var(--danger)">
-      <div class="card-hd" style="border-color:var(--danger)">
-        <h3 class="c-danger">Hapus Toko</h3>
-      </div>
-      <div class="card-bd">
-        <p class="fs13 c-mid mb16" style="line-height:1.65">
-          Menghapus toko beserta <strong>seluruh</strong> produk, transaksi, riwayat stok,
-          dan akun karyawan. Akun Anda sendiri juga ikut terhapus. Tindakan ini
-          <strong>permanen dan tidak dapat dibatalkan</strong>.
-        </p>
-        <p class="fs13 c-mid mb16">Unduh data Anda lebih dulu bila masih diperlukan.</p>
-        <button class="btn btn-danger" onclick="openDelete()">Hapus Toko &amp; Semua Data</button>
-      </div>
-    </div>
-
-    <p class="tc c-dim fs12 mt24" style="padding-bottom:8px">
-      StockFlow &middot;
-      <a href="privasi.html" class="c-dim">Kebijakan Privasi</a> &middot;
-      <a href="ketentuan.html" class="c-dim">Syarat &amp; Ketentuan</a>
-    </p>
-
+    <span class="badge brand" id="myRole">&mdash;</span>
   </div>
+
+  <div class="srow">
+    <div class="srow-lbl">Nama saya</div>
+    <div class="srow-ctl" style="flex:1;max-width:320px">
+      <input type="text" id="myNameInput" class="input" style="flex:1">
+      <button class="btn btn-sm" onclick="saveName()">Simpan</button>
+    </div>
+  </div>
+
+  <div class="srow">
+    <div class="srow-lbl">Password baru</div>
+    <div class="srow-ctl" style="flex:1;max-width:320px">
+      <input type="password" id="newPass" class="input" placeholder="Min. 8 karakter"
+             autocomplete="new-password" style="flex:1">
+      <button class="btn btn-sm" onclick="savePass()">Simpan</button>
+    </div>
+  </div>
+
+  <!-- ============ TOKO ============ -->
+  <div class="sgrp owner-only">Toko</div>
+
+  <div class="srow owner-only">
+    <div class="srow-lbl">Nama toko</div>
+    <div class="srow-ctl" style="flex:1;max-width:320px">
+      <input type="text" id="bName" class="input" style="flex:1">
+    </div>
+  </div>
+
+  <div class="srow split owner-only">
+    <div><label class="label" for="bPhone">Telepon</label>
+      <input type="text" id="bPhone" class="input" placeholder="08xxxxxxxxxx"></div>
+    <div><label class="label" for="bTax">Pajak (%)</label>
+      <input type="number" id="bTax" class="input" min="0" max="100" step="0.01"></div>
+  </div>
+
+  <div class="srow stack owner-only">
+    <label class="label" for="bAddr">Alamat</label>
+    <textarea id="bAddr" class="textarea" style="min-height:64px"></textarea>
+  </div>
+
+  <div class="srow stack owner-only">
+    <label class="label" for="bNote">Catatan di struk</label>
+    <input type="text" id="bNote" class="input">
+  </div>
+
+  <div class="srow owner-only">
+    <div class="srow-lbl"></div>
+    <div class="srow-ctl">
+      <button class="btn btn-primary btn-sm" onclick="saveBiz()">Simpan toko</button>
+    </div>
+  </div>
+
+  <!-- ============ QRIS ============ -->
+  <div class="sgrp owner-only">QRIS</div>
+
+  <div class="srow owner-only">
+    <div class="qr-box" id="qrisPrev"></div>
+    <div class="srow-lbl">
+      Gambar QRIS toko
+      <small>Ditampilkan di kasir saat pembeli memilih QRIS.</small>
+    </div>
+    <div class="srow-ctl" style="flex-direction:column;align-items:stretch">
+      <input type="file" id="qFile" accept="image/*" class="hide" onchange="pickQris(this)">
+      <button class="btn btn-sm" onclick="document.getElementById('qFile').click()" id="qPickBtn"></button>
+      <button class="btn btn-sm btn-danger hide" id="qDel" onclick="delQris()">Hapus</button>
+    </div>
+  </div>
+
+  <details class="adv owner-only">
+    <summary>
+      <span data-ico="zap" data-ico-size="16" class="c-dim"></span>
+      Konfirmasi otomatis lewat Midtrans
+      <span class="badge" id="credBadge">Nonaktif</span>
+      <span class="chev" data-ico="forward" data-ico-size="15"></span>
+    </summary>
+
+    <div class="srow stack">
+      <label class="label" for="mKey">Server Key Midtrans</label>
+      <input type="password" id="mKey" class="input" placeholder="Mid-server-..." autocomplete="off">
+    </div>
+
+    <div class="srow split">
+      <div>
+        <label class="label" for="mEnv">Lingkungan</label>
+        <select id="mEnv" class="select">
+          <option value="false">Sandbox</option>
+          <option value="true">Production</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="saveCred()" style="flex:1">Simpan</button>
+        <button class="btn btn-sm btn-danger hide" id="credDel" onclick="delCred()">Hapus</button>
+      </div>
+    </div>
+
+    <div class="srow">
+      <div class="srow-lbl">QRIS otomatis di kasir</div>
+      <div class="srow-ctl"><button class="btn btn-sm" id="qrisToggle" onclick="toggleQris()">&mdash;</button></div>
+    </div>
+  </details>
+
+  <!-- ============ PRINTER ============ -->
+  <div class="sgrp">Printer struk</div>
+
+  <div class="srow">
+    <span data-ico="printer" data-ico-size="18" id="prnDot" class="c-dim"></span>
+    <div class="srow-lbl" id="prnName">Belum terhubung</div>
+    <div class="srow-ctl">
+      <button class="btn btn-sm" onclick="prnConnect()" id="prnConnectBtn">Hubungkan</button>
+      <button class="btn btn-sm hide" onclick="prnTest()" id="prnTestBtn">Tes</button>
+      <button class="btn btn-sm btn-danger hide" onclick="prnDisconnect()" id="prnOffBtn">Putuskan</button>
+    </div>
+  </div>
+
+  <div class="srow">
+    <div class="srow-lbl">Cetak otomatis</div>
+    <div class="srow-ctl"><button class="btn btn-sm" id="prnAutoBtn" onclick="prnToggleAuto()">&mdash;</button></div>
+  </div>
+
+  <!-- ============ LAINNYA ============ -->
+  <div class="sgrp">Lainnya</div>
+
+  <div class="srow">
+    <div class="srow-lbl">Mode gelap</div>
+    <div class="srow-ctl"><button class="btn btn-sm" id="themeBtn" onclick="flipTheme()">&mdash;</button></div>
+  </div>
+
+  <div class="srow">
+    <div class="srow-lbl">Unduh data</div>
+    <div class="srow-ctl">
+      <button class="btn btn-sm" onclick="exportData()">JSON</button>
+      <button class="btn btn-sm owner-only" onclick="exportCsv()">CSV</button>
+    </div>
+  </div>
+
+  <div class="srow">
+    <div class="srow-lbl">Keluar dari akun</div>
+    <div class="srow-ctl"><button class="btn btn-sm" onclick="Auth.logout()">Keluar</button></div>
+  </div>
+
+  <div class="srow owner-only">
+    <div class="srow-lbl danger-row">Hapus toko &amp; semua data</div>
+    <div class="srow-ctl"><button class="btn btn-sm btn-danger" onclick="openDelete()">Hapus</button></div>
+  </div>
+
+</div>
+
+<p class="tc c-dim fs12 mt16" style="padding-bottom:8px">
+  <a href="privasi.html" class="c-dim">Privasi</a> &middot;
+  <a href="ketentuan.html" class="c-dim">Ketentuan</a>
+</p>
+
+</div>
 </div>
 </div>
 
@@ -280,20 +250,20 @@
 <div class="modal" id="mDel">
   <div class="modal-box narrow">
     <div class="modal-hd">
-      <h3 class="c-danger">Hapus Toko Permanen</h3>
+      <h3 class="c-danger">Hapus toko</h3>
       <button class="modal-x" onclick="UI.closeModal('mDel')" id="delX"></button>
     </div>
     <div class="modal-bd">
-      <div class="notice danger mb16" id="delWarn"></div>
+      <p class="fs13 c-mid mb16">Semua produk, transaksi, dan akun karyawan hilang permanen.</p>
       <div class="field mb0">
-        <label class="label" for="delConfirm">KETIK <strong>HAPUS</strong> UNTUK MELANJUTKAN</label>
+        <label class="label" for="delConfirm">Ketik HAPUS</label>
         <input type="text" id="delConfirm" class="input" placeholder="HAPUS" autocomplete="off"
                oninput="syncDelBtn()">
       </div>
     </div>
     <div class="modal-ft">
       <button class="btn" onclick="UI.closeModal('mDel')">Batal</button>
-      <button class="btn btn-danger" id="delBtn" onclick="doDelete()" disabled>Hapus Permanen</button>
+      <button class="btn btn-danger" id="delBtn" onclick="doDelete()" disabled>Hapus permanen</button>
     </div>
   </div>
 </div>
@@ -308,29 +278,24 @@
 <script>
 if (!Auth.guard()) throw 'redirect';
 var U = Auth.user();
+var isOwner = U.role === 'owner';
 var biz = null, qUrl = null, cred = null;
 
 UI.shell('settings', 'Pengaturan');
 
-var isOwner = U.role === 'owner';
 if (!isOwner) {
-  ['bizCard', 'payCard', 'dangerCard', 'expCsvRow'].forEach(function (id) {
-    document.getElementById(id).classList.add('hide');
-  });
+  document.querySelectorAll('.owner-only').forEach(function (el) { el.classList.add('hide'); });
 }
 
-document.getElementById('delX').innerHTML   = UI.ic('close', 18);
-document.getElementById('qPickBtn').innerHTML = UI.ic('camera', 16) + ' Pilih Gambar';
+document.getElementById('delX').innerHTML     = UI.ic('close', 18);
+document.getElementById('qPickBtn').innerHTML = UI.ic('camera', 15) + ' Pilih';
 document.getElementById('avatar').textContent  = UI.initials(U.name);
 document.getElementById('myName').textContent  = U.name;
 document.getElementById('myEmail').textContent = U.email || '';
 document.getElementById('myRole').textContent  = isOwner ? 'Owner' : 'Staff';
 document.getElementById('myNameInput').value   = U.name;
 
-document.getElementById('delWarn').innerHTML =
-  UI.ic('alert', 17) + '<div><strong>Tidak ada cara memulihkan data ini</strong>' +
-  'Seluruh transaksi, produk, dan akun karyawan akan hilang permanen.</div>';
-
+/* ---------- Tampilan ---------- */
 function syncThemeBtn() {
   document.getElementById('themeBtn').textContent = UI.isDark() ? 'Matikan' : 'Nyalakan';
 }
@@ -364,31 +329,96 @@ async function load() {
 }
 
 /* ============================================================
-   KREDENSIAL PEMBAYARAN
+   QRIS: gambar yang diunggah sendiri
+   ============================================================ */
+function showQris() {
+  document.getElementById('qrisPrev').innerHTML = qUrl
+    ? '<img src="' + UI.esc(qUrl) + '" alt="QRIS toko">'
+    : '<span>Belum ada gambar</span>';
+  document.getElementById('qDel').classList.toggle('hide', !qUrl);
+  document.getElementById('qPickBtn').innerHTML =
+    UI.ic('camera', 15) + (qUrl ? ' Ganti' : ' Pilih');
+}
+
+function pickQris(inp) {
+  var f = inp.files && inp.files[0];
+  if (!f) return;
+
+  /* Sebagian browser HP tidak mengisi f.type — pakai ekstensi sebagai cadangan */
+  var looksImage = /^image\//.test(f.type || '') ||
+                   /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name || '');
+  if (!looksImage) return UI.toast('Harus berupa gambar', 'error');
+  if (f.size > 5 * 1024 * 1024) return UI.toast('Maksimal 5MB', 'error');
+
+  /* Tampilkan dulu dari berkas lokal supaya terasa cepat */
+  var fr = new FileReader();
+  fr.onload = async function (e) {
+    var preview = e.target.result;
+    qUrl = preview;
+    showQris();
+
+    UI.loading(true);
+    var url = await API.upload(f, 'qris/' + U.business_id);
+
+    if (!url) {
+      UI.loading(false);
+      qUrl = biz ? biz.qris_static_url : null;
+      showQris();
+      return UI.toast(API.uploadError || 'Gagal mengunggah', 'error');
+    }
+
+    var up = await API.from('businesses').update({ qris_static_url: url })
+               .eq('id', U.business_id).run();
+    UI.loading(false);
+
+    if (up.error) {
+      qUrl = biz ? biz.qris_static_url : null;
+      showQris();
+      return UI.toast(up.error.message, 'error');
+    }
+
+    qUrl = url;
+    if (biz) biz.qris_static_url = url;
+    showQris();
+    await Auth.reload();
+    UI.toast('QRIS tersimpan', 'ok');
+  };
+  fr.onerror = function () { UI.toast('Gagal membaca berkas', 'error'); };
+  fr.readAsDataURL(f);
+}
+
+function delQris() {
+  UI.confirm({ title: 'Hapus gambar QRIS?', text: 'Bisa diunggah lagi nanti.', ok: 'Hapus', danger: true })
+    .then(async function (ok) {
+      if (!ok) return;
+      UI.loading(true);
+      var r = await API.from('businesses').update({ qris_static_url: null })
+                .eq('id', U.business_id).run();
+      UI.loading(false);
+      if (r.error) return UI.toast(r.error.message, 'error');
+      qUrl = null;
+      if (biz) biz.qris_static_url = null;
+      document.getElementById('qFile').value = '';
+      showQris();
+      await Auth.reload();
+      UI.toast('QRIS dihapus', 'ok');
+    });
+}
+
+/* ============================================================
+   MIDTRANS (opsional)
    ============================================================ */
 function showCred() {
-  var host = document.getElementById('credStatus');
-  var on   = !!(biz && biz.qris_enabled);
+  var on = !!(biz && biz.qris_enabled);
+  var has = !!(cred && cred.configured);
 
-  if (cred && cred.configured) {
-    document.getElementById('mEnv').value = String(!!cred.is_production);
-    document.getElementById('credDel').classList.remove('hide');
-    host.innerHTML = UI.notice(
-      cred.is_production ? 'ok' : 'info',
-      'Kredensial terpasang' + (cred.is_production ? ' — Production' : ' — Sandbox'),
-      'Key berakhiran <strong>' + UI.esc(cred.key_hint || '????') + '</strong>, dipasang ' +
-      UI.dateOnly(cred.updated_at) + '. Dana masuk ke rekening akun Midtrans Anda.');
-  } else {
-    document.getElementById('credDel').classList.add('hide');
-    host.innerHTML = UI.notice('plain', 'Belum terpasang',
-      'Kasir akan memakai QRIS statis atau tunai sampai kredensial diisi.');
-  }
+  var badge = document.getElementById('credBadge');
+  badge.textContent = on ? 'Aktif' : (has ? 'Terpasang' : 'Nonaktif');
+  badge.className = 'badge ' + (on ? 'ok' : '');
 
-  document.getElementById('qrisToggleBox').innerHTML =
-    '<div style="flex:1"><strong>QRIS otomatis di kasir</strong>' +
-    (on ? 'Aktif — kasir menampilkan QR dinamis.' : 'Nonaktif — kasir tidak menawarkan QRIS otomatis.') +
-    '</div><button class="btn btn-sm" onclick="toggleQris()">' +
-    (on ? 'Matikan' : 'Aktifkan') + '</button>';
+  document.getElementById('credDel').classList.toggle('hide', !has);
+  document.getElementById('qrisToggle').textContent = on ? 'Matikan' : 'Aktifkan';
+  if (has) document.getElementById('mEnv').value = String(!!cred.is_production);
 }
 
 async function saveCred() {
@@ -396,32 +426,21 @@ async function saveCred() {
   var prod = document.getElementById('mEnv').value === 'true';
 
   if (!key) return UI.toast('Masukkan Server Key', 'error');
-  if (key.length < 20) return UI.toast('Server Key terlihat terlalu pendek', 'error');
   if (/^Mid-client-|^SB-Mid-client-/i.test(key)) {
-    return UI.toast('Itu Client Key. Yang dibutuhkan Server Key.', 'error');
+    return UI.toast('Itu Client Key, bukan Server Key', 'error');
   }
 
   UI.loading(true);
   var body = {
-    business_id: U.business_id,
-    provider: 'midtrans',
-    server_key: key,
-    is_production: prod,
-    key_hint: key.slice(-4),
-    updated_at: new Date().toISOString(),
-    updated_by: U.id,
+    business_id: U.business_id, provider: 'midtrans', server_key: key,
+    is_production: prod, key_hint: key.slice(-4),
+    updated_at: new Date().toISOString(), updated_by: U.id,
   };
-
-  /* Upsert manual: coba update dulu, kalau belum ada baru insert */
   var up = await API.from('payment_credentials').update(body).eq('business_id', U.business_id).run();
-  var touched = up.data && up.data.length;
-  if (!touched) {
+  if (!(up.data && up.data.length)) {
     var ins = await API.from('payment_credentials').insert(body).run();
     if (ins.error) { UI.loading(false); return UI.toast(ins.error.message, 'error'); }
-  } else if (up.error) {
-    UI.loading(false); return UI.toast(up.error.message, 'error');
   }
-
   var c = await API.rpc('payment_credential_status', {});
   UI.loading(false);
 
@@ -432,106 +451,42 @@ async function saveCred() {
 }
 
 function delCred() {
-  UI.confirm({
-    title: 'Hapus kredensial?',
-    text: 'Pembayaran QRIS otomatis akan berhenti sampai Anda memasang key kembali.',
-    ok: 'Hapus', danger: true,
-  }).then(async function (ok) {
-    if (!ok) return;
-    UI.loading(true);
-    var r = await API.from('payment_credentials').remove().eq('business_id', U.business_id).run();
-    UI.loading(false);
-    if (r.error) return UI.toast(r.error.message, 'error');
-    cred = { configured: false };
-    showCred();
-    UI.toast('Kredensial dihapus', 'ok');
-  });
+  UI.confirm({ title: 'Hapus kredensial?', text: 'QRIS otomatis berhenti.', ok: 'Hapus', danger: true })
+    .then(async function (ok) {
+      if (!ok) return;
+      UI.loading(true);
+      var r = await API.from('payment_credentials').remove().eq('business_id', U.business_id).run();
+      UI.loading(false);
+      if (r.error) return UI.toast(r.error.message, 'error');
+      cred = { configured: false };
+      showCred();
+      UI.toast('Dihapus', 'ok');
+    });
 }
 
 async function toggleQris() {
   var next = !(biz && biz.qris_enabled);
-
   if (next && !(cred && cred.configured)) {
-    var go = await UI.confirm({
-      title: 'Kredensial belum terpasang',
-      text: 'Tanpa Server Key Midtrans, pembayaran QRIS akan gagal saat dicoba di kasir. ' +
-            'Tetap aktifkan?',
-      ok: 'Tetap aktifkan',
-    });
-    if (!go) return;
+    return UI.toast('Pasang Server Key dulu', 'error');
   }
-
   UI.loading(true);
   var r = await API.from('businesses').update({ qris_enabled: next }).eq('id', U.business_id).run();
   UI.loading(false);
   if (r.error) return UI.toast(r.error.message, 'error');
-
   biz.qris_enabled = next;
   showCred();
   await Auth.reload();
-  UI.toast(next ? 'QRIS otomatis aktif' : 'QRIS otomatis dimatikan', 'ok');
+  UI.toast(next ? 'QRIS otomatis aktif' : 'Dimatikan', 'ok');
 }
 
 /* ============================================================
-   QRIS STATIS
-   ============================================================ */
-function showQris() {
-  document.getElementById('qrisPrev').innerHTML = qUrl
-    ? '<img src="' + UI.esc(qUrl) + '" style="width:100%;border-radius:6px;background:#fff">'
-    : '<span class="c-dim fs13">Belum ada QRIS statis</span>';
-  document.getElementById('qDel').classList.toggle('hide', !qUrl);
-}
-
-function pickQris(inp) {
-  var f = inp.files && inp.files[0];
-  if (!f) return;
-  if (f.size > 5 * 1024 * 1024) return UI.toast('Gambar maksimal 5MB', 'error');
-
-  var r = new FileReader();
-  r.onload = async function (e) {
-    qUrl = e.target.result;
-    showQris();
-
-    UI.loading(true);
-    var url = await API.upload(f, 'qris/' + U.business_id);
-    if (!url) { UI.loading(false); return UI.toast('Gagal mengunggah', 'error'); }
-
-    var up = await API.from('businesses').update({ qris_static_url: url }).eq('id', U.business_id).run();
-    UI.loading(false);
-    if (up.error) return UI.toast(up.error.message, 'error');
-
-    qUrl = url; showQris();
-    await Auth.reload();
-    UI.toast('QRIS statis tersimpan', 'ok');
-  };
-  r.readAsDataURL(f);
-}
-
-function delQris() {
-  UI.confirm({ title: 'Hapus QRIS statis?', text: 'Bisa diunggah kembali nanti.', ok: 'Hapus', danger: true })
-    .then(async function (ok) {
-      if (!ok) return;
-      UI.loading(true);
-      var r = await API.from('businesses').update({ qris_static_url: null }).eq('id', U.business_id).run();
-      UI.loading(false);
-      if (r.error) return UI.toast(r.error.message, 'error');
-      qUrl = null;
-      document.getElementById('qFile').value = '';
-      showQris();
-      await Auth.reload();
-      UI.toast('QRIS statis dihapus', 'ok');
-    });
-}
-
-/* ============================================================
-   INFO TOKO & PROFIL
+   TOKO & PROFIL
    ============================================================ */
 async function saveBiz() {
   var name = document.getElementById('bName').value.trim();
   if (!name) return UI.toast('Nama toko wajib diisi', 'error');
-
   var tax = Number(document.getElementById('bTax').value) || 0;
-  if (tax < 0 || tax > 100) return UI.toast('Pajak harus antara 0 dan 100', 'error');
+  if (tax < 0 || tax > 100) return UI.toast('Pajak 0 sampai 100', 'error');
 
   UI.loading(true);
   var r = await API.from('businesses').update({
@@ -545,131 +500,35 @@ async function saveBiz() {
 
   if (r.error) return UI.toast(r.error.message, 'error');
   await Auth.reload();
-  UI.toast('Informasi toko tersimpan', 'ok');
+  UI.toast('Tersimpan', 'ok');
   setTimeout(function () { location.reload(); }, 600);
 }
 
 async function saveName() {
   var n = document.getElementById('myNameInput').value.trim();
   if (!n) return UI.toast('Nama tidak boleh kosong', 'error');
-
   UI.loading(true);
   var r = await API.from('profiles').update({ name: n }).eq('id', U.id).run();
   UI.loading(false);
   if (r.error) return UI.toast(r.error.message, 'error');
-
   await Auth.reload();
-  UI.toast('Nama diperbarui', 'ok');
+  UI.toast('Tersimpan', 'ok');
   setTimeout(function () { location.reload(); }, 600);
 }
 
 async function savePass() {
   var p = document.getElementById('newPass').value;
-  if (p.length < 8) return UI.toast('Password minimal 8 karakter', 'error');
-
+  if (p.length < 8) return UI.toast('Minimal 8 karakter', 'error');
   UI.loading(true);
   var r = await Auth.changePassword(p);
   UI.loading(false);
   if (!r.ok) return UI.toast(r.msg, 'error');
-
   document.getElementById('newPass').value = '';
   UI.toast('Password diperbarui', 'ok');
 }
 
 /* ============================================================
-   EXPORT DATA
-   ============================================================ */
-function download(filename, content, type) {
-  var blob = new Blob([content], { type: type });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-}
-
-async function exportData() {
-  UI.loading(true);
-  var r = await API.rpc('export_my_data', {});
-  UI.loading(false);
-
-  if (r.error) return UI.toast(r.error.message, 'error');
-
-  var stamp = new Date().toISOString().slice(0, 10);
-  download('stockflow-data-' + stamp + '.json',
-    JSON.stringify(r.data, null, 2), 'application/json');
-  UI.toast('Data diunduh', 'ok');
-}
-
-async function exportCsv() {
-  UI.loading(true);
-  var o = await API.from('orders').select('*').order('created_at', false).limit(5000);
-  UI.loading(false);
-
-  if (o.error) return UI.toast(o.error.message, 'error');
-  if (!o.data.length) return UI.toast('Belum ada transaksi', 'warn');
-
-  var head = ['No Invoice', 'Tanggal', 'Kasir', 'Pembeli', 'Metode', 'Status',
-              'Subtotal', 'Diskon', 'Pajak', 'Total', 'HPP', 'Laba'];
-  var esc = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
-
-  var lines = [head.join(',')];
-  o.data.forEach(function (x) {
-    lines.push([
-      esc(x.order_no), esc(new Date(x.created_at).toLocaleString('id-ID')),
-      esc(x.cashier_name), esc(x.customer_name), esc(x.payment_method), esc(x.status),
-      x.subtotal, x.discount, x.tax, x.total, x.cost_total,
-      Number(x.total) - Number(x.cost_total),
-    ].join(','));
-  });
-
-  download('stockflow-transaksi-' + new Date().toISOString().slice(0, 10) + '.csv',
-    '﻿' + lines.join('\n'), 'text/csv;charset=utf-8');
-  UI.toast('CSV diunduh', 'ok');
-}
-
-/* ============================================================
-   HAPUS AKUN
-   ============================================================ */
-function openDelete() {
-  document.getElementById('delConfirm').value = '';
-  syncDelBtn();
-  UI.openModal('mDel');
-}
-
-function syncDelBtn() {
-  document.getElementById('delBtn').disabled =
-    document.getElementById('delConfirm').value.trim().toUpperCase() !== 'HAPUS';
-}
-
-async function doDelete() {
-  if (document.getElementById('delConfirm').value.trim().toUpperCase() !== 'HAPUS') return;
-
-  document.getElementById('delBtn').disabled = true;
-  UI.loading(true);
-
-  var r = await API.invoke('delete-account', { confirm: 'HAPUS' });
-
-  UI.loading(false);
-
-  if (r.error) {
-    document.getElementById('delBtn').disabled = false;
-    return UI.toast(r.error.message, 'error');
-  }
-
-  UI.toast('Toko dan seluruh data telah dihapus', 'ok');
-  setTimeout(function () {
-    try {
-      localStorage.removeItem('sf5_token');
-      localStorage.removeItem('sf5_profile');
-    } catch (e) {}
-    location.href = 'index.html';
-  }, 1400);
-}
-
-
-/* ============================================================
-   PRINTER STRUK
+   PRINTER
    ============================================================ */
 var AUTO_KEY = 'sf5_print_auto';
 var prnAuto = (function () {
@@ -679,41 +538,28 @@ var prnAuto = (function () {
 function prnSyncAuto() {
   document.getElementById('prnAutoBtn').textContent = prnAuto ? 'Matikan' : 'Nyalakan';
 }
-
 function prnToggleAuto() {
   prnAuto = !prnAuto;
   try { localStorage.setItem(AUTO_KEY, prnAuto ? '1' : '0'); } catch (e) {}
   prnSyncAuto();
-  UI.toast(prnAuto ? 'Cetak otomatis aktif' : 'Cetak otomatis dimatikan', 'ok');
 }
 
 function prnRender(st) {
   var sup = Printer.support();
   var on  = st.connected;
 
-  document.getElementById('prnName').textContent =
-    on ? (st.name || 'Printer') : (st.remembered ? st.name + ' (terputus)' : 'Belum terhubung');
-
-  document.getElementById('prnState').textContent = on
-    ? 'Terhubung dan siap mencetak.'
+  document.getElementById('prnName').innerHTML = on
+    ? UI.esc(st.name || 'Printer') + '<small>Siap mencetak</small>'
     : (sup.ok
-        ? 'Hubungkan printer untuk mencetak struk langsung.'
-        : 'Cetak lewat dialog print browser.');
+        ? (st.remembered ? UI.esc(st.name) + '<small>Terputus, tekan Hubungkan</small>'
+                         : 'Belum terhubung<small>Printer 58mm Bluetooth</small>')
+        : 'Tidak didukung<small>' + UI.esc(sup.reason) + '</small>');
 
   document.getElementById('prnDot').className = on ? 'c-ok' : 'c-dim';
-
-  document.getElementById('prnConnectBtn').textContent = on ? 'Ganti Printer' : 'Hubungkan Printer';
+  document.getElementById('prnConnectBtn').textContent = on ? 'Ganti' : 'Hubungkan';
+  document.getElementById('prnConnectBtn').disabled = !sup.ok;
   document.getElementById('prnTestBtn').classList.toggle('hide', !on);
   document.getElementById('prnOffBtn').classList.toggle('hide', !on);
-
-  /* Tombol dinonaktifkan kalau lingkungannya memang tidak mendukung */
-  document.getElementById('prnConnectBtn').disabled = !sup.ok;
-
-  document.getElementById('prnSupport').innerHTML = sup.ok
-    ? (on ? '' : UI.notice('plain', null,
-        'Printer thermal 58mm dengan Bluetooth 4.0 (BLE) dan perintah ESC/POS.'))
-    : UI.notice('warn', 'Bluetooth tidak tersedia di sini', UI.esc(sup.reason));
-
   UI.hydrateIcons(document);
 }
 
@@ -725,9 +571,8 @@ async function prnConnect() {
     UI.toast('Printer terhubung', 'ok');
   } catch (e) {
     UI.loading(false);
-    /* Pengguna menutup dialog pemilihan bukan error yang perlu dilaporkan */
     if (e && (e.name === 'NotFoundError' || /cancel/i.test(e.message || ''))) return;
-    UI.toast(e.message || 'Gagal menghubungkan printer', 'error');
+    UI.toast(e.message || 'Gagal menghubungkan', 'error');
   }
 }
 
@@ -746,15 +591,86 @@ async function prnTest() {
 function prnDisconnect() {
   Printer.disconnect();
   Printer.forget();
-  UI.toast('Printer diputuskan', 'ok');
   prnRender(Printer.info());
+  UI.toast('Diputuskan', 'ok');
 }
 
 Printer.onChange(prnRender);
 prnRender(Printer.info());
 prnSyncAuto();
-/* Sambung ulang diam-diam kalau printer pernah diizinkan */
 Printer.reconnect();
+
+/* ============================================================
+   DATA
+   ============================================================ */
+function download(filename, content, type) {
+  var blob = new Blob([content], { type: type });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+async function exportData() {
+  UI.loading(true);
+  var r = await API.rpc('export_my_data', {});
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  download('stockflow-' + new Date().toISOString().slice(0, 10) + '.json',
+    JSON.stringify(r.data, null, 2), 'application/json');
+  UI.toast('Diunduh', 'ok');
+}
+
+async function exportCsv() {
+  UI.loading(true);
+  var o = await API.from('orders').select('*').order('created_at', false).limit(5000);
+  UI.loading(false);
+  if (o.error) return UI.toast(o.error.message, 'error');
+  if (!o.data.length) return UI.toast('Belum ada transaksi', 'warn');
+
+  var esc = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+  var lines = [['No Invoice','Tanggal','Kasir','Pembeli','Metode','Status',
+                'Subtotal','Diskon','Pajak','Total','HPP','Laba'].join(',')];
+  o.data.forEach(function (x) {
+    lines.push([esc(x.order_no), esc(new Date(x.created_at).toLocaleString('id-ID')),
+      esc(x.cashier_name), esc(x.customer_name), esc(x.payment_method), esc(x.status),
+      x.subtotal, x.discount, x.tax, x.total, x.cost_total,
+      Number(x.total) - Number(x.cost_total)].join(','));
+  });
+  download('transaksi-' + new Date().toISOString().slice(0, 10) + '.csv',
+    '' + lines.join('\n'), 'text/csv;charset=utf-8');
+  UI.toast('Diunduh', 'ok');
+}
+
+/* ============================================================
+   HAPUS TOKO
+   ============================================================ */
+function openDelete() {
+  document.getElementById('delConfirm').value = '';
+  syncDelBtn();
+  UI.openModal('mDel');
+}
+function syncDelBtn() {
+  document.getElementById('delBtn').disabled =
+    document.getElementById('delConfirm').value.trim().toUpperCase() !== 'HAPUS';
+}
+async function doDelete() {
+  if (document.getElementById('delConfirm').value.trim().toUpperCase() !== 'HAPUS') return;
+  document.getElementById('delBtn').disabled = true;
+  UI.loading(true);
+  var r = await API.invoke('delete-account', { confirm: 'HAPUS' });
+  UI.loading(false);
+  if (r.error) {
+    document.getElementById('delBtn').disabled = false;
+    return UI.toast(r.error.message, 'error');
+  }
+  UI.toast('Toko dihapus', 'ok');
+  setTimeout(function () {
+    try { localStorage.removeItem('sf5_token'); localStorage.removeItem('sf5_profile'); } catch (e) {}
+    location.href = 'index.html';
+  }, 1200);
+}
 
 load();
 </script>

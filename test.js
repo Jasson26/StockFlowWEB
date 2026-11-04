@@ -883,7 +883,7 @@ ok('menangani printer SPP yang tak terjangkau',
 
 /* UI terkait printer */
 const setSrc2 = fs.readFileSync(path.join(SRC, 'settings.html'), 'utf8');
-ok('Pengaturan punya kartu printer', /Printer Struk Bluetooth/.test(setSrc2));
+ok('Pengaturan punya bagian printer', /Printer struk/.test(setSrc2));
 ok('Pengaturan punya tes cetak', /prnTest\(\)/.test(setSrc2));
 ok('Pengaturan punya saklar cetak otomatis', /prnToggleAuto\(\)/.test(setSrc2));
 ok('Pengaturan memuat printer.js', /js\/printer\.js/.test(setSrc2));
@@ -903,24 +903,27 @@ ok('sesi menyimpan telepon toko', /business_phone/.test(authSrc));
 
 
 /* ============================================================ */
-section('[23] Beranda dan panduan toko baru');
-
-ok('beranda.html ada', fs.existsSync(path.join(SRC, 'beranda.html')));
-const ber = fs.readFileSync(path.join(SRC, 'beranda.html'), 'utf8');
-ok('beranda dijaga Auth.guard', /Auth\.guard\(/.test(ber));
-ok('beranda punya ringkasan hari ini', /renderKpi/.test(ber));
-ok('beranda punya aksi cepat', /renderQuick/.test(ber));
-ok('beranda punya panduan toko baru', /renderSetup/.test(ber));
-ok('panduan hilang setelah tiga langkah selesai',
-   /hasProduct && hasStock && hasSale/.test(ber));
-ok('beranda menyembunyikan laba dari staff', /isOwner/.test(ber));
+section('[23] Beranda dihapus, kasir jadi halaman utama');
 
 const uiSrc2 = fs.readFileSync(path.join(SRC, 'js/ui.js'), 'utf8');
-ok('Beranda ada di menu', /id: 'beranda'/.test(uiSrc2));
-ok('login mengarah ke beranda',
-   /location\.replace\('beranda\.html'\)/.test(fs.readFileSync(path.join(SRC, 'masuk.html'), 'utf8')));
-ok('guard owner-only jatuh ke beranda',
-   /ownerOnly[^\n]*beranda\.html/.test(authSrc));
+const masukSrc2 = fs.readFileSync(path.join(SRC, 'masuk.html'), 'utf8');
+
+ok('beranda.html tidak ada lagi', !fs.existsSync(path.join(SRC, 'beranda.html')));
+ok('Beranda hilang dari menu', !/id: 'beranda'/.test(uiSrc2));
+ok('login mengarah ke kasir', /location\.replace\('pos\.html'\)/.test(masukSrc2));
+ok('guard owner-only jatuh ke kasir', /ownerOnly[^\n]*pos\.html/.test(authSrc));
+
+/* Tidak boleh ada tautan menggantung ke halaman yang sudah dihapus */
+const allShipped = fs.readdirSync(SRC)
+  .filter((f) => /\.(html|js|css)$/.test(f) && f !== 'test.js')
+  .concat(['js/ui.js', 'js/auth.js', 'js/api.js', 'css/app.css']);
+const dangling = allShipped.filter((f) => {
+  const p = path.join(SRC, f);
+  return fs.existsSync(p) && fs.statSync(p).isFile() &&
+         /beranda\.html/.test(fs.readFileSync(p, 'utf8'));
+});
+ok('tidak ada referensi beranda.html yang menggantung',
+   dangling.length === 0, dangling.join(', '));
 
 /* Empty state harus menuntun, bukan buntu */
 ok('UI.empty menerima aksi', /function empty\(icon, title, sub, act\)/.test(uiSrc2));
@@ -934,9 +937,139 @@ ok('UI.empty menerima aksi', /function empty\(icon, title, sub, act\)/.test(uiSr
 
 /* Palet netral di seluruh berkas yang dikirim ke browser */
 const shipped = ['css/app.css', 'css/landing.css', 'index.html', 'masuk.html',
-                 'privasi.html', 'ketentuan.html', 'beranda.html'];
+                 'privasi.html', 'ketentuan.html', 'pos.html'];
 const redLeft = shipped.filter((f) => /#d92b21|Jost/.test(fs.readFileSync(path.join(SRC, f), 'utf8')));
 ok('tidak ada sisa merah/Jost', redLeft.length === 0, redLeft.join(', '));
+
+
+/* ============================================================ */
+section('[25] Logo: huruf S ungu italic');
+
+const icoSrc = fs.readFileSync(path.join(SRC, 'js/icons.js'), 'utf8');
+const appCss = fs.readFileSync(path.join(SRC, 'css/app.css'), 'utf8');
+const landCss = fs.readFileSync(path.join(SRC, 'css/landing.css'), 'utf8');
+
+ok('logo memakai teks S, bukan gambar abstrak', /">S</.test(icoSrc));
+ok('logo miring', /font-style="italic"/.test(icoSrc));
+ok('logo ungu #7C3AED', /#7C3AED/.test(icoSrc));
+ok('token --brand ada di app.css', /--brand:\s*#7C3AED/.test(appCss));
+ok('token --brand ada di landing.css', /--brand:\s*#7C3AED/.test(landCss));
+ok('tulisan StockFlow di aplikasi ungu italic',
+   /\.sb-name\s*\{[^}]*var\(--brand\)[^}]*\}/s.test(appCss) &&
+   /\.sb-name\s*\{[^}]*italic/s.test(appCss));
+ok('tulisan StockFlow di halaman depan ungu italic',
+   /\.brand span\s*\{[^}]*var\(--brand\)[^}]*\}/s.test(landCss) &&
+   /\.brand span\s*\{[^}]*italic/s.test(landCss));
+
+
+/* ============================================================ */
+section('[26] Pengaturan: satu kartu, tanpa penjelasan panjang');
+
+const setSrcA = fs.readFileSync(path.join(SRC, 'settings.html'), 'utf8');
+
+/* Hanya satu <div class="card"> pembungkus di dalam .sheet */
+const cardCount = (setSrcA.match(/<div class="card"/g) || []).length;
+ok('hanya satu kartu di Pengaturan', cardCount === 1, cardCount + ' kartu');
+
+/* Semua bagian lama masih ada, cuma dirapikan */
+[['Profil', 'myNameInput'], ['Password', 'newPass'], ['Toko', 'bName'],
+ ['QRIS unggah', 'qFile'], ['Midtrans', 'mKey'], ['Printer', 'prnConnectBtn'],
+ ['Mode gelap', 'themeBtn'], ['Unduh data', 'exportData'],
+ ['Hapus toko', 'openDelete']].forEach(([label, id]) => {
+  ok(label + ' masih ada', setSrcA.includes(id));
+});
+
+/* Midtrans dilipat, bukan dihapus */
+ok('Midtrans disembunyikan di bagian lanjutan', /<details class="adv/.test(setSrcA));
+ok('Midtrans tidak dihapus', /payment_credentials/.test(setSrcA));
+
+/* Tidak ada paragraf penjelasan panjang di dalam kartu */
+const longParas = (setSrcA.match(/<p[^>]*>[^<]{140,}/g) || []);
+ok('tanpa paragraf penjelasan panjang', longParas.length === 0,
+   longParas.length + ' paragraf panjang');
+
+
+/* ============================================================ */
+section('[27] QRIS unggahan: jalur utama tanpa Midtrans');
+
+const posSrc4 = fs.readFileSync(path.join(SRC, 'pos.html'), 'utf8');
+const apiSrc2 = fs.readFileSync(path.join(SRC, 'js/api.js'), 'utf8');
+const schemaSrc2 = fs.readFileSync(path.join(SRC, 'schema.sql'), 'utf8');
+
+/* Penjualan via QRIS unggahan dicatat sebagai 'qris', bukan 'transfer' */
+ok("kasir mencatat QRIS unggahan sebagai 'qris'",
+   /finishManual\('qris'/.test(posSrc4));
+ok("tidak lagi dicatat sebagai 'QRIS statis' transfer",
+   !/finishManual\('transfer', 'QRIS statis'\)/.test(posSrc4));
+ok("checkout_cash menerima 'qris'",
+   /p_method not in \('cash','transfer','qris'\)/.test(schemaSrc2));
+ok('ada migrasi terpisah untuk database yang sudah hidup',
+   fs.existsSync(path.join(SRC, 'migrasi-01-qris-statis.sql')));
+
+const migSrc = fs.readFileSync(path.join(SRC, 'migrasi-01-qris-statis.sql'), 'utf8');
+ok('migrasi tidak membuang tabel', !/drop table/i.test(migSrc));
+ok('migrasi menyiapkan bucket Storage', /storage\.buckets/.test(migSrc));
+ok('migrasi memakai create or replace', /create or replace function checkout_cash/.test(migSrc));
+
+/* Tombol kasir jelas: tidak "Tampilkan QR" kalau QR-nya sudah di layar */
+ok('tombol berbunyi "Sudah dibayar" untuk QRIS unggahan',
+   /'Sudah dibayar'/.test(posSrc4));
+
+/* Unggahan harus bisa didiagnosa kalau gagal */
+ok('API.upload melaporkan alasan gagal', /uploadError/.test(apiSrc2));
+ok('alasan gagal muncul di Pengaturan', /API\.uploadError/.test(setSrcA));
+ok('bucket yang belum dibuat dijelaskan', /belum dibuat di Supabase Storage/.test(apiSrc2));
+ok('ekstensi diambil dari tipe MIME', /'image\/png': 'png'/.test(apiSrc2));
+ok('berkas HP tanpa f.type tetap diterima',
+   /jpe\?g\|png\|webp\|gif\|heic\|heif/.test(setSrcA));
+
+/* QRIS unggahan bisa dipakai walau Midtrans tidak diaktifkan */
+ok('kasir memakai qris_static_url tanpa qris_enabled',
+   /!U\.qris_enabled && !U\.qris_static_url/.test(posSrc4));
+
+
+/* ============================================================ */
+section('[24] Cetak: sambung ulang saat tombol ditekan');
+
+const prnSrc2 = fs.readFileSync(path.join(SRC, 'js/printer.js'), 'utf8');
+const posSrc3 = fs.readFileSync(path.join(SRC, 'pos.html'), 'utf8');
+const ordSrc3 = fs.readFileSync(path.join(SRC, 'orders.html'), 'utf8');
+const setSrc3 = fs.readFileSync(path.join(SRC, 'settings.html'), 'utf8');
+
+ok('ada Printer.ensure()', /async function ensure\(\)/.test(prnSrc2));
+ok('ensure dipublikasikan', /COLS, support, connect, reconnect, ensure/.test(prnSrc2));
+ok('ensure mencoba sambung ulang dulu', /ensure[\s\S]{0,420}await reconnect\(\)/.test(prnSrc2));
+ok('ensure baru meminta pilih perangkat kalau gagal',
+   /ensure[\s\S]{0,620}await connect\(\)/.test(prnSrc2));
+
+/* Tombol tidak boleh hilang hanya karena sedang terputus */
+ok('kasir: tombol tampil berdasarkan dukungan, bukan status koneksi',
+   /btn\.classList\.toggle\('hide', !sup\.ok\)/.test(posSrc3));
+ok('riwayat: tombol tampil berdasarkan dukungan',
+   /btn\.classList\.toggle\('hide', !sup\.ok\)/.test(ordSrc3));
+
+/* Label harus beda supaya tidak tertukar dengan dialog browser */
+ok('kasir: label berubah saat terputus',
+   /Hubungkan & cetak|Hubungkan &amp; cetak/.test(posSrc3));
+ok('kasir: tombol browser diberi nama Print / PDF', /Print \/ PDF/.test(posSrc3));
+ok('riwayat: tombol browser diberi nama Print / PDF', /Print \/ PDF/.test(ordSrc3));
+ok('tidak ada lagi dua tombol bernama sama',
+   (posSrc3.match(/>Cetak<\/button>/g) || []).length === 0);
+
+/* Klik memanggil ensure sebelum mencetak */
+ok('kasir memanggil ensure sebelum cetak',
+   /btPrint[\s\S]{0,420}Printer\.ensure\(\)/.test(posSrc3));
+ok('riwayat memanggil ensure sebelum cetak',
+   /btReprint[\s\S]{0,420}Printer\.ensure\(\)/.test(ordSrc3));
+
+/* Cetak otomatis berjalan tanpa gestur, jadi hanya boleh sambung diam-diam */
+ok('cetak otomatis tidak memunculkan dialog perangkat',
+   /autoPrint[\s\S]{0,420}Printer\.reconnect\(\)/.test(posSrc3) &&
+   !/autoPrint[\s\S]{0,420}Printer\.ensure\(/.test(posSrc3));
+
+/* Status koneksi terbaca sekilas, tanpa paragraf penjelasan */
+ok('Pengaturan menunjukkan status koneksi printer',
+   /Terputus, tekan Hubungkan/.test(setSrc3) && /Siap mencetak/.test(setSrc3));
 
 /* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')

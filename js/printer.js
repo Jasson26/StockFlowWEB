@@ -194,6 +194,29 @@ const Printer = (function () {
     }
   }
 
+  /**
+   * Pastikan printer siap dipakai, dipanggil tepat saat pengguna menekan
+   * tombol cetak. Urutannya: sudah tersambung, lalu coba sambung ulang
+   * diam-diam, baru minta pengguna memilih perangkat.
+   *
+   * Harus dipanggil langsung dari penanganan klik, karena requestDevice()
+   * mensyaratkan gestur pengguna.
+   */
+  async function ensure() {
+    if (connected()) return true;
+
+    const s = support();
+    if (!s.ok) throw new Error(s.reason);
+
+    /* Sambung ulang tanpa dialog bila perangkatnya masih diizinkan */
+    const back = await reconnect();
+    if (back && connected()) return true;
+
+    /* Terpaksa minta pengguna memilih lagi */
+    await connect();
+    return connected();
+  }
+
   function disconnect() {
     try { if (device && device.gatt && device.gatt.connected) device.gatt.disconnect(); } catch (e) {}
     device = null; charac = null;
@@ -404,7 +427,7 @@ const Printer = (function () {
   }
 
   return {
-    COLS, support, connect, reconnect, disconnect, connected, info,
+    COLS, support, connect, reconnect, ensure, disconnect, connected, info,
     forget, printReceipt, printTest, buildReceipt, onChange,
     Builder, toAscii,
   };

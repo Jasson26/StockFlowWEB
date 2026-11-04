@@ -127,10 +127,9 @@ const UI = (function () {
 
   /* ---------- Menu ---------- */
   const MENU = [
-    { id: 'beranda',   icon: 'home',     label: 'Beranda',      href: 'beranda.html',   tab: true },
     { sec: 'Transaksi' },
     { id: 'pos',       icon: 'pos',      label: 'Kasir',        href: 'pos.html',       tab: true },
-    { id: 'orders',    icon: 'receipt',  label: 'Riwayat',      href: 'orders.html' },
+    { id: 'orders',    icon: 'receipt',  label: 'Riwayat',      href: 'orders.html',    tab: true },
     { sec: 'Inventori' },
     { id: 'products',  icon: 'box',      label: 'Produk',       href: 'products.html',  tab: true },
     { id: 'inventory', icon: 'refresh',  label: 'Stok',         href: 'inventory.html' },
