@@ -177,7 +177,7 @@ function render() {
   if (!list.length) {
     document.getElementById('rows').innerHTML =
       '<tr><td colspan="7">' +
-      UI.empty('receipt', 'Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini') +
+      UI.empty('receipt', 'Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini.', { label: 'Buka kasir', href: 'pos.html' }) +
       '</td></tr>';
     return;
   }

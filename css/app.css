@@ -4,37 +4,36 @@
    ============================================================ */
 
 :root {
-  /* ---- Warna inti ----
-     Tombol utama memakai ink (hampir hitam) agar terbaca tegas di
-     layar kasir yang sering terkena cahaya terang. Biru disimpan
-     untuk tautan, status aktif, dan fokus. */
-  --ink:        #0C121C;
-  --ink-soft:   #1B2430;
-  --ink-hover:  #202B3A;
+  /* ---- Netral: satu skala abu, satu aksen biru ----
+     Tombol utama memakai abu gelap, biru hanya untuk tautan,
+     status aktif, dan fokus. Tidak ada warna yang bersaing. */
+  --ink:        #1F2937;
+  --ink-soft:   #374151;
+  --ink-hover:  #111827;
 
-  --accent:       #1F5AE0;
-  --accent-hover: #1848B8;
-  --accent-soft:  #EEF3FE;
-  --accent-ring:  rgba(31, 90, 224, .22);
+  --accent:       #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-soft:  #EFF6FF;
+  --accent-ring:  rgba(37, 99, 235, .20);
 
   --ok:        #047857;
   --ok-soft:   #ECFDF5;
   --warn:      #B45309;
   --warn-soft: #FFFBEB;
-  --danger:      #B42318;
-  --danger-soft: #FEF3F2;
+  --danger:      #B91C1C;
+  --danger-soft: #FEF2F2;
 
   /* ---- Netral ---- */
-  --bg:         #F7F8FA;
+  --bg:         #F8FAFC;
   --surface:    #FFFFFF;
-  --surface-2:  #F4F5F7;
-  --surface-3:  #ECEEF2;
-  --border:     #E3E6EB;
-  --border-mid: #D2D7DF;
+  --surface-2:  #F1F5F9;
+  --surface-3:  #E8EDF3;
+  --border:     #E2E8F0;
+  --border-mid: #CBD5E1;
 
-  --text:     #0C121C;
-  --text-mid: #525C6B;
-  --text-dim: #8A93A1;
+  --text:     #111827;
+  --text-mid: #64748B;
+  --text-dim: #94A3B8;
 
   /* ---- Bentuk ---- */
   --r-xs: 6px;
@@ -62,32 +61,32 @@
 }
 
 html[data-theme='dark'] {
-  --ink:       #F2F4F7;
-  --ink-soft:  #E4E7EC;
+  --ink:       #E5E7EB;
+  --ink-soft:  #D1D5DB;
   --ink-hover: #FFFFFF;
 
-  --accent:      #6693F5;
-  --accent-hover:#84A9F8;
-  --accent-soft: #15213A;
-  --accent-ring: rgba(102, 147, 245, .26);
+  --accent:      #60A5FA;
+  --accent-hover:#93C5FD;
+  --accent-soft: #15233B;
+  --accent-ring: rgba(96, 165, 250, .26);
 
   --ok:        #34D399;
   --ok-soft:   #0C241D;
   --warn:      #FBBF24;
-  --warn-soft: #291D08;
+  --warn-soft: #2A1E08;
   --danger:      #F87171;
-  --danger-soft: #2A1215;
+  --danger-soft: #2A1416;
 
-  --bg:         #0B0E13;
-  --surface:    #13171F;
-  --surface-2:  #1A1F29;
-  --surface-3:  #222935;
-  --border:     #252B36;
-  --border-mid: #333B49;
+  --bg:         #0B0F14;
+  --surface:    #131922;
+  --surface-2:  #1A212B;
+  --surface-3:  #232B37;
+  --border:     #242C38;
+  --border-mid: #333D4B;
 
-  --text:     #F2F4F7;
-  --text-mid: #99A2B0;
-  --text-dim: #6B7483;
+  --text:     #F1F5F9;
+  --text-mid: #94A3B8;
+  --text-dim: #64748B;
 
   --sh-xs: 0 1px 2px rgba(0,0,0,.5);
   --sh-sm: 0 1px 3px rgba(0,0,0,.55);

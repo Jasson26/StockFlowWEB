@@ -156,7 +156,7 @@ function render() {
 
   if (!list.length) {
     document.getElementById('rows').innerHTML =
-      '<tr><td colspan="5">' + UI.empty('empty', 'Belum ada pergerakan stok', 'Catat stok masuk untuk memulai') + '</td></tr>';
+      '<tr><td colspan="5">' + UI.empty('empty', 'Belum ada pergerakan stok', 'Catat barang yang datang dari supplier untuk memulai.', { label: 'Catat stok masuk', onclick: "openMove('in')" }) + '</td></tr>';
     return;
   }
 

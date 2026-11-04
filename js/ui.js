@@ -127,9 +127,10 @@ const UI = (function () {
 
   /* ---------- Menu ---------- */
   const MENU = [
+    { id: 'beranda',   icon: 'home',     label: 'Beranda',      href: 'beranda.html',   tab: true },
     { sec: 'Transaksi' },
     { id: 'pos',       icon: 'pos',      label: 'Kasir',        href: 'pos.html',       tab: true },
-    { id: 'orders',    icon: 'receipt',  label: 'Riwayat',      href: 'orders.html',    tab: true },
+    { id: 'orders',    icon: 'receipt',  label: 'Riwayat',      href: 'orders.html' },
     { sec: 'Inventori' },
     { id: 'products',  icon: 'box',      label: 'Produk',       href: 'products.html',  tab: true },
     { id: 'inventory', icon: 'refresh',  label: 'Stok',         href: 'inventory.html' },
@@ -215,11 +216,20 @@ const UI = (function () {
     wrap.onclick = (e) => { if (e.target === wrap) wrap.remove(); };
   }
 
-  /* ---------- Empty state ---------- */
-  function empty(icon, title, sub) {
+  /* ---------- Empty state ----------
+     act opsional: { label, href } atau { label, onclick } supaya
+     pengguna punya langkah berikutnya, bukan kalimat buntu. */
+  function empty(icon, title, sub, act) {
+    var btn = '';
+    if (act && act.label) {
+      btn = act.href
+        ? '<a class="btn btn-primary btn-sm mt16" href="' + act.href + '">' + esc(act.label) + '</a>'
+        : '<button class="btn btn-primary btn-sm mt16" onclick="' + act.onclick + '">' +
+          esc(act.label) + '</button>';
+    }
     return '<div class="empty"><div class="empty-ico">' + ic(icon || 'empty', 21) + '</div>' +
       '<div class="empty-title">' + esc(title) + '</div>' +
-      (sub ? '<div class="empty-sub">' + esc(sub) + '</div>' : '') + '</div>';
+      (sub ? '<div class="empty-sub">' + esc(sub) + '</div>' : '') + btn + '</div>';
   }
 
   /* ---------- Notice ---------- */

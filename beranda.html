@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1F2937">
+<meta name="robots" content="noindex">
+<title>Beranda — StockFlow</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+<div class="content">
+
+  <!-- Panduan toko baru, tampil sampai langkahnya selesai -->
+  <div id="setupCard" class="hide mb20"></div>
+
+  <!-- Ringkasan hari ini -->
+  <div class="grid g4 keep mb16" id="kpi"></div>
+
+  <div class="grid g2 mb16">
+    <!-- Aksi cepat -->
+    <div class="card p0">
+      <div class="card-hd"><h3>Aksi cepat</h3></div>
+      <div class="card-bd">
+        <div class="quick" id="quick"></div>
+      </div>
+    </div>
+
+    <!-- Perlu perhatian -->
+    <div class="card p0">
+      <div class="card-hd">
+        <h3>Perlu perhatian</h3>
+        <div class="spacer"></div>
+        <a href="inventory.html" class="fs13">Kelola stok</a>
+      </div>
+      <div id="attention"></div>
+    </div>
+  </div>
+
+  <!-- Transaksi terakhir -->
+  <div class="card p0">
+    <div class="card-hd">
+      <h3>Transaksi terakhir</h3>
+      <div class="spacer"></div>
+      <a href="orders.html" class="fs13">Lihat semua</a>
+    </div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>No. Invoice</th>
+          <th class="hide-mobile">Waktu</th>
+          <th>Metode</th>
+          <th>Status</th>
+          <th class="num">Total</th>
+        </tr></thead>
+        <tbody id="recent"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<style>
+/* Aksi cepat: tombol besar, mudah ditekan di tablet kasir */
+.quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.quick a {
+  display: flex; align-items: center; gap: 11px;
+  padding: 14px; border-radius: var(--r);
+  background: var(--surface-2); border: 1px solid var(--border);
+  text-decoration: none; color: var(--text);
+  transition: background .13s, border-color .13s;
+}
+.quick a:hover { background: var(--surface-3); border-color: var(--border-mid); text-decoration: none; }
+.quick a .ico { color: var(--text-mid); }
+.quick a b { display: block; font-size: 14px; font-weight: 600; line-height: 1.25; }
+.quick a > span { min-width: 0; }
+.quick a span span, .quick a > span > span { display: block; font-size: 12.5px; color: var(--text-mid); line-height: 1.3; }
+.quick a.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.quick a.primary b, .quick a.primary .ico { color: #fff; }
+.quick a.primary span { color: rgba(255,255,255,.7); }
+html[data-theme='dark'] .quick a.primary,
+html[data-theme='dark'] .quick a.primary b,
+html[data-theme='dark'] .quick a.primary .ico { color: var(--bg); }
+html[data-theme='dark'] .quick a.primary span { color: rgba(0,0,0,.6); }
+@media (max-width: 420px) { .quick { grid-template-columns: 1fr; } }
+
+/* Panduan langkah awal */
+.setup { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; }
+.setup h2 { font-size: 17px; font-weight: 650; letter-spacing: -.02em; margin-bottom: 4px; }
+.setup .lead { font-size: 13.5px; color: var(--text-mid); margin-bottom: 18px; }
+.steps-list { display: flex; flex-direction: column; gap: 8px; }
+.sstep {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: var(--r);
+  background: var(--surface-2); border: 1px solid var(--border);
+  text-decoration: none; color: var(--text);
+}
+.sstep:hover { border-color: var(--border-mid); text-decoration: none; }
+.sstep.done { opacity: .62; }
+.sstep-n {
+  width: 24px; height: 24px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 650;
+  background: var(--border); color: var(--text-mid);
+}
+.sstep.done .sstep-n { background: var(--ok); color: #fff; }
+.sstep.now .sstep-n { background: var(--ink); color: var(--surface); }
+html[data-theme='dark'] .sstep.now .sstep-n { color: var(--bg); }
+.sstep-t { flex: 1; min-width: 0; }
+.sstep-t b { display: block; font-size: 14px; font-weight: 600; }
+.sstep-t span { display: block; font-size: 12.5px; color: var(--text-mid); }
+.setup-bar { height: 5px; border-radius: 99px; background: var(--surface-3); overflow: hidden; margin-bottom: 18px; }
+.setup-bar i { display: block; height: 100%; background: var(--ok); transition: width .4s ease; }
+</style>
+
+<script src="js/icons.js"></script>
+<script src="js/config.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!Auth.guard()) throw 'redirect';
+var U = Auth.user();
+var isOwner = U.role === 'owner';
+
+UI.shell('beranda', 'Beranda',
+  '<span class="badge hide-mobile">' + UI.esc(U.business_name) + '</span>');
+
+/* ============================================================
+   MUAT
+   ============================================================ */
+async function load() {
+  UI.loading(true);
+
+  var r = UI.range('today');
+  var since = r[0].toISOString();
+
+  var prod   = await API.from('products').select('*');
+  var orders = await API.from('orders').select('*')
+                 .gte('created_at', since).order('created_at', false).limit(200);
+  var recent = await API.from('orders').select('*').order('created_at', false).limit(6);
+  var cats   = await API.from('categories').select('id').limit(1);
+
+  UI.loading(false);
+
+  var products = prod.data || [];
+  var today    = (orders.data || []).filter(function (o) { return o.status === 'paid'; });
+
+  renderSetup(products, recent.data || []);
+  renderKpi(today, products);
+  renderQuick(products);
+  renderAttention(products);
+  renderRecent(recent.data || []);
+}
+
+/* ============================================================
+   PANDUAN TOKO BARU
+   ============================================================ */
+function renderSetup(products, allOrders) {
+  var hasProduct = products.length > 0;
+  var hasStock   = products.some(function (p) { return Number(p.stock) > 0; });
+  var hasSale    = allOrders.some(function (o) { return o.status === 'paid'; });
+
+  /* Sudah jalan semua, panduan tidak perlu tampil lagi */
+  if (hasProduct && hasStock && hasSale) {
+    document.getElementById('setupCard').classList.add('hide');
+    return;
+  }
+
+  var steps = [
+    { done: hasProduct, t: 'Tambahkan produk pertama',
+      s: 'Nama, harga jual, dan stok awal.', href: 'products.html' },
+    { done: hasStock, t: 'Isi stok',
+      s: 'Supaya kasir bisa menjualnya.', href: 'inventory.html' },
+    { done: hasSale, t: 'Coba satu transaksi',
+      s: 'Jalankan penjualan pertama di kasir.', href: 'pos.html' },
+  ];
+
+  var doneCount = steps.filter(function (x) { return x.done; }).length;
+  var nowIdx = steps.findIndex(function (x) { return !x.done; });
+
+  document.getElementById('setupCard').innerHTML =
+    '<div class="setup">' +
+      '<h2>Siapkan toko Anda</h2>' +
+      '<p class="lead">Tiga langkah, sekitar lima menit. ' +
+        doneCount + ' dari ' + steps.length + ' selesai.</p>' +
+      '<div class="setup-bar"><i style="width:' +
+        Math.round(doneCount / steps.length * 100) + '%"></i></div>' +
+      '<div class="steps-list">' +
+        steps.map(function (x, i) {
+          var cls = x.done ? 'done' : (i === nowIdx ? 'now' : '');
+          return '<a class="sstep ' + cls + '" href="' + x.href + '">' +
+            '<span class="sstep-n">' + (x.done ? UI.ic('check', 13) : (i + 1)) + '</span>' +
+            '<span class="sstep-t"><b>' + x.t + '</b><span>' + x.s + '</span></span>' +
+            UI.ic('forward', 16) +
+          '</a>';
+        }).join('') +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('setupCard').classList.remove('hide');
+  UI.hydrateIcons(document);
+}
+
+/* ============================================================
+   RINGKASAN HARI INI
+   ============================================================ */
+function renderKpi(today, products) {
+  var omzet = today.reduce(function (s, o) { return s + Number(o.total || 0); }, 0);
+  var hpp   = today.reduce(function (s, o) { return s + Number(o.cost_total || 0); }, 0);
+  var low   = products.filter(function (p) {
+    return Number(p.stock) <= Number(p.min_stock || 0);
+  }).length;
+
+  var tiles = [
+    { lbl: 'Penjualan hari ini', val: UI.rp(omzet), sub: today.length + ' transaksi', accent: true },
+    { lbl: 'Rata-rata per transaksi', val: UI.rp(today.length ? omzet / today.length : 0) },
+    { lbl: 'Produk aktif', val: String(products.filter(function (p) { return p.active; }).length) },
+  ];
+
+  /* Laba hanya untuk owner */
+  if (isOwner) {
+    tiles.splice(2, 0, { lbl: 'Laba kotor hari ini', val: UI.rp(omzet - hpp), cls: 'c-ok' });
+  } else {
+    tiles.push({ lbl: 'Stok perlu dicek', val: String(low), cls: low ? 'c-warn' : '' });
+  }
+  if (isOwner) tiles.push({ lbl: 'Stok perlu dicek', val: String(low), cls: low ? 'c-warn' : '' });
+
+  document.getElementById('kpi').innerHTML = tiles.slice(0, 4).map(function (t) {
+    return '<div class="stat' + (t.accent ? ' accent' : '') + '">' +
+      '<div class="stat-lbl">' + t.lbl + '</div>' +
+      '<div class="stat-val ' + (t.cls || '') + '" style="font-size:20px">' + t.val + '</div>' +
+      (t.sub ? '<div class="stat-sub">' + t.sub + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+/* ============================================================
+   AKSI CEPAT
+   ============================================================ */
+function renderQuick(products) {
+  var items = [
+    { icon: 'pos',     t: 'Buka kasir',     s: 'Mulai transaksi', href: 'pos.html', primary: true },
+    { icon: 'plus',    t: 'Tambah produk',  s: 'Barang baru',     href: 'products.html' },
+    { icon: 'refresh', t: 'Stok masuk',    s: 'Barang datang',  href: 'inventory.html' },
+    { icon: 'receipt', t: 'Riwayat',        s: 'Transaksi lalu',  href: 'orders.html' },
+  ];
+  if (isOwner) {
+    items.push({ icon: 'chart', t: 'Laporan', s: 'Laba rugi', href: 'reports.html' });
+    items.push({ icon: 'settings', t: 'Pengaturan', s: 'Toko dan printer', href: 'settings.html' });
+  }
+
+  document.getElementById('quick').innerHTML = items.map(function (q) {
+    return '<a href="' + q.href + '"' + (q.primary ? ' class="primary"' : '') + '>' +
+      UI.ic(q.icon, 19) +
+      '<span><b>' + q.t + '</b><span>' + q.s + '</span></span>' +
+    '</a>';
+  }).join('');
+}
+
+/* ============================================================
+   PERLU PERHATIAN
+   ============================================================ */
+function renderAttention(products) {
+  var out = products.filter(function (p) { return Number(p.stock) <= 0; });
+  var low = products.filter(function (p) {
+    return Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock || 0);
+  });
+
+  var list = out.concat(low).slice(0, 6);
+
+  if (!list.length) {
+    document.getElementById('attention').innerHTML = products.length
+      ? UI.empty('check', 'Semua stok aman', 'Tidak ada produk di bawah batas minimum')
+      : UI.empty('box', 'Belum ada produk', 'Tambahkan produk untuk mulai memantau stok');
+    UI.hydrateIcons(document);
+    return;
+  }
+
+  document.getElementById('attention').innerHTML =
+    '<div class="table-wrap"><table class="tbl"><tbody>' +
+    list.map(function (p) {
+      var st = Number(p.stock) || 0;
+      return '<tr><td><div class="fw6">' + UI.esc(p.name) + '</div>' +
+        '<div class="fs12 c-dim">Batas minimum ' + UI.num(p.min_stock) + '</div></td>' +
+        '<td class="num"><span class="badge ' + (st <= 0 ? 'danger' : 'warn') + '">' +
+        (st <= 0 ? 'Habis' : UI.num(st) + ' tersisa') + '</span></td></tr>';
+    }).join('') +
+    '</tbody></table></div>';
+}
+
+/* ============================================================
+   TRANSAKSI TERAKHIR
+   ============================================================ */
+function renderRecent(list) {
+  var MNAME = { cash: 'Tunai', qris: 'QRIS', transfer: 'Transfer' };
+
+  if (!list.length) {
+    document.getElementById('recent').innerHTML =
+      '<tr><td colspan="5">' +
+      UI.empty('receipt', 'Belum ada transaksi',
+               'Transaksi dari kasir akan muncul di sini') + '</td></tr>';
+    UI.hydrateIcons(document);
+    return;
+  }
+
+  document.getElementById('recent').innerHTML = list.map(function (o) {
+    return '<tr>' +
+      '<td><div class="fw6 mono">' + UI.esc(o.order_no) + '</div>' +
+        '<div class="fs12 c-dim only-mobile">' + UI.dt(o.created_at) + '</div></td>' +
+      '<td class="hide-mobile c-mid fs13 nowrap">' + UI.dt(o.created_at) + '</td>' +
+      '<td><span class="badge">' + (MNAME[o.payment_method] || o.payment_method) + '</span></td>' +
+      '<td>' + UI.statusBadge(o.status) + '</td>' +
+      '<td class="num fw7 mono">' + UI.rp(o.total) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+load();
+</script>
+</body>
+</html>

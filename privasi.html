@@ -3,27 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#d92b21">
+<meta name="theme-color" content="#1F2937">
 <title>Kebijakan Privasi , StockFlow</title>
 <meta name="description" content="Kebijakan Privasi StockFlow: data apa yang dikumpulkan, untuk apa dipakai, berapa lama disimpan, dan hak Anda atas data tersebut.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
 
-<nav class="doc-nav">
-  <a href="index.html" class="mark">StockFlow</a>
-  <span class="spacer"></span>
-  <a href="ketentuan.html" class="nav-link">Syarat &amp; Ketentuan</a>
-  <a href="masuk.html" class="nav-link">Masuk</a>
-</nav>
+<nav class="nav"><div class="nav-in"><a href="index.html" class="brand"><span id="navLogo"></span><span>StockFlow</span></a><div class="spacer"></div><a href="ketentuan.html" class="btn">Syarat &amp; Ketentuan</a><a href="masuk.html" class="btn btn-primary">Masuk</a></div></nav>
 
-<header class="doc-hero">
+
+
+
+<header class="doc-hero"><div class="wrap">
   <h1>Kebijakan Privasi</h1>
   <p>Berlaku sejak <span id="eff"></span></p>
-</header>
+</div></header>
 
 <main class="doc-body">
 <p>
@@ -184,43 +179,31 @@
 </main>
 
 <footer class="foot">
-  <div class="blocks" id="blocks" aria-label="StockFlow"></div>
-  <div class="foot-grid">
-    <nav class="foot-links" aria-label="Produk">
-      <b>Produk</b>
-      <a href="index.html">Beranda</a>
-      <a href="masuk.html">Masuk</a>
-      <a href="masuk.html?daftar=1">Daftar</a>
-    </nav>
-    <nav class="foot-links" aria-label="Ketentuan">
-      <b>Ketentuan</b>
-      <a href="privasi.html">Kebijakan Privasi</a>
-      <a href="ketentuan.html">Syarat &amp; Ketentuan</a>
-    </nav>
-    <div class="foot-contact">
-      Pertanyaan mengenai dokumen ini dapat dikirim ke
-      <strong><span id="mail"></span></strong>.
+  <div class="foot-in">
+    <div class="foot-about">
+      <a href="index.html" class="brand"><span id="footLogo"></span><span>StockFlow</span></a>
+      <p>Kasir dan inventori untuk warung, kafe dan toko kecil di Indonesia.</p>
     </div>
+    <div class="foot-col"><b>Produk</b>
+      <a href="index.html">Beranda</a><a href="masuk.html">Masuk</a>
+      <a href="masuk.html?daftar=1">Daftar</a></div>
+    <div class="foot-col"><b>Ketentuan</b>
+      <a href="privasi.html">Kebijakan Privasi</a>
+      <a href="ketentuan.html">Syarat &amp; Ketentuan</a></div>
+    <div class="foot-col"><b>Kontak</b>
+      <span style="font-size:14px;color:var(--text-mid)" id="mail"></span></div>
   </div>
-  <div class="foot-last">
-    <span>&copy; <span id="yr"></span> StockFlow</span>
-  </div>
+  <div class="foot-last">&copy; <span id="yr"></span> StockFlow</div>
 </footer>
 
+<script src="js/icons.js"></script>
 <script>
-(function () {
-  var L = 'STOCKFLOW'.split('');
-  var H = [84, 62, 95, 70, 100, 66, 88, 74, 92];
-  var C = ['var(--ink)','var(--accent)','var(--ink)','var(--accent)',
-           'var(--ink)','var(--ink)','var(--accent)','var(--ink)','var(--accent)'];
-  document.getElementById('blocks').innerHTML = L.map(function (l, i) {
-    return '<span style="height:' + H[i] + '%;background:' + C[i] + '">' + l + '</span>';
-  }).join('');
-  document.getElementById('yr').textContent = new Date().getFullYear();
-  document.getElementById('eff').textContent =
-    new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
-  document.getElementById('mail').textContent = ['jassontheodorus540','gmail.com'].join('@');
-})();
+document.getElementById('navLogo').innerHTML  = Icons.logo(28);
+document.getElementById('footLogo').innerHTML = Icons.logo(26);
+document.getElementById('yr').textContent = new Date().getFullYear();
+document.getElementById('eff').textContent =
+  new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+document.getElementById('mail').textContent = ['jassontheodorus540','gmail.com'].join('@');
 </script>
 
 </body>

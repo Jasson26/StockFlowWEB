@@ -203,8 +203,9 @@ function render() {
   if (!list.length) {
     document.getElementById('rows').innerHTML =
       '<tr><td colspan="7">' +
-      UI.empty('box', products.length ? 'Tidak ada hasil' : 'Belum ada produk',
-               products.length ? 'Coba kata kunci lain' : 'Klik "+ Produk" untuk menambahkan') +
+      products.length
+        ? UI.empty('search', 'Tidak ada hasil', 'Coba kata kunci atau kategori lain')
+        : UI.empty('box', 'Belum ada produk', 'Mulai dengan satu produk yang paling sering Anda jual.', { label: 'Tambah produk pertama', onclick: 'openEdit()' }) +
       '</td></tr>';
     return;
   }

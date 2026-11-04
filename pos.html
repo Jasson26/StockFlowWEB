@@ -262,7 +262,7 @@ function renderGrid() {
   if (!list.length) {
     host.innerHTML = products.length
       ? UI.empty('search', 'Produk tidak ditemukan', 'Coba kata kunci atau kategori lain')
-      : UI.empty('box', 'Belum ada produk', 'Tambahkan produk dulu di menu Produk');
+      : UI.empty('box', 'Belum ada produk', 'Kasir butuh produk untuk bisa dipakai.', { label: 'Tambah produk', href: 'products.html' });
     host.style.gridTemplateColumns = '1fr';
     return;
   }

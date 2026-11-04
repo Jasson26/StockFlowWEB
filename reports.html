@@ -226,7 +226,7 @@ function render() {
           '<td class="num fw7 mono">' + UI.num(t.qty) + '</td>' +
           '<td class="num mono">' + UI.rp(t.rev) + '</td></tr>';
       }).join('')
-    : '<tr><td colspan="3">' + UI.empty('chart', 'Belum ada penjualan', 'Pada periode ini') + '</td></tr>';
+    : '<tr><td colspan="3">' + UI.empty('chart', 'Belum ada penjualan', 'Belum ada transaksi pada periode ini.') + '</td></tr>';
 
   /* ---------- STOK RENDAH ---------- */
   var low = products.filter(function (p) {

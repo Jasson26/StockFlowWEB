@@ -688,7 +688,8 @@ ok('landing punya deskripsi meta', /name="description"/.test(land));
 ok('landing memakai css halaman depan', /css\/landing\.css/.test(land));
 ok('landing punya satu h1', (land.match(/<h1/g) || []).length === 1,
    'jumlah h1=' + (land.match(/<h1/g) || []).length);
-ok('landing punya demo yang bisa diklik', /dBtns/.test(land));
+ok('landing punya demo yang bisa diklik', /dGrid/.test(land) && /dCart/.test(land));
+ok('landing memakai palet netral', !/#d92b21/.test(land));
 ok('landing menghormati prefers-reduced-motion', /prefers-reduced-motion/.test(land));
 ok('landing tidak memuat skrip autentikasi', !/js\/auth\.js/.test(land));
 
@@ -899,6 +900,43 @@ ok('riwayat bisa cetak ulang', /btReprint\(\)/.test(ordSrc2));
 /* Sesi menyimpan alamat & telepon untuk kop struk */
 ok('sesi menyimpan alamat toko', /business_address/.test(authSrc));
 ok('sesi menyimpan telepon toko', /business_phone/.test(authSrc));
+
+
+/* ============================================================ */
+section('[23] Beranda dan panduan toko baru');
+
+ok('beranda.html ada', fs.existsSync(path.join(SRC, 'beranda.html')));
+const ber = fs.readFileSync(path.join(SRC, 'beranda.html'), 'utf8');
+ok('beranda dijaga Auth.guard', /Auth\.guard\(/.test(ber));
+ok('beranda punya ringkasan hari ini', /renderKpi/.test(ber));
+ok('beranda punya aksi cepat', /renderQuick/.test(ber));
+ok('beranda punya panduan toko baru', /renderSetup/.test(ber));
+ok('panduan hilang setelah tiga langkah selesai',
+   /hasProduct && hasStock && hasSale/.test(ber));
+ok('beranda menyembunyikan laba dari staff', /isOwner/.test(ber));
+
+const uiSrc2 = fs.readFileSync(path.join(SRC, 'js/ui.js'), 'utf8');
+ok('Beranda ada di menu', /id: 'beranda'/.test(uiSrc2));
+ok('login mengarah ke beranda',
+   /location\.replace\('beranda\.html'\)/.test(fs.readFileSync(path.join(SRC, 'masuk.html'), 'utf8')));
+ok('guard owner-only jatuh ke beranda',
+   /ownerOnly[^\n]*beranda\.html/.test(authSrc));
+
+/* Empty state harus menuntun, bukan buntu */
+ok('UI.empty menerima aksi', /function empty\(icon, title, sub, act\)/.test(uiSrc2));
+[['pos.html', 'Tambah produk'],
+ ['products.html', 'Tambah produk pertama'],
+ ['orders.html', 'Buka kasir'],
+ ['inventory.html', 'Catat stok masuk']].forEach(([f, label]) => {
+  const s2 = fs.readFileSync(path.join(SRC, f), 'utf8');
+  ok(f + ' punya tombol "' + label + '" di empty state', s2.includes(label));
+});
+
+/* Palet netral di seluruh berkas yang dikirim ke browser */
+const shipped = ['css/app.css', 'css/landing.css', 'index.html', 'masuk.html',
+                 'privasi.html', 'ketentuan.html', 'beranda.html'];
+const redLeft = shipped.filter((f) => /#d92b21|Jost/.test(fs.readFileSync(path.join(SRC, f), 'utf8')));
+ok('tidak ada sisa merah/Jost', redLeft.length === 0, redLeft.join(', '));
 
 /* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')

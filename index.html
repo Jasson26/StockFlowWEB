@@ -3,635 +3,376 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#d92b21">
+<meta name="theme-color" content="#1F2937">
 <title>StockFlow: Kasir &amp; Stok untuk Warung Indonesia</title>
-<meta name="description" content="Kasir dan inventori berbasis web untuk warung, kafe dan toko kecil. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Gratis, dibuka dari HP.">
+<meta name="description" content="Aplikasi kasir dan inventori gratis untuk warung, kafe dan toko kecil. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Dibuka dari HP, tanpa install.">
 <meta property="og:title" content="StockFlow: Kasir &amp; Stok untuk Warung Indonesia">
-<meta property="og:description" content="Satu QR untuk semua dompet digital. Stok terpotong sendiri. Struk langsung tercetak. Gratis.">
+<meta property="og:description" content="Catat penjualan, pantau stok, terima QRIS. Gratis, dibuka dari HP.">
 <meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
 
 <a class="skip" href="#utama">Lompat ke isi</a>
 
-<!-- ============================================================
-     KEPALA , lembar bingkai dengan satu panel teks
-     ============================================================ -->
-<header class="hero">
-  <div class="sheet" id="sheet"></div>
-</header>
+<!-- ============ NAVIGASI ============ -->
+<nav class="nav">
+  <div class="nav-in">
+    <a href="index.html" class="brand"><span id="navLogo"></span><span>StockFlow</span></a>
+    <div class="spacer"></div>
+    <div class="nav-links">
+      <a href="#cara">Cara kerja</a>
+      <a href="#fitur">Fitur</a>
+      <a href="#harga">Harga</a>
+      <a href="#tanya">Tanya jawab</a>
+    </div>
+    <a href="masuk.html" class="btn">Masuk</a>
+    <a href="masuk.html?daftar=1" class="btn btn-primary">Daftar gratis</a>
+  </div>
+</nav>
 
 <main id="utama">
 
-<!-- ============================================================
-     CARA KERJANYA , empat medan warna, kartu yang sama maju terus
-     ============================================================ -->
-<section class="steps" aria-labelledby="h-cara">
-  <div class="step">
-    <h2 id="h-cara">Cara kerjanya</h2>
-    <div class="step-card rise" data-ui>
-      <div class="u-head">Keranjang</div>
-      <div class="u-row"><span class="u-grow u-name">Kopi Susu Gula Aren</span><span class="u-num">2</span></div>
-      <div class="u-row"><span class="u-grow u-name">Nasi Goreng Spesial</span><span class="u-num">1</span></div>
-      <div class="u-total"><span>Total</span><span class="u-num">Rp 61.000</span></div>
-    </div>
-    <p class="step-say">Pertama barang dipilih.</p>
+<!-- ============ HERO ============ -->
+<header class="wrap hero">
+  <h1>Kasir dan stok warung Anda, rapi di satu tempat</h1>
+  <p>
+    Catat penjualan, pantau stok, dan terima pembayaran QRIS yang terkonfirmasi
+    sendiri. Dibuka dari HP yang sudah Anda punya, tanpa install apa pun.
+  </p>
+  <div class="hero-acts">
+    <a href="masuk.html?daftar=1" class="btn btn-primary btn-lg btn-block-m">Daftar gratis</a>
+    <a href="masuk.html?demo=1&amp;autologin=1" class="btn btn-lg btn-block-m">Lihat demo</a>
   </div>
+  <p class="hero-note">Gratis selamanya &middot; Tanpa kartu kredit &middot; Siap dipakai dalam 5 menit</p>
+</header>
 
-  <div class="step">
-    <div class="step-card rise" data-ui>
-      <div class="u-head">Bayar QRIS</div>
-      <div style="padding:12px;display:grid;place-items:center">
-        <div class="qr" data-qr="21" style="width:132px;height:132px"></div>
+<!-- ============ PRATINJAU ============ -->
+<div class="wrap">
+  <div class="shot rise">
+    <div class="shot-bar">
+      <span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span>
+      <span class="shot-url">stockflow &rsaquo; Kasir</span>
+    </div>
+    <div class="demo-shell">
+      <div class="demo-left">
+        <div data-ui>
+          <div class="u-head">Pilih produk</div>
+          <div class="u-pgrid" id="dGrid"></div>
+        </div>
       </div>
-      <div class="u-total"><span>Tagihan</span><span class="u-num">Rp 61.000</span></div>
+      <div class="demo-right">
+        <div data-ui style="flex:1;display:flex;flex-direction:column">
+          <div class="u-head">Keranjang</div>
+          <div id="dCart" style="flex:1"></div>
+          <div class="u-total"><span>Total</span><span class="u-num" id="dTotal">Rp 0</span></div>
+        </div>
+        <div class="demo-foot">
+          <button class="btn btn-primary" style="width:100%" id="dPay">Bayar</button>
+        </div>
+      </div>
     </div>
-    <p class="step-say">Lalu satu QR muncul.</p>
   </div>
+</div>
 
-  <div class="step">
-    <div class="step-card rise" data-ui>
-      <div class="u-head">Status pembayaran</div>
-      <div class="u-row"><span class="u-grow u-name">Diterima</span><span class="u-chip ok">LUNAS</span></div>
-      <div class="u-row"><span class="u-grow u-sub">Dibayar lewat</span><span class="u-num">GoPay</span></div>
-      <div class="u-row"><span class="u-grow u-sub">Waktu</span><span class="u-num">14:08</span></div>
-      <div class="u-total"><span>Masuk rekening</span><span class="u-num">Rp 61.000</span></div>
+<!-- ============ CARA KERJA ============ -->
+<section class="sec tint" id="cara">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Tiga langkah, selesai</h2>
+      <p>Alurnya sama seperti kasir biasa, hanya pencatatannya otomatis.</p>
     </div>
-    <p class="step-say">Pembeli bayar, sistem tahu sendiri.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-card rise" data-ui>
-      <div class="u-head">Stok terpotong</div>
-      <div class="u-row"><span class="u-grow u-name">Kopi Susu Gula Aren</span><span class="u-num">40 &rarr; 38</span></div>
-      <div class="u-row"><span class="u-grow u-name">Nasi Goreng Spesial</span><span class="u-num">25 &rarr; 24</span></div>
-      <div class="u-row"><span class="u-grow u-sub">Struk</span><span class="u-chip on">TERCETAK</span></div>
+    <div class="steps">
+      <div class="step rise">
+        <h3>Pilih barang</h3>
+        <p>Ketuk produk di layar, atau scan barcode dengan alat scanner biasa.
+           Totalnya dihitung sendiri.</p>
+      </div>
+      <div class="step rise">
+        <h3>Pembeli bayar</h3>
+        <p>Tunai dengan kembalian otomatis, atau tunjukkan QRIS.
+           Pembayaran QRIS terkonfirmasi sendiri tanpa cek mutasi.</p>
+      </div>
+      <div class="step rise">
+        <h3>Selesai</h3>
+        <p>Stok langsung berkurang dan struk tercetak ke printer Bluetooth.
+           Laporannya tersusun sendiri.</p>
+      </div>
     </div>
-    <p class="step-say">Stok berkurang, struk keluar.</p>
   </div>
 </section>
 
-<!-- ============================================================
-     FITUR , papan dekatan pada bagian antarmuka yang nyata
-     ============================================================ -->
-<section aria-labelledby="h-fitur" style="padding:110px 0">
-  <div class="mosaic" id="mosaic"></div>
+<!-- ============ FITUR ============ -->
+<section class="sec" id="fitur">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Yang Anda dapat</h2>
+      <p>Dibuat dari kebutuhan warung, kafe, dan toko kecil.</p>
+    </div>
+    <div class="grid3" id="feats"></div>
+  </div>
 </section>
 
-<!-- ============================================================
-     COBA SENDIRI , demo yang benar-benar jalan
-     ============================================================ -->
-<section class="demo-wrap" aria-labelledby="h-coba" style="background:var(--surface)">
-  <div class="demo-head rise">
-    <h2 id="h-coba">Coba sendiri</h2>
-    <p>Ketuk barangnya seperti kasir sungguhan. Totalnya berubah, QR-nya ikut berubah,
-       dan struk 58mm di bawah tercetak persis seperti ini.</p>
-  </div>
-
-  <div class="demo rise">
-    <div class="demo-stage">
-      <div data-ui style="background:var(--bg)">
-        <div class="u-head">Keranjang, Warung Demo</div>
-        <div id="dCart"></div>
-        <div class="u-total"><span>Total</span><span class="u-num" id="dTotal">Rp 0</span></div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:start">
-        <div class="qr" id="dQr" data-qr="21" style="width:132px;height:132px"></div>
-        <div class="slip" id="dSlip"></div>
-      </div>
+<!-- ============ QRIS ============ -->
+<section class="sec tint">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Satu QR untuk semua dompet digital</h2>
+      <p>
+        QRIS adalah standar Bank Indonesia. Satu kode yang sama bisa dipindai dengan
+        aplikasi apa pun, dan nominalnya sudah terisi sehingga pembeli tidak bisa salah ketik.
+      </p>
     </div>
-
-    <div class="demo-ctrl">
-      <div class="u-head" style="background:var(--surface-2)">Ketuk untuk menambah</div>
-      <div id="dBtns"></div>
-      <div class="ctrl-foot">
-        <button class="link-plain" id="dReset" type="button">Kosongkan keranjang</button>
-      </div>
+    <div class="wallets">
+      <span class="wallet">GoPay</span><span class="wallet">OVO</span>
+      <span class="wallet">DANA</span><span class="wallet">ShopeePay</span>
+      <span class="wallet">LinkAja</span><span class="wallet">BCA mobile</span>
+      <span class="wallet">Livin&rsquo;</span><span class="wallet">BRImo</span>
     </div>
+    <p style="text-align:center;margin-top:30px;font-size:15px;color:var(--text-mid);max-width:52ch;margin-inline:auto">
+      Dana masuk langsung ke rekening Anda. Setiap toko memakai akun pembayarannya
+      sendiri, jadi uang tidak pernah singgah di kami.
+    </p>
   </div>
-
-  <p class="demo-note">Harga dan nama barang di atas hanya contoh. Di tokomu, semuanya kamu isi sendiri.</p>
 </section>
 
-<!-- ============================================================
-     HARGA , struk rinci
-     ============================================================ -->
-<section class="price-sec" aria-labelledby="h-harga">
-  <div class="price-board">
-    <div class="price-say rise">
-      <h2 id="h-harga">Gratis, tanpa kecuali</h2>
-      <p>Tidak ada paket, tidak ada masa percobaan, tidak ada biaya per transaksi
-         yang mengalir ke kami. Yang berbayar hanya barang milik pihak lain, dan
-         itupun hanya kalau kamu memakainya.</p>
-      <a class="btn" href="masuk.html?daftar=1">Daftarkan toko</a>
+<!-- ============ HARGA ============ -->
+<section class="sec" id="harga">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Gratis, tanpa kecuali</h2>
+      <p>Tidak ada paket, tidak ada masa percobaan, tidak ada biaya tersembunyi.</p>
     </div>
 
-    <div class="price-slip rise">
-      <h3>Rincian biaya</h3>
+    <div class="price rise">
+      <div class="price-big">Rp 0</div>
+      <div class="price-sub">selamanya, untuk semua fitur</div>
 
-      <div class="price-item"><span>Aplikasi StockFlow</span><span>Rp 0</span></div>
-      <div class="price-item"><span>Database &amp; penyimpanan</span><span>Rp 0</span></div>
-      <div class="price-item"><span>Hosting halaman</span><span>Rp 0</span></div>
-      <div class="price-item"><span>Akun kasir karyawan</span><span>Rp 0</span></div>
-      <div class="price-item other"><span>QRIS di bawah Rp 100.000</span><span>0%</span></div>
-      <div class="price-item other"><span>QRIS di atas itu</span><span>0,7%</span></div>
-      <div class="price-item other"><span>Printer Bluetooth, sekali beli</span><span>&plusmn;150.000</span></div>
+      <div class="price-list" id="priceList"></div>
 
-      <div class="price-bar"></div>
-      <div class="price-total">
-        <b>Dibayar ke StockFlow</b>
-        <strong>Rp 0</strong>
-      </div>
+      <a href="masuk.html?daftar=1" class="btn btn-primary btn-lg" style="width:100%">
+        Daftarkan toko
+      </a>
 
       <p class="price-fine">
-        Tarif QRIS ditetapkan Bank Indonesia dan dibayarkan ke penyedia pembayaran,
-        bukan ke kami. Printer dibeli sendiri dan sifatnya opsional.
+        Yang berbayar hanya milik pihak lain: biaya QRIS yang ditetapkan Bank Indonesia
+        (0% untuk transaksi di bawah Rp 100.000) dan printer Bluetooth bila Anda
+        ingin mencetak struk. Keduanya opsional dan tidak dibayarkan ke kami.
       </p>
     </div>
   </div>
 </section>
 
-<!-- ============================================================
-     TANYA JAWAB
-     ============================================================ -->
-<section class="faq-sec" aria-labelledby="h-tanya">
-  <div class="faq-board">
-    <div class="faq-head"><h2 id="h-tanya">Yang sering ditanya</h2></div>
+<!-- ============ TANYA JAWAB ============ -->
+<section class="sec tint" id="tanya">
+  <div class="wrap">
+    <div class="sec-head"><h2>Tanya jawab</h2></div>
 
-    <div class="faq-list">
+    <div class="faq">
       <details name="faq">
-        <summary><span class="faq-q">Uangnya masuk ke rekening siapa?</span><span class="faq-pm"></span></summary>
-        <div class="faq-a">
-          Ke rekeningmu sendiri. Setiap toko memasang akun pembayarannya masing-masing,
-          jadi dana tidak pernah singgah di kami. Kami tidak menerima, menyimpan,
-          atau menyalurkan uangmu.
-        </div>
+        <summary><span class="q">Uangnya masuk ke rekening siapa?</span><span class="pm"></span></summary>
+        <div class="a">Ke rekening Anda sendiri. Setiap toko memasang akun pembayarannya
+          masing-masing, jadi dana tidak pernah singgah di kami.</div>
       </details>
 
       <details name="faq">
-        <summary><span class="faq-q">Perlu beli HP atau mesin kasir baru?</span><span class="faq-pm"></span></summary>
-        <div class="faq-a">
-          Tidak. StockFlow berjalan di browser, jadi HP yang sekarang kamu pakai sudah cukup.
-          Tidak ada aplikasi yang perlu dipasang dan tidak ada yang perlu diperbarui.
-        </div>
+        <summary><span class="q">Perlu beli mesin kasir baru?</span><span class="pm"></span></summary>
+        <div class="a">Tidak. StockFlow berjalan di browser, jadi HP yang sekarang Anda pakai
+          sudah cukup. Tidak ada aplikasi yang perlu dipasang.</div>
       </details>
 
       <details name="faq">
-        <summary><span class="faq-q">Satu QR untuk semua dompet digital?</span><span class="faq-pm"></span></summary>
-        <div class="faq-a">
-          Benar. QRIS adalah standar Bank Indonesia, jadi satu kode yang sama bisa dipindai
-          dengan GoPay, OVO, DANA, ShopeePay, LinkAja, sampai aplikasi m-banking.
-          Nominalnya sudah terisi, jadi pembeli tidak bisa salah ketik.
-        </div>
-      </details>
-
-      <details name="faq">
-        <summary><span class="faq-q">Printer apa yang cocok?</span><span class="faq-pm"></span></summary>
-        <div class="faq-a">
-          Printer thermal 58mm yang mendukung Bluetooth 4.0 (BLE) dan perintah ESC/POS.
+        <summary><span class="q">Printer apa yang cocok?</span><span class="pm"></span></summary>
+        <div class="a">Printer thermal 58mm dengan Bluetooth 4.0 (BLE) dan perintah ESC/POS.
           Cek kemasannya: kalau tertulis Bluetooth 2.0/4.0, hampir pasti bisa.
-          Kalau hanya 2.0, tidak bisa dijangkau dari browser.
-        </div>
+          Fitur ini belum tersedia di iPhone.</div>
       </details>
 
       <details name="faq">
-        <summary><span class="faq-q">Karyawan bisa lihat omzet saya?</span><span class="faq-pm"></span></summary>
-        <div class="faq-a">
-          Tidak. Akun staff hanya bisa membuka kasir, produk, dan stok.
-          Laporan keuangan dan pembatalan transaksi terkunci untuk owner,
-          dan penguncian itu ada di database, bukan sekadar disembunyikan di tampilan.
-        </div>
+        <summary><span class="q">Karyawan bisa lihat omzet saya?</span><span class="pm"></span></summary>
+        <div class="a">Tidak. Akun staff hanya bisa membuka kasir, produk, dan stok.
+          Laporan keuangan terkunci untuk owner, dan penguncian itu ada di database,
+          bukan sekadar disembunyikan di tampilan.</div>
       </details>
 
       <details name="faq">
-        <summary><span class="faq-q">Kalau internet mati bagaimana?</span><span class="faq-pm"></span></summary>
-        <div class="faq-a">
-          Transaksi butuh internet karena datanya tersimpan di server supaya aman dan
-          bisa dibuka dari perangkat lain. Untuk warung dengan sinyal naik-turun,
-          siapkan tethering dari HP sebagai cadangan.
-        </div>
+        <summary><span class="q">Kalau internet mati bagaimana?</span><span class="pm"></span></summary>
+        <div class="a">Transaksi butuh internet karena datanya tersimpan di server supaya aman
+          dan bisa dibuka dari perangkat lain. Siapkan tethering HP sebagai cadangan.</div>
       </details>
 
       <details name="faq">
-        <summary><span class="faq-q">Data saya bisa dibawa keluar?</span><span class="faq-pm"></span></summary>
-        <div class="faq-a">
-          Bisa, kapan saja. Unduh seluruh data dalam satu berkas, atau transaksi saja
-          sebagai CSV untuk dibuka di Excel. Kalau ingin berhenti, akun beserta
-          seluruh isinya bisa dihapus permanen sendiri.
-        </div>
+        <summary><span class="q">Data saya bisa dibawa keluar?</span><span class="pm"></span></summary>
+        <div class="a">Bisa, kapan saja. Unduh seluruh data dalam satu berkas, atau transaksi
+          saja sebagai CSV. Kalau ingin berhenti, akun beserta isinya bisa dihapus
+          permanen sendiri.</div>
       </details>
     </div>
   </div>
 </section>
 
-<!-- ============================================================
-     AJAKAN
-     ============================================================ -->
-<section class="cta-row" aria-labelledby="h-mulai">
-  <div class="cta-side a" aria-hidden="true"></div>
-  <div class="cta-main rise">
-    <h2 id="h-mulai">Buka toko hari ini</h2>
-    <p>Daftar, isi beberapa produk, lalu jalankan transaksi pertama. Lima menit cukup.</p>
-    <div class="cta-acts">
-      <a class="btn btn-paper" href="masuk.html?daftar=1">Daftarkan toko</a>
-      <a class="btn btn-ink" href="masuk.html?demo=1&amp;autologin=1">Masuk ke demo</a>
+<!-- ============ PENUTUP ============ -->
+<section class="sec">
+  <div class="wrap">
+    <div class="cta rise">
+      <h2>Siap mulai hari ini?</h2>
+      <p>Daftar, isi beberapa produk, lalu jalankan transaksi pertama. Lima menit cukup.</p>
+      <div class="hero-acts">
+        <a href="masuk.html?daftar=1" class="btn btn-lg btn-block-m">Daftar gratis</a>
+        <a href="masuk.html?demo=1&amp;autologin=1" class="btn btn-lg ghost btn-block-m">Lihat demo dulu</a>
+      </div>
     </div>
   </div>
-  <div class="cta-side b" aria-hidden="true"></div>
 </section>
 
 </main>
 
-<!-- ============================================================
-     KAKI
-     ============================================================ -->
+<!-- ============ KAKI ============ -->
 <footer class="foot">
-  <div class="blocks" id="blocks" aria-label="StockFlow"></div>
-
-  <div class="foot-grid">
-    <nav class="foot-links" aria-label="Produk">
+  <div class="foot-in">
+    <div class="foot-about">
+      <a href="index.html" class="brand"><span id="footLogo"></span><span>StockFlow</span></a>
+      <p>Kasir dan inventori untuk warung, kafe dan toko kecil di Indonesia.</p>
+    </div>
+    <div class="foot-col">
       <b>Produk</b>
-      <a href="#h-cara">Cara kerja</a>
-      <a href="#h-coba">Coba sendiri</a>
-      <a href="#h-harga">Harga</a>
-    </nav>
-    <nav class="foot-links" aria-label="Akun">
+      <a href="#cara">Cara kerja</a>
+      <a href="#fitur">Fitur</a>
+      <a href="#harga">Harga</a>
+    </div>
+    <div class="foot-col">
       <b>Akun</b>
       <a href="masuk.html">Masuk</a>
       <a href="masuk.html?daftar=1">Daftar</a>
       <a href="masuk.html?demo=1&amp;autologin=1">Demo</a>
-    </nav>
-    <nav class="foot-links" aria-label="Ketentuan">
+    </div>
+    <div class="foot-col">
       <b>Ketentuan</b>
       <a href="privasi.html">Kebijakan Privasi</a>
       <a href="ketentuan.html">Syarat &amp; Ketentuan</a>
-    </nav>
-    <div class="foot-contact">
-      Dibuat di Jakarta untuk warung, kafe dan toko kecil di Indonesia.<br>
-      Pembayaran diproses penyedia berizin Bank Indonesia.
     </div>
   </div>
-
-  <div class="foot-last">
-    <span>&copy; <span id="yr"></span> StockFlow</span>
-    <span class="spacer"></span>
-    <a class="btn" href="masuk.html?daftar=1" style="min-height:40px;font-size:15px">Mulai</a>
-  </div>
+  <div class="foot-last">&copy; <span id="yr"></span> StockFlow</div>
 </footer>
 
+<script src="js/icons.js"></script>
 <script>
-/* ============================================================
-   Kode QR digambar dari modulnya sendiri.
-   Bukan QRIS sungguhan , ini gambar, bukan kode yang bisa dibayar.
-   Polanya tetap (bukan acak) agar sama di setiap kunjungan.
-   ============================================================ */
-function drawQr(el) {
-  var n = Number(el.dataset.qr) || 21;
-  el.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
-  el.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
+document.getElementById('navLogo').innerHTML  = Icons.logo(28);
+document.getElementById('footLogo').innerHTML = Icons.logo(26);
+document.getElementById('yr').textContent = new Date().getFullYear();
 
-  var seed = 7;
-  function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
-
-  /* tiga penanda sudut, seperti kode sungguhan */
-  function finder(r, c) {
-    return (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
-  }
-  function finderOn(r, c) {
-    var rr = r < 7 ? r : r - (n - 7);
-    var cc = c < 7 ? c : c - (n - 7);
-    var ring = (rr === 0 || rr === 6 || cc === 0 || cc === 6);
-    var core = (rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4);
-    return ring || core;
-  }
-
-  var html = '';
-  for (var r = 0; r < n; r++) {
-    for (var c = 0; c < n; c++) {
-      var on = finder(r, c) ? finderOn(r, c) : rnd() > 0.52;
-      html += '<i class="' + (on ? '' : 'o') + '"></i>';
-    }
-  }
-  el.innerHTML = html;
-}
-document.querySelectorAll('.qr').forEach(drawQr);
-
-/* ============================================================
-   LEMBAR KEPALA , bingkai berisi fragmen antarmuka yang nyata
-   ============================================================ */
 var rp = function (n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); };
 
-var FRAMES = [
-  { h: 196, strip: 'Grid produk', cls: 's-ink', ui:
-    '<div class="u-pgrid">' +
-      '<div class="u-pcard"><div class="u-name">Kopi Susu Gula Aren</div><div class="u-num">Rp 18.000</div></div>' +
-      '<div class="u-pcard"><div class="u-name">Es Teh Manis</div><div class="u-num">Rp 6.000</div></div>' +
-      '<div class="u-pcard"><div class="u-name">Nasi Goreng</div><div class="u-num">Rp 25.000</div></div>' +
-      '<div class="u-pcard"><div class="u-name">Ayam Geprek</div><div class="u-num">Rp 22.000</div></div>' +
-    '</div>' },
+/* ---------- Kartu fitur ---------- */
+document.getElementById('feats').innerHTML = [
+  ['pos', 'Kasir yang cepat',
+   'Grid produk dengan foto, pencarian, dan dukungan scanner barcode. Kembalian dihitung otomatis.'],
+  ['box', 'Stok selalu akurat',
+   'Setiap penjualan langsung memotong stok. Catat barang masuk, keluar, dan hasil stock opname di satu tempat.'],
+  ['chart', 'Tahu untung ruginya',
+   'Omzet, laba kotor, dan laba bersih setelah biaya. Lengkap dengan produk terlaris dan peringatan stok menipis.'],
+  ['printer', 'Struk langsung cetak',
+   'Terhubung ke printer thermal Bluetooth. Bisa diatur agar struk keluar sendiri setiap transaksi selesai.'],
+  ['users', 'Akun untuk karyawan',
+   'Kasir masuk dengan akun sendiri dan tidak bisa melihat laporan keuangan atau membatalkan transaksi lunas.'],
+  ['shield', 'Data toko terkunci',
+   'Pembatasan ada di database, bukan sekadar disembunyikan. Data toko lain tidak bisa terbaca.'],
+].map(function (f) {
+  return '<div class="card rise"><div class="card-ico">' + Icons.svg(f[0], 19) + '</div>' +
+    '<h3>' + f[1] + '</h3><p>' + f[2] + '</p></div>';
+}).join('');
 
-  { h: 150, strip: 'Keranjang', cls: 's-red', ui:
-    '<div class="u-row"><span class="u-grow u-name">Kopi Susu</span><span class="u-num">2</span></div>' +
-    '<div class="u-row"><span class="u-grow u-name">Es Teh Manis</span><span class="u-num">1</span></div>' +
-    '<div class="u-total"><span>Total</span><span class="u-num">Rp 42.000</span></div>' },
-
-  { h: 178, strip: 'QRIS semua dompet', cls: 's-paper', raw:
-    '<div style="padding:14px"><div class="qr" data-qr="21" style="width:124px;height:124px"></div></div>' },
-
-  { h: 210, strip: 'Struk 58mm', cls: 's-ink', raw:
-    '<div class="slip" style="width:100%">' +
-      '<div class="slip-c slip-big">WARUNG DEMO</div>' +
-      '<div class="slip-c">Jl. Contoh No. 1</div>' +
-      '<div class="slip-rule"></div>' +
-      '<div class="slip-row"><span>Kopi Susu</span><span class="u-num">36.000</span></div>' +
-      '<div class="slip-row"><span>Es Teh</span><span class="u-num">6.000</span></div>' +
-      '<div class="slip-rule"></div>' +
-      '<div class="slip-row slip-big"><span>TOTAL</span><span class="u-num">42.000</span></div>' +
-      '<div class="slip-rule"></div>' +
-      '<div class="slip-c">Terima kasih</div>' +
-    '</div>' },
-
-  { h: 132, strip: 'Stok menipis', cls: 's-white', ui:
-    '<div class="u-head">Stok</div>' +
-    '<div class="u-row"><span class="u-grow u-name">Air Mineral</span><span class="u-chip ok">8</span></div>' +
-    '<div class="u-row"><span class="u-grow u-name">Roti Bakar</span><span class="u-chip ok">0</span></div>' +
-    '<div class="u-row"><span class="u-grow u-name">Kentang</span><span class="u-chip">22</span></div>' },
-
-  { h: 160, strip: 'Laporan harian', cls: 's-red', ui:
-    '<div class="u-head">Omzet 7 hari</div>' +
-    '<div class="u-bars">' +
-      '<i style="height:38%"></i><i style="height:62%"></i><i style="height:45%"></i>' +
-      '<i style="height:80%"></i><i style="height:55%"></i><i class="hi" style="height:100%"></i>' +
-      '<i style="height:70%"></i>' +
-    '</div>' +
-    '<div class="u-row"><span class="u-grow u-sub">Hari ini</span><span class="u-num">Rp 1.240.000</span></div>' },
-
-  { h: 118, strip: 'Pembayaran diterima', cls: 's-ink', ui:
-    '<div class="u-row"><span class="u-grow u-name">Lunas</span><span class="u-chip ok">QRIS</span></div>' +
-    '<div class="u-row"><span class="u-grow u-sub">GoPay, 14:08</span><span class="u-num">Rp 61.000</span></div>' },
-
-  { h: 142, strip: 'Scan barcode', cls: 's-paper', ui:
-    '<div class="u-head">Cari / scan</div>' +
-    '<div class="u-row"><span class="u-grow u-sub">899000000001</span></div>' +
-    '<div class="u-row"><span class="u-grow u-name">Kopi Susu Gula Aren</span><span class="u-num">Rp 18.000</span></div>' },
-
-  { h: 128, strip: 'Printer Bluetooth', cls: 's-white', ui:
-    '<div class="u-row"><span class="u-grow u-name">POS-58 Printer</span><span class="u-chip ok">SIAP</span></div>' +
-    '<div class="u-row"><span class="u-grow u-sub">58mm, 32 kolom</span></div>' },
-
-  { h: 150, strip: 'Owner dan staff', cls: 's-red', ui:
-    '<div class="u-row"><span class="u-swatch">JT</span><span class="u-grow u-name">Jasson</span><span class="u-chip on">Owner</span></div>' +
-    '<div class="u-row"><span class="u-swatch">RK</span><span class="u-grow u-name">Rika</span><span class="u-chip">Staff</span></div>' +
-    '<div class="u-row"><span class="u-swatch">BD</span><span class="u-grow u-name">Budi</span><span class="u-chip">Staff</span></div>' },
-
-  { h: 120, strip: 'Barang rusak', cls: 's-ink', ui:
-    '<div class="u-row"><span class="u-grow u-name">Roti Bakar</span><span class="u-num">&minus;3</span></div>' +
-    '<div class="u-row"><span class="u-grow u-sub">Kedaluwarsa</span><span class="u-num">Rp 15.000</span></div>' },
-
-  { h: 134, strip: 'Stock opname', cls: 's-paper', ui:
-    '<div class="u-head">Koreksi stok</div>' +
-    '<div class="u-row"><span class="u-grow u-sub">Tercatat</span><span class="u-num">40</span></div>' +
-    '<div class="u-row"><span class="u-grow u-sub">Hitungan fisik</span><span class="u-num">38</span></div>' +
-    '<div class="u-row"><span class="u-grow u-name">Selisih</span><span class="u-chip ok">&minus;2</span></div>' },
-];
-
-(function buildSheet() {
-  var sheet = document.getElementById('sheet');
-  var cols = 6;
-  var html = '';
-
-  /* Panel teks duduk di kolom 3–4, seperti bingkai lain */
-  var panel =
-    '<div class="hero-panel">' +
-      '<h1 class="hero-mark">StockFlow</h1>' +
-      '<p class="hero-say">Kasir, stok dan QRIS untuk warung. Dibuka dari HP, tanpa install.</p>' +
-      '<div class="hero-cta"><a class="btn btn-paper" href="masuk.html?daftar=1">Mulai gratis</a></div>' +
-      '<div class="hero-links">' +
-        '<a href="#h-coba">Coba sendiri</a>' +
-        '<a href="#h-harga">Harga</a>' +
-        '<a href="masuk.html">Masuk</a>' +
-      '</div>' +
-    '</div>';
-
-  for (var c = 0; c < cols; c++) {
-    html += '<div class="sheet-col">';
-    for (var i = c; i < FRAMES.length; i += cols) {
-      var f = FRAMES[i];
-      var inner = f.raw || ('<div data-ui>' + f.ui + '</div>');
-      html +=
-        '<div class="frame' + (i === 0 ? ' shutter' : '') + '">' +
-          '<div class="frame-body" style="height:' + f.h + 'px">' + inner + '</div>' +
-          '<div class="frame-strip ' + f.cls + '">' + f.strip + '</div>' +
-        '</div>';
-    }
-    html += '</div>';
-  }
-
-  sheet.innerHTML = html + panel;
-  sheet.querySelectorAll('.qr').forEach(drawQr);
-})();
+/* ---------- Daftar yang termasuk ---------- */
+document.getElementById('priceList').innerHTML = [
+  'Kasir, produk, dan stok tanpa batas',
+  'Pembayaran tunai, transfer, dan QRIS',
+  'Laporan penjualan dan laba rugi',
+  'Akun karyawan sebanyak yang dibutuhkan',
+  'Cetak struk ke printer Bluetooth',
+  'Unduh dan hapus data kapan saja',
+].map(function (t) {
+  return '<div class="price-row">' + Icons.svg('check', 17) + '<span>' + t + '</span></div>';
+}).join('');
 
 /* ============================================================
-   FITUR , dekatan pada bagian antarmuka, diperbesar
-   ============================================================ */
-(function buildMosaic() {
-  var T = [
-    { size: 'm-6x2', bg: 'tile white', head: 'Yang sudah jalan' },
-
-    { size: 'm-6x4', bg: 'tile paper', zoom: 2.6,
-      el: '<div data-ui style="width:200px"><div class="u-total"><span>Total</span><span class="u-num">Rp 61.000</span></div></div>',
-      name: 'Total selalu benar',
-      note: 'Dihitung di server, bukan di HP kasir.' },
-
-    { size: 'm-3x4', bg: 'tile red', zoom: 3.4,
-      el: '<div data-ui style="width:120px;background:transparent"><span class="u-chip ok" style="font-size:13px">LUNAS</span></div>',
-      name: 'Terkonfirmasi sendiri',
-      note: 'Tanpa cek mutasi.' },
-
-    { size: 'm-3x2', bg: 'tile dark', zoom: 3.2,
-      el: '<div data-ui style="width:120px;background:transparent;color:#fff"><span class="u-num" style="font-size:15px;font-weight:700">40 &rarr; 38</span></div>',
-      name: 'Stok ikut turun',
-      note: 'Saat uang masuk.' },
-
-    { size: 'm-3x2', bg: 'tile paper', zoom: 3.2,
-      el: '<div data-ui style="width:130px;background:transparent"><span class="u-num" style="font-size:15px;font-weight:700">Rp 18.000</span></div>',
-      name: 'Harga per barang',
-      note: 'Ubah kapan saja.' },
-
-    { size: 'm-6x2', bg: 'tile dark', zoom: 2.2,
-      el: '<div data-ui style="width:260px;background:transparent;color:#fff">' +
-          '<div class="u-bars" style="padding:0"><i style="height:38%"></i><i style="height:62%"></i>' +
-          '<i style="height:45%"></i><i style="height:80%"></i><i class="hi" style="height:100%"></i></div></div>',
-      name: 'Laba kotor dan bersih',
-      note: 'Setelah biaya operasional.' },
-
-    { size: 'm-3x4', bg: 'tile white', zoom: 1.9,
-      el: '<div style="width:150px"><div class="qr" data-qr="17" style="width:150px;height:150px"></div></div>',
-      name: 'Satu QR, semua dompet',
-      note: 'GoPay, OVO, DANA, ShopeePay.' },
-
-    { size: 'm-3x2', bg: 'tile red', zoom: 3.0,
-      el: '<div data-ui style="width:130px;background:transparent;color:#fff">' +
-          '<span class="u-num" style="font-size:14px;font-weight:700">58mm</span></div>',
-      name: 'Struk Bluetooth',
-      note: '32 kolom, ESC/POS.' },
-
-    { size: 'm-3x2', bg: 'tile paper', zoom: 2.4,
-      el: '<div data-ui style="width:150px;background:transparent">' +
-          '<span class="u-swatch" style="width:30px;height:30px">JT</span></div>',
-      name: 'Akun per karyawan',
-      note: 'Omzet tetap tertutup.' },
-  ];
-
-  document.getElementById('mosaic').innerHTML = T.map(function (t, i) {
-    if (t.head) {
-      return '<div class="m ' + t.size + ' ' + t.bg + ' m-head rise">' +
-             '<h2 id="h-fitur">' + t.head + '</h2></div>';
-    }
-    return '<div class="m ' + t.size + ' ' + t.bg + ' rise">' +
-      '<div class="m-zoom"><div style="transform:scale(' + t.zoom + ')">' + t.el + '</div></div>' +
-      '<div class="m-cap"><b>' + t.name + '</b><span>' + t.note + '</span></div>' +
-      '</div>';
-  }).join('');
-
-  document.querySelectorAll('#mosaic .qr').forEach(drawQr);
-})();
-
-/* ============================================================
-   DEMO , kasir yang benar-benar berjalan
+   Pratinjau kasir yang benar-benar bisa diketuk
    ============================================================ */
 (function demo() {
   var MENU = [
-    { n: 'Kopi Susu Gula Aren', p: 18000 },
-    { n: 'Es Teh Manis',        p: 6000 },
-    { n: 'Americano',           p: 15000 },
-    { n: 'Nasi Goreng Spesial', p: 25000 },
-    { n: 'Ayam Geprek',         p: 22000 },
-    { n: 'Kentang Goreng',      p: 15000 },
-    { n: 'Pisang Goreng',       p: 10000 },
+    { n: 'Kopi Susu Gula Aren', p: 18000, s: 40 },
+    { n: 'Es Teh Manis',        p: 6000,  s: 80 },
+    { n: 'Americano',           p: 15000, s: 35 },
+    { n: 'Nasi Goreng Spesial', p: 25000, s: 25 },
+    { n: 'Ayam Geprek',         p: 22000, s: 18 },
+    { n: 'Kentang Goreng',      p: 15000, s: 22 },
   ];
   var cart = {};
 
+  var elGrid  = document.getElementById('dGrid');
   var elCart  = document.getElementById('dCart');
   var elTotal = document.getElementById('dTotal');
-  var elSlip  = document.getElementById('dSlip');
-  var elBtns  = document.getElementById('dBtns');
+  var elPay   = document.getElementById('dPay');
 
-  elBtns.innerHTML = MENU.map(function (m, i) {
-    return '<button class="ctrl-row" type="button" data-i="' + i + '" aria-pressed="false">' +
-      '<span>' + m.n + '</span><span class="u-num">' + rp(m.p) + '</span></button>';
+  elGrid.innerHTML = MENU.map(function (m, i) {
+    return '<button class="u-pcard" type="button" data-i="' + i + '" ' +
+      'style="text-align:left;cursor:pointer" aria-label="Tambah ' + m.n + '">' +
+      '<div class="u-name">' + m.n + '</div>' +
+      '<div class="u-sub">Stok ' + m.s + '</div>' +
+      '<div class="u-num">' + rp(m.p) + '</div></button>';
   }).join('');
-
-  function total() {
-    return Object.keys(cart).reduce(function (s, i) { return s + MENU[i].p * cart[i]; }, 0);
-  }
 
   function render() {
     var keys = Object.keys(cart);
+    var total = keys.reduce(function (s, i) { return s + MENU[i].p * cart[i]; }, 0);
 
     elCart.innerHTML = keys.length
       ? keys.map(function (i) {
           return '<div class="u-row"><span class="u-grow u-name">' + MENU[i].n + '</span>' +
-                 '<span class="u-sub">&times;' + cart[i] + '</span>' +
-                 '<span class="u-num">' + rp(MENU[i].p * cart[i]) + '</span></div>';
+            '<span class="u-sub">&times;' + cart[i] + '</span>' +
+            '<span class="u-num">' + rp(MENU[i].p * cart[i]) + '</span></div>';
         }).join('')
-      : '<div class="u-row"><span class="u-grow u-sub">Belum ada barang. Ketuk daftar di sebelah.</span></div>';
+      : '<div class="u-row"><span class="u-grow u-sub">Ketuk produk di sebelah untuk menambahkan.</span></div>';
 
-    var t = total();
-    elTotal.textContent = rp(t);
-
-    elSlip.innerHTML =
-      '<div class="slip-c slip-big">WARUNG DEMO</div>' +
-      '<div class="slip-c">Jl. Contoh No. 1, Jakarta</div>' +
-      '<div class="slip-rule"></div>' +
-      (keys.length
-        ? keys.map(function (i) {
-            return '<div class="slip-row"><span>' + MENU[i].n + '</span></div>' +
-                   '<div class="slip-row"><span>&nbsp;&nbsp;' + cart[i] + ' x ' +
-                   rp(MENU[i].p) + '</span><span class="u-num">' +
-                   rp(MENU[i].p * cart[i]) + '</span></div>';
-          }).join('')
-        : '<div class="slip-row"><span>Belum ada barang</span></div>') +
-      '<div class="slip-rule"></div>' +
-      '<div class="slip-row slip-big"><span>TOTAL</span><span class="u-num">' + rp(t) + '</span></div>' +
-      '<div class="slip-rule"></div>' +
-      '<div class="slip-c">Terima kasih</div>';
-
-    elBtns.querySelectorAll('.ctrl-row').forEach(function (b) {
-      b.setAttribute('aria-pressed', cart[b.dataset.i] ? 'true' : 'false');
-    });
+    elTotal.textContent = rp(total);
+    elPay.disabled = !keys.length;
+    elPay.style.opacity = keys.length ? '1' : '.5';
   }
 
-  elBtns.addEventListener('click', function (e) {
-    var b = e.target.closest('.ctrl-row');
+  elGrid.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-i]');
     if (!b) return;
-    var i = b.dataset.i;
-    cart[i] = (cart[i] || 0) + 1;
+    cart[b.dataset.i] = (cart[b.dataset.i] || 0) + 1;
     render();
   });
 
-  document.getElementById('dReset').addEventListener('click', function () {
+  elPay.addEventListener('click', function () {
     cart = {};
     render();
+    elPay.textContent = 'Lunas, stok terpotong';
+    setTimeout(function () { elPay.textContent = 'Bayar'; }, 1800);
   });
 
   render();
 })();
 
-/* ============================================================
-   KAKI , nama dibangun dari balok
-   ============================================================ */
-(function blocks() {
-  var LETTERS = 'STOCKFLOW'.split('');
-  var H = [84, 62, 95, 70, 100, 66, 88, 74, 92];
-  var C = ['var(--ink)', 'var(--accent)', 'var(--ink)', 'var(--accent)',
-           'var(--ink)', 'var(--ink)', 'var(--accent)', 'var(--ink)', 'var(--accent)'];
-
-  document.getElementById('blocks').innerHTML = LETTERS.map(function (l, i) {
-    return '<span style="height:' + H[i] + '%;background:' + C[i] + '">' + l + '</span>';
-  }).join('');
-})();
-
-document.getElementById('yr').textContent = new Date().getFullYear();
-
-/* ============================================================
-   GERAK , masuk per bagian, dan satu rana di bingkai pertama
-   ============================================================ */
+/* ---------- Gerak halus ---------- */
 (function motion() {
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  var risers = Array.prototype.slice.call(document.querySelectorAll('.rise'));
-  var shutter = document.querySelector('.shutter');
-
-  if (reduce || !('IntersectionObserver' in window)) {
-    risers.forEach(function (el) { el.classList.add('in'); });
-    if (shutter) shutter.classList.add('in');
+  var items = [].slice.call(document.querySelectorAll('.rise'));
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      !('IntersectionObserver' in window)) {
+    items.forEach(function (el) { el.classList.add('in'); });
     return;
   }
-
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (en) {
       if (!en.isIntersecting) return;
-      var el = en.target;
-      var sibs = Array.prototype.slice.call(
-        el.parentElement.querySelectorAll(':scope > .rise'));
-      el.style.transitionDelay = Math.min(sibs.indexOf(el), 6) * 75 + 'ms';
-      el.classList.add('in');
-      io.unobserve(el);
+      var sibs = [].slice.call(en.target.parentElement.querySelectorAll(':scope > .rise'));
+      en.target.style.transitionDelay = Math.min(sibs.indexOf(en.target), 5) * 70 + 'ms';
+      en.target.classList.add('in');
+      io.unobserve(en.target);
     });
-  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
-
-  risers.forEach(function (el) { io.observe(el); });
-
-  /* Rana membuka bingkai pertama begitu halaman siap */
-  if (shutter) requestAnimationFrame(function () {
-    setTimeout(function () { shutter.classList.add('in'); }, 120);
-  });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+  items.forEach(function (el) { io.observe(el); });
 })();
 </script>
 </body>

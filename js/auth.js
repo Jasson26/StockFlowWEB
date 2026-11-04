@@ -289,7 +289,7 @@ const Auth = (function () {
     /* Pasang di awal setiap halaman internal */
     guard(ownerOnly) {
       if (!readTok() || !readProf()) { location.replace('masuk.html'); return false; }
-      if (ownerOnly && !Auth.isOwner()) { location.replace('pos.html'); return false; }
+      if (ownerOnly && !Auth.isOwner()) { location.replace('beranda.html'); return false; }
       return true;
     },
 

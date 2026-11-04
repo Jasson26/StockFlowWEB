@@ -3,32 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#d92b21">
+<meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Masuk — StockFlow</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
-<style>
-/* Jembatan merek: halaman masuk memakai huruf dan warna halaman depan,
-   tapi tetap memakai komponen formulir aplikasi. */
-:root {
-  --ff: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --ink: #0a0a0a; --ink-soft: #1b1b1b; --ink-hover: #1f1f1f;
-  --accent: #d92b21; --accent-hover: #b8231b;
-  --accent-soft: #fdecea; --accent-ring: rgba(217, 43, 33, .22);
-}
-.auth-art { background: var(--ink); }
-.auth-art h2, .auth-logo span, .auth-inner h1 {
-  text-transform: uppercase; letter-spacing: -0.03em; line-height: .92; font-weight: 700;
-}
-.auth-art h2 { font-size: clamp(30px, 3.4vw, 44px); }
-.auth-inner h1 { font-size: clamp(26px, 3vw, 34px); }
-.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-.sf-logo rect:first-child { fill: var(--accent); }
-</style>
 </head>
 <body>
 
@@ -202,7 +180,7 @@ document.getElementById('artFeats').innerHTML = [
   return '<div class="auth-feat"><i>' + Icons.svg(f[0], 15) + '</i>' + f[1] + '</div>';
 }).join('');
 
-if (Auth.isLogged()) location.replace('pos.html');
+if (Auth.isLogged()) location.replace('beranda.html');
 
 /* Datang dari link konfirmasi email: sesi ada, toko belum dibuat.
    Langsung tawarkan penyelesaiannya daripada memaksa login ulang. */
@@ -248,7 +226,7 @@ async function doSetup() {
 
   if (r.ok) {
     UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'products.html'; }, 450);
+    setTimeout(function () { location.href = 'beranda.html'; }, 450);
   } else {
     UI.toast(r.msg, 'error');
   }
@@ -270,7 +248,7 @@ async function doLogin() {
 
   if (r.ok) {
     UI.toast('Selamat datang!', 'ok');
-    setTimeout(function () { location.href = 'pos.html'; }, 350);
+    setTimeout(function () { location.href = 'beranda.html'; }, 350);
   } else if (r.needSetup) {
     /* Akun aktif tapi tokonya belum dibuat — selesaikan di sini */
     UI.toast(r.msg, 'warn');
@@ -301,7 +279,7 @@ async function doSignup() {
 
   if (r.ok) {
     UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'products.html'; }, 450);
+    setTimeout(function () { location.href = 'beranda.html'; }, 450);
   } else if (r.needConfirm) {
     UI.toast(r.msg, 'warn');
     show('vLogin');

@@ -128,7 +128,7 @@ async function load() {
 function render() {
   if (!users.length) {
     document.getElementById('rows').innerHTML =
-      '<tr><td colspan="6">' + UI.empty('users', 'Belum ada pengguna lain', 'Klik "+ Tambah Pengguna"') + '</td></tr>';
+      '<tr><td colspan="6">' + UI.empty('users', 'Belum ada pengguna lain', 'Buat akun kasir supaya karyawan bisa melayani tanpa melihat laporan keuangan.', { label: 'Tambah pengguna', onclick: 'openEdit()' }) + '</td></tr>';
     return;
   }
 
