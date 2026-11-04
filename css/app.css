@@ -746,7 +746,7 @@ html[data-theme='dark'] .toast { color: var(--bg); }
 @media (min-width: 768px) { .cart-fab { display: none; } }
 
 /* ---------- Metode bayar ---------- */
-.pay-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 16px; }
+.pay-opts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; margin-bottom: 16px; }
 .pay-opt {
   padding: 13px 8px; border-radius: var(--r-sm);
   border: 1px solid var(--border-mid); background: var(--surface);

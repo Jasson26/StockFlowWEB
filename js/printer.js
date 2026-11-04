@@ -39,7 +39,7 @@ const Printer = (function () {
 
   let device = null;
   let charac = null;      // characteristic untuk menulis
-  let mtu = 20;           // ukuran potongan aman sebelum diketahui
+  let mtu = 20;           // aman untuk MTU bawaan BLE (23 - 3 byte header)
   let busy = false;
 
   /* ============================================================
@@ -103,7 +103,28 @@ const Printer = (function () {
      KONEKSI
      ============================================================ */
 
-  /* Telusuri seluruh service, cari characteristic yang bisa ditulis */
+  /* Characteristic tulis yang dipakai printer thermal populer.
+     Dicari lebih dulu; kalau memilih sembarang characteristic yang
+     "bisa ditulis", data bisa terkirim ke jalur yang salah dan
+     kertas keluar kosong. */
+  const PRINT_CHARS = [
+    '00002af1-0000-1000-8000-00805f9b34fb', // service 18f0 (RPP02N, MTP-II, dll)
+    '0000ff02-0000-1000-8000-00805f9b34fb', // service ff00
+    '0000ffe1-0000-1000-8000-00805f9b34fb', // HM-10
+    '0000ff12-0000-1000-8000-00805f9b34fb', // service ff10
+    '49535343-8841-43f4-a8d4-ecbe34729bb3', // ISSC transparent UART (TX)
+    '6e400002-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART (RX dari sisi printer)
+    'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f', // service e7810a71
+  ];
+
+  /* Service yang jelas bukan jalur cetak */
+  const SKIP_SERVICES = [
+    '00001800-0000-1000-8000-00805f9b34fb', // Generic Access
+    '00001801-0000-1000-8000-00805f9b34fb', // Generic Attribute
+    '0000180a-0000-1000-8000-00805f9b34fb', // Device Information
+    '0000180f-0000-1000-8000-00805f9b34fb', // Battery
+  ];
+
   async function findWritable(server) {
     let services = [];
     try {
@@ -115,16 +136,25 @@ const Printer = (function () {
       }
     }
 
+    const all = [];
     for (const svc of services) {
+      if (SKIP_SERVICES.indexOf(String(svc.uuid).toLowerCase()) >= 0) continue;
       let chars = [];
       try { chars = await svc.getCharacteristics(); } catch (e) { continue; }
       for (const c of chars) {
         if (c.properties && (c.properties.write || c.properties.writeWithoutResponse)) {
-          return c;
+          all.push(c);
         }
       }
     }
-    return null;
+
+    /* 1. characteristic printer yang dikenal */
+    for (const u of PRINT_CHARS) {
+      const hit = all.find((c) => String(c.uuid).toLowerCase() === u);
+      if (hit) return hit;
+    }
+    /* 2. cadangan: yang pertama bisa ditulis */
+    return all[0] || null;
   }
 
   async function connect() {
@@ -156,8 +186,7 @@ const Printer = (function () {
         'yang tidak bisa diakses dari browser.');
     }
 
-    /* writeWithoutResponse biasanya lebih cepat dan didukung lebih luas */
-    mtu = charac.properties.writeWithoutResponse ? 100 : 20;
+    mtu = 20;
 
     remember(device.name || 'Printer', device.id);
     emit();
@@ -186,7 +215,7 @@ const Printer = (function () {
       charac = await findWritable(server);
       if (!charac) { device = null; return null; }
 
-      mtu = charac.properties.writeWithoutResponse ? 100 : 20;
+      mtu = 20;
       emit();
       return info();
     } catch (e) {
@@ -233,22 +262,33 @@ const Printer = (function () {
     if (busy) throw new Error('Masih mencetak, tunggu sebentar');
     busy = true;
 
+    /* Tulis DENGAN respons bila didukung: printer mengonfirmasi tiap
+       potongan, jadi tidak ada data yang terbuang karena buffer penuh.
+       Mengirim terlalu cepat tanpa respons adalah penyebab umum
+       kertas keluar kosong. */
+    const withResp = !!(charac.properties.write && (charac.writeValueWithResponse || charac.writeValue));
+
     try {
-      /* Dikirim per potongan. Printer murah mudah kewalahan kalau
-         dikirim sekaligus, jadi ada jeda singkat antar potongan. */
+      await sleep(60); // beri jeda setelah sambung / init
       for (let i = 0; i < bytes.length; i += mtu) {
         const chunk = bytes.slice(i, i + mtu);
-        if (charac.properties.writeWithoutResponse && charac.writeValueWithoutResponse) {
+        if (withResp) {
+          if (charac.writeValueWithResponse) await charac.writeValueWithResponse(chunk);
+          else await charac.writeValue(chunk);
+          await sleep(8);
+        } else if (charac.writeValueWithoutResponse) {
           await charac.writeValueWithoutResponse(chunk);
+          await sleep(35);
         } else if (charac.writeValue) {
           await charac.writeValue(chunk);
+          await sleep(35);
         } else {
           throw new Error('Characteristic tidak bisa ditulis');
         }
-        await sleep(18);
+        /* Tiap ~300 byte beri waktu kepala cetak mengejar */
+        if ((i / mtu) % 15 === 14) await sleep(withResp ? 40 : 120);
       }
-      /* Beri waktu buffer printer menghabiskan antrean */
-      await sleep(120);
+      await sleep(250);
     } finally {
       busy = false;
     }
@@ -277,12 +317,17 @@ const Printer = (function () {
   Builder.prototype.raw   = function (arr) { this.b.push.apply(this.b, arr); return this; };
   Builder.prototype.init  = function () { return this.raw([ESC, 0x40]); };
   Builder.prototype.align = function (n) { return this.raw([ESC, 0x61, n]); };      // 0 kiri 1 tengah 2 kanan
-  Builder.prototype.bold  = function (on) { return this.raw([ESC, 0x45, on ? 1 : 0]); };
+  Builder.prototype.bold  = function (on) { this._bold = !!on; return this.raw([ESC, 0x45, on ? 1 : 0]); };
+  /* Ukuran huruf lewat ESC ! (mode cetak). Lebih luas didukung daripada
+     GS !, yang di sebagian printer murah membuat teks tidak tercetak. */
   Builder.prototype.size  = function (w, h) {                                        // 0..1 masing-masing
-    return this.raw([GS, 0x21, ((w ? 1 : 0) << 4) | (h ? 1 : 0)]);
+    /* ESC ! juga mengatur tebal, jadi status tebal ikut dipertahankan */
+    return this.raw([ESC, 0x21, (h ? 0x10 : 0) | (w ? 0x20 : 0) | (this._bold ? 0x08 : 0)]);
   };
   Builder.prototype.feed  = function (n) { return this.raw([ESC, 0x64, n || 1]); };
-  Builder.prototype.cut   = function () { return this.raw([GS, 0x56, 0x42, 0x00]); };
+  /* Printer portabel 58mm tidak punya pemotong; perintah potong sengaja
+     tidak dikirim karena sebagian model justru menganggapnya data rusak. */
+  Builder.prototype.cut   = function () { return this; };
 
   Builder.prototype.text = function (s) {
     const t = toAscii(s);
@@ -340,7 +385,7 @@ const Printer = (function () {
     const mName = { cash: 'Tunai', qris: 'QRIS', transfer: 'Transfer' };
 
     const b = new Builder();
-    b.init();
+    b.init().raw([ESC, 0x74, 0x00]); // tabel karakter PC437
 
     /* Kepala */
     b.align(1).bold(true).size(1, 1);

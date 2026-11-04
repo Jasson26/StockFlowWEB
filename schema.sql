@@ -331,8 +331,7 @@ begin
   insert into profiles (id, business_id, name, role, active)
   values (auth.uid(), v_biz, coalesce(nullif(trim(p_name), ''), 'Pemilik'), 'owner', true);
 
-  insert into categories (business_id, name, sort_order) values
-    (v_biz, 'Makanan', 1), (v_biz, 'Minuman', 2), (v_biz, 'Lainnya', 3);
+  -- Kategori tidak dibuat otomatis: tiap toko menentukan sendiri.
 
   return jsonb_build_object('business_id', v_biz);
 end

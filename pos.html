@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#6C4CF1">
 <meta name="robots" content="noindex">
 <title>Kasir — StockFlow</title>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=20261105b">
 </head>
 <body>
 
@@ -19,7 +19,7 @@
       <div class="pos-bar">
         <div class="row">
           <div class="search-wrap">
-            <input type="text" id="q" class="input" placeholder="Cari nama produk, SKU, atau scan barcode…" autocomplete="off">
+            <input type="text" id="q" class="input" placeholder="Cari produk…" autocomplete="off">
           </div>
           <button class="btn btn-icon hide-mobile" onclick="load()" title="Muat ulang"><span data-ico="refresh" data-ico-size="16"></span></button>
         </div>
@@ -91,7 +91,6 @@
         <div class="pay-opts">
           <button class="pay-opt on" data-m="cash"     onclick="setMethod('cash')"><i><span data-ico="cash" data-ico-size="16"></span></i>Tunai</button>
           <button class="pay-opt"    data-m="qris"     onclick="setMethod('qris')"><i><span data-ico="qr" data-ico-size="16"></span></i>QRIS</button>
-          <button class="pay-opt"    data-m="transfer" onclick="setMethod('transfer')"><i><span data-ico="bank" data-ico-size="16"></span></i>Transfer</button>
         </div>
 
         <!-- TUNAI -->
@@ -111,17 +110,6 @@
         <!-- QRIS -->
         <div id="payQris" class="hide">
           <div id="qrisIntro"></div>
-        </div>
-
-        <!-- TRANSFER -->
-        <div id="payTf" class="hide">
-          <div class="field">
-            <label class="label">NO. REFERENSI / CATATAN</label>
-            <input type="text" id="tfRef" class="input" placeholder="Misal: BCA 1234567890">
-            <div class="hint">
-              Transfer dicatat manual &mdash; pastikan dana sudah masuk sebelum menyelesaikan.
-            </div>
-          </div>
         </div>
 
         <div class="field mt16">
@@ -190,13 +178,13 @@
   </div>
 </div>
 
-<script src="js/icons.js"></script>
-<script src="js/printer.js"></script>
-<script src="js/config.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/ui.js"></script>
+<script src="js/icons.js?v=20261105b"></script>
+<script src="js/printer.js?v=20261105b"></script>
+<script src="js/config.js?v=20261105b"></script>
+<script src="js/demo.js?v=20261105b"></script>
+<script src="js/api.js?v=20261105b"></script>
+<script src="js/auth.js?v=20261105b"></script>
+<script src="js/ui.js?v=20261105b"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 
@@ -396,7 +384,6 @@ function openPay() {
   document.getElementById('payTitle').textContent = 'Pembayaran';
   document.getElementById('payTotal').textContent = UI.rp(t.total);
   document.getElementById('paid').value  = '';
-  document.getElementById('tfRef').value = '';
   document.getElementById('cust').value  = '';
 
   var steps = [t.total, 50000, 100000, 150000, 200000, 500000]
@@ -426,7 +413,6 @@ function setMethod(m) {
   });
   document.getElementById('payCash').classList.toggle('hide', m !== 'cash');
   document.getElementById('payQris').classList.toggle('hide', m !== 'qris');
-  document.getElementById('payTf').classList.toggle('hide',   m !== 'transfer');
 
   var btn = document.getElementById('paySubmit');
   btn.textContent = m !== 'qris' ? 'Selesaikan'
@@ -492,16 +478,11 @@ async function submitPay() {
     return finishManual('cash', null);
   }
 
-  /* transfer */
-  var ref = document.getElementById('tfRef').value.trim();
-  UI.confirm({
-    title: 'Dana sudah masuk?',
-    text: 'Transfer dicatat manual. Pastikan Anda sudah melihat dana masuk di rekening sebelum melanjutkan.',
-    ok: 'Ya, sudah masuk',
-  }).then(function (ok) { if (ok) finishManual('transfer', ref); });
+  /* Metode lain tidak tersedia di kasir */
+  UI.toast('Pilih Tunai atau QRIS', 'error');
 }
 
-/* ---------- Tunai & transfer: langsung lunas ---------- */
+/* ---------- Tunai & QRIS unggahan: langsung lunas ---------- */
 async function finishManual(payMethod, ref) {
   busy = true;
   UI.loading(true);

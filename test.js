@@ -1072,6 +1072,47 @@ ok('Pengaturan menunjukkan status koneksi printer',
    /Terputus, tekan Hubungkan/.test(setSrc3) && /Siap mencetak/.test(setSrc3));
 
 /* ============================================================ */
+section('[28] Printer: struk tidak keluar kosong');
+
+const prn3 = fs.readFileSync(path.join(SRC, 'js/printer.js'), 'utf8');
+ok('characteristic printer yang dikenal diutamakan', /PRINT_CHARS/.test(prn3) && /00002af1/.test(prn3));
+ok('service sistem (GAP/Device Info/Battery) dilewati', /SKIP_SERVICES/.test(prn3));
+ok('potongan 20 byte (aman untuk MTU bawaan)', /mtu = 20;/.test(prn3) && !/\? 100 : 20/.test(prn3));
+ok('tulis dengan respons bila didukung', /writeValueWithResponse/.test(prn3));
+ok('ukuran huruf pakai ESC !, bukan GS !', !/GS, 0x21/.test(prn3) && /ESC, 0x21/.test(prn3));
+ok('tidak mengirim perintah potong', !/GS, 0x56/.test(prn3));
+
+{
+  const vmp = require('vm');
+  const c2 = vmp.createContext({ navigator: {}, window: {}, location: { protocol: 'https:' },
+                                 localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+                                 setTimeout, console });
+  vmp.runInContext(prn3 + '\n;this.P = Printer;', c2);
+  const bytes = Array.from(c2.P.buildReceipt(
+    { order_no: 'INV-1', total: 5000, subtotal: 5000, paid_amount: 5000, payment_method: 'cash' },
+    [{ name: 'Teh', price: 5000, qty: 1 }], { name: 'Toko' }));
+  const txt = String.fromCharCode.apply(null, bytes.filter((b) => b >= 0x20 && b < 0x7f));
+  ok('struk berisi teks yang bisa dicetak', /Toko/.test(txt) && /INV-1/.test(txt) && /Teh/.test(txt) && /TOTAL/.test(txt));
+  ok('struk tidak mengandung GS (0x1D)', bytes.indexOf(0x1D) === -1);
+}
+
+/* ============================================================ */
+section('[29] Kasir: tanpa Transfer; produk tanpa SKU/Barcode; kategori bebas');
+
+const pos5 = fs.readFileSync(path.join(SRC, 'pos.html'), 'utf8');
+const prd5 = fs.readFileSync(path.join(SRC, 'products.html'), 'utf8');
+const sch5 = fs.readFileSync(path.join(SRC, 'schema.sql'), 'utf8');
+ok('tombol Transfer hilang dari kasir', !/data-m="transfer"/.test(pos5));
+ok('kasir tidak lagi menyelesaikan transfer', !/finishManual\('transfer'/.test(pos5));
+ok('field SKU hilang', !/id="eSku"/.test(prd5));
+ok('field Barcode hilang', !/id="eBar"/.test(prd5));
+ok('toko baru tanpa kategori bawaan', !/'Makanan', 1\)/.test(sch5));
+ok('ada migrasi kategori',
+   fs.existsSync(path.join(SRC, 'migrasi-02-tanpa-kategori-bawaan.sql')));
+const mig2 = fs.readFileSync(path.join(SRC, 'migrasi-02-tanpa-kategori-bawaan.sql'), 'utf8');
+ok('migrasi hanya hapus kategori kosong', /not exists \(select 1 from products/.test(mig2));
+
+/* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')
                   : ('SEMUA LULUS — ' + pass + ' tes');
 console.log('\n' + '='.repeat(56));

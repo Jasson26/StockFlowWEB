@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6C4CF1">
 <title>Produk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=20261105b">
 </head>
 <body>
 
@@ -31,7 +31,6 @@
           <th style="width:46px"></th>
           <th>Produk</th>
           <th class="hide-mobile">Kategori</th>
-          <th class="hide-mobile">SKU</th>
           <th class="num">Harga</th>
           <th class="num">Stok</th>
           <th style="width:90px"></th>
@@ -101,16 +100,6 @@
         </div>
       </div>
 
-      <div class="grid g2">
-        <div class="field">
-          <label class="label">SKU</label>
-          <input type="text" id="eSku" class="input" placeholder="Opsional">
-        </div>
-        <div class="field">
-          <label class="label">BARCODE</label>
-          <input type="text" id="eBar" class="input" placeholder="Opsional — bisa discan di kasir">
-        </div>
-      </div>
     </div>
     <div class="modal-ft">
       <button class="btn" onclick="UI.closeModal('mEdit')">Batal</button>
@@ -136,13 +125,13 @@
   </div>
 </div>
 
-<script src="js/icons.js"></script>
-<script src="js/config.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/ui.js"></script>
+<script src="js/icons.js?v=20261105b"></script>
+<script src="js/config.js?v=20261105b"></script>
+<script src="js/demo.js?v=20261105b"></script>
+<script src="js/demo.js?v=20261105b"></script>
+<script src="js/api.js?v=20261105b"></script>
+<script src="js/auth.js?v=20261105b"></script>
+<script src="js/ui.js?v=20261105b"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 var U = Auth.user();
@@ -220,7 +209,6 @@ function render() {
       '<td><div class="fw7">' + UI.esc(p.name) + '</div>' +
         (p.active ? '' : '<span class="badge">Nonaktif</span>') + '</td>' +
       '<td class="hide-mobile c-mid">' + UI.esc(catName(p.category_id)) + '</td>' +
-      '<td class="hide-mobile c-dim fs13">' + UI.esc(p.sku || '—') + '</td>' +
       '<td class="num fw7 mono">' + UI.rp(p.price) + '</td>' +
       '<td class="num"><span class="badge ' + cls + '">' + UI.num(st) + '</span></td>' +
       '<td><div class="row" style="gap:4px;justify-content:flex-end">' +
@@ -244,8 +232,6 @@ function openEdit(id) {
   document.getElementById('eCost').value  = p ? p.cost : '';
   document.getElementById('eStock').value = p ? p.stock : '';
   document.getElementById('eMin').value   = p ? p.min_stock : '';
-  document.getElementById('eSku').value   = p ? (p.sku || '') : '';
-  document.getElementById('eBar').value   = p ? (p.barcode || '') : '';
 
   imgUrl = p ? p.image_url : null;
   showPrev();
@@ -296,8 +282,6 @@ async function save() {
     price: price,
     cost: Number(document.getElementById('eCost').value) || 0,
     min_stock: Number(document.getElementById('eMin').value) || 0,
-    sku: document.getElementById('eSku').value.trim() || null,
-    barcode: document.getElementById('eBar').value.trim() || null,
     image_url: url,
   };
 
