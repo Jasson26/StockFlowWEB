@@ -21,7 +21,7 @@
           <div class="search-wrap">
             <input type="text" id="q" class="input" placeholder="Cari nama produk, SKU, atau scan barcode…" autocomplete="off">
           </div>
-          <button class="btn btn-icon hide-mobile" onclick="load()" title="Muat ulang">&#8635;</button>
+          <button class="btn btn-icon hide-mobile" onclick="load()" title="Muat ulang"><span data-ico="refresh" data-ico-size="16"></span></button>
         </div>
         <div class="chips" id="cats"></div>
       </div>
@@ -36,7 +36,7 @@
       <div class="cart-hd">
         <h3>Keranjang</h3>
         <span class="badge brand" id="cartCount">0 item</span>
-        <button class="btn btn-ghost btn-icon" onclick="clearCart()" title="Kosongkan">&#128465;</button>
+        <button class="btn btn-ghost btn-icon" onclick="clearCart()" title="Kosongkan"><span data-ico="trash" data-ico-size="16"></span></button>
         <button class="btn btn-ghost btn-icon only-mobile" onclick="closeCart()" title="Tutup">&times;</button>
       </div>
 
@@ -66,7 +66,7 @@
 
 <!-- FAB keranjang (HP) -->
 <button class="cart-fab hide" id="fab" onclick="openCart()">
-  <span>&#128722;</span>
+  <span><span data-ico="pos" data-ico-size="16"></span></span>
   <span class="cf-count" id="fabCount">0</span>
   <span class="spacer"></span>
   <span class="mono" id="fabTotal">Rp 0</span>
@@ -89,9 +89,9 @@
         </div>
 
         <div class="pay-opts">
-          <button class="pay-opt on" data-m="cash"     onclick="setMethod('cash')"><i>&#128181;</i>Tunai</button>
-          <button class="pay-opt"    data-m="qris"     onclick="setMethod('qris')"><i>&#128241;</i>QRIS</button>
-          <button class="pay-opt"    data-m="transfer" onclick="setMethod('transfer')"><i>&#127974;</i>Transfer</button>
+          <button class="pay-opt on" data-m="cash"     onclick="setMethod('cash')"><i><span data-ico="cash" data-ico-size="16"></span></i>Tunai</button>
+          <button class="pay-opt"    data-m="qris"     onclick="setMethod('qris')"><i><span data-ico="qr" data-ico-size="16"></span></i>QRIS</button>
+          <button class="pay-opt"    data-m="transfer" onclick="setMethod('transfer')"><i><span data-ico="bank" data-ico-size="16"></span></i>Transfer</button>
         </div>
 
         <!-- TUNAI -->
@@ -135,7 +135,7 @@
         <div class="qr-amount mono" id="qrAmount">Rp 0</div>
         <div class="qr-inv mb12" id="qrInv">&mdash;</div>
 
-        <div class="qr-timer" id="qrTimer">&#9201; <span id="qrTime">15:00</span></div>
+        <div class="qr-timer" id="qrTimer"><span data-ico="clock" data-ico-size="16"></span><span id="qrTime">15:00</span></div>
 
         <div class="qr-frame">
           <img id="qrImg" alt="Kode QRIS untuk pembayaran">
@@ -179,12 +179,19 @@
       <div id="rcptHost"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn" onclick="window.print()">&#128424; Cetak</button>
+      <button class="btn hide" onclick="btPrint()" id="btPrintBtn">
+        <span data-ico="printer" data-ico-size="16"></span>Cetak Struk
+      </button>
+      <button class="btn" onclick="window.print()" id="webPrintBtn">
+        <span data-ico="print" data-ico-size="16"></span>Cetak
+      </button>
       <button class="btn btn-primary" onclick="closeRcpt()">Transaksi Baru</button>
     </div>
   </div>
 </div>
 
+<script src="js/icons.js"></script>
+<script src="js/printer.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/api.js"></script>
@@ -207,7 +214,7 @@ var qr = { orderId: null, gatewayId: null, expiresAt: 0, pollTimer: null, tickTi
 
 UI.shell('pos', 'Kasir',
   '<span class="badge hide-mobile">' + UI.esc(U.business_name) + '</span>' +
-  '<button class="btn btn-ghost btn-icon hide-mobile" onclick="UI.toggleTheme()" title="Mode gelap">&#127769;</button>'
+  '<button class="btn btn-ghost btn-icon hide-mobile" onclick="UI.toggleTheme()" title="Mode gelap">' + UI.ic('moon',16) + '</button>'
 );
 
 /* ============================================================
@@ -254,8 +261,8 @@ function renderGrid() {
 
   if (!list.length) {
     host.innerHTML = products.length
-      ? UI.empty('&#128269;', 'Produk tidak ditemukan', 'Coba kata kunci atau kategori lain')
-      : UI.empty('&#128230;', 'Belum ada produk', 'Tambahkan produk dulu di menu Produk');
+      ? UI.empty('search', 'Produk tidak ditemukan', 'Coba kata kunci atau kategori lain')
+      : UI.empty('box', 'Belum ada produk', 'Tambahkan produk dulu di menu Produk');
     host.style.gridTemplateColumns = '1fr';
     return;
   }
@@ -266,7 +273,7 @@ function renderGrid() {
     var cls = st <= 0 ? 'zero' : (st <= Number(p.min_stock || 0) ? 'low' : '');
     return '<button class="pcard' + (st <= 0 ? ' out' : '') + '" onclick="add(\'' + p.id + '\')">' +
       '<div class="pcard-img">' +
-        (p.image_url ? '<img src="' + UI.esc(p.image_url) + '" alt="" loading="lazy">' : '&#128230;') +
+        (p.image_url ? '<img src="' + UI.esc(p.image_url) + '" alt="" loading="lazy">' : UI.ic('box', 22)) +
       '</div>' +
       '<div class="pcard-bd">' +
         '<div class="pcard-name">' + UI.esc(p.name) + '</div>' +
@@ -336,7 +343,7 @@ function renderCart() {
   var host = document.getElementById('cartItems');
 
   if (!cart.length) {
-    host.innerHTML = UI.empty('&#128722;', 'Keranjang kosong', 'Pilih produk untuk mulai transaksi');
+    host.innerHTML = UI.empty('pos', 'Keranjang kosong', 'Pilih produk untuk mulai transaksi');
   } else {
     host.innerHTML = cart.map(function (i) {
       return '<div class="citem">' +
@@ -631,7 +638,7 @@ async function onQrisPaid(issuer) {
   var o = r.data || {};
 
   document.getElementById('stResult').innerHTML =
-    '<div class="qr-result-ico ok">&#10004;</div>' +
+    '<div class="qr-result-ico ok">' + UI.ic('check',16) + '</div>' +
     '<h4>Pembayaran Diterima</h4>' +
     '<p>' + UI.rp(o.total || 0) + ' lewat QRIS' +
     (issuer ? ' (' + UI.esc(String(issuer).toUpperCase()) + ')' : '') + '</p>';
@@ -659,7 +666,7 @@ function onQrisFailed(st) {
     : 'Pembayaran tidak berhasil diproses oleh penyedia.';
 
   document.getElementById('stResult').innerHTML =
-    '<div class="qr-result-ico warn">&#9888;</div>' +
+    '<div class="qr-result-ico warn">' + UI.ic('alert',16) + '</div>' +
     '<h4>' + (st === 'expired' ? 'QR Kedaluwarsa' : 'Pembayaran Gagal') + '</h4>' +
     '<p>' + msg + '<br>Keranjang tetap tersimpan &mdash; Anda bisa coba lagi.</p>';
 
@@ -748,13 +755,67 @@ function showReceipt(o) {
       '<div class="r-c" style="font-size:11px">' + UI.esc(U.receipt_note || 'Terima kasih') + '</div>' +
     '</div>';
 
+  lastOrder = o;
+  syncPrintBtn();
   UI.openModal('mRcpt');
+  autoPrint(o);
 }
 
 function closeRcpt() {
   UI.closeModal('mRcpt');
   document.getElementById('q').focus();
 }
+
+/* ============================================================
+   CETAK KE PRINTER BLUETOOTH
+   ============================================================ */
+var lastOrder = null;
+
+function bizInfo() {
+  return {
+    name: U.business_name,
+    address: U.business_address || null,
+    phone: U.business_phone || null,
+    receipt_note: U.receipt_note,
+  };
+}
+
+function syncPrintBtn() {
+  var on = Printer.connected();
+  document.getElementById('btPrintBtn').classList.toggle('hide', !on);
+  /* Dialog print browser tetap disediakan sebagai cadangan */
+  document.getElementById('webPrintBtn').classList.toggle('btn-primary', false);
+  UI.hydrateIcons(document);
+}
+
+async function btPrint() {
+  if (!lastOrder) return;
+  try {
+    UI.loading(true);
+    await Printer.printReceipt(lastOrder, lastItems, bizInfo());
+    UI.loading(false);
+    UI.toast('Struk dicetak', 'ok');
+  } catch (e) {
+    UI.loading(false);
+    UI.toast(e.message || 'Gagal mencetak', 'error');
+  }
+}
+
+/* Cetak otomatis bila diaktifkan di Pengaturan */
+async function autoPrint(o) {
+  var auto = false;
+  try { auto = localStorage.getItem('sf5_print_auto') === '1'; } catch (e) {}
+  if (!auto || !Printer.connected()) return;
+  try {
+    await Printer.printReceipt(o, lastItems, bizInfo());
+    UI.toast('Struk dicetak otomatis', 'ok');
+  } catch (e) {
+    UI.toast('Cetak otomatis gagal: ' + (e.message || ''), 'warn');
+  }
+}
+
+Printer.onChange(syncPrintBtn);
+Printer.reconnect().then(syncPrintBtn);
 
 /* ============================================================
    PENCARIAN / BARCODE

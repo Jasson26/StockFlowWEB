@@ -92,6 +92,7 @@
   </div>
 </div>
 
+<script src="js/icons.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/demo.js"></script>
@@ -147,7 +148,7 @@ function render() {
 
   if (!list.length) {
     document.getElementById('rows').innerHTML =
-      '<tr><td colspan="5">' + UI.empty('&#9989;', 'Tidak ada barang rusak', 'Bagus! Tidak ada kerugian pada periode ini') + '</td></tr>';
+      '<tr><td colspan="5">' + UI.empty('check', 'Tidak ada barang rusak', 'Bagus! Tidak ada kerugian pada periode ini') + '</td></tr>';
     return;
   }
 

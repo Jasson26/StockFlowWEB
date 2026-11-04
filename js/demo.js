@@ -70,6 +70,7 @@ const Demo = (function () {
         p('p10','c3', 'Pisang Goreng',       10000,  4000, 14, 6),
       ],
       stock_movements: [], orders: [], order_items: [], expenses: [], payments: [],
+      payment_credentials: [],
       _session: null,
     };
   }
@@ -180,6 +181,7 @@ const Demo = (function () {
       localStorage.setItem('sf5_profile', JSON.stringify({
         id: u.id, name: u.name, role: u.role, email: u._email,
         business_id: BIZ, business_name: biz.name,
+        business_address: biz.address, business_phone: biz.phone,
         tax_percent: Number(biz.tax_percent || 0),
         qris_enabled: !!biz.qris_enabled,
         qris_static_url: biz.qris_static_url,
@@ -320,6 +322,42 @@ const Demo = (function () {
 
     if (fn === 'setup_owner') {
       return { data: null, error: { message: 'Pendaftaran tidak tersedia di mode demo' } };
+    }
+
+    if (fn === 'payment_credential_status') {
+      const c = (d.payment_credentials || [])[0];
+      return {
+        data: c
+          ? { configured: true, provider: c.provider, is_production: c.is_production,
+              key_hint: c.key_hint, updated_at: c.updated_at }
+          : { configured: false },
+        error: null,
+      };
+    }
+
+    if (fn === 'export_my_data') {
+      return {
+        data: {
+          exported_at: new Date().toISOString(),
+          business: d.businesses[0],
+          users: d.profiles.map((p) => ({
+            name: p.name, role: p.role, active: p.active, created_at: p.created_at })),
+          categories: d.categories,
+          products: d.products,
+          orders: d.orders,
+          order_items: d.order_items,
+          stock_movements: d.stock_movements,
+          expenses: u.role === 'owner' ? d.expenses : [],
+        },
+        error: null,
+      };
+    }
+
+    if (fn === 'delete_my_business') {
+      if (u.role !== 'owner') {
+        return { data: null, error: { message: 'Hanya owner yang boleh menghapus toko' } };
+      }
+      return { data: { ok: true, user_ids: d.profiles.map((p) => p.id) }, error: null };
     }
 
     return { data: null, error: { message: 'Fungsi demo tidak dikenal: ' + fn } };
@@ -482,6 +520,19 @@ const Demo = (function () {
       return { data: null, error: { message: 'action tidak dikenal' } };
     }
 
+    if (name === 'delete-account') {
+      const u = me();
+      if (u.role !== 'owner') {
+        return { data: null, error: { message: 'Hanya owner yang boleh menghapus toko' } };
+      }
+      if (b.confirm !== 'HAPUS') {
+        return { data: null, error: { message: 'Konfirmasi tidak cocok' } };
+      }
+      /* Di demo, cukup reset data lokal */
+      try { localStorage.removeItem(DATA); } catch (e) {}
+      return { data: { ok: true, demo: true }, error: null };
+    }
+
     return { data: null, error: { message: 'Fungsi demo tidak dikenal: ' + name } };
   }
 
@@ -501,12 +552,14 @@ const Demo = (function () {
 
   function banner() {
     if (!on()) return;
+    /* Tandai <html> agar tata letak menyisakan ruang untuk banner */
+    document.documentElement.classList.add('demo-on');
     if (document.getElementById('demoBanner')) return;
     const b = document.createElement('div');
     b.id = 'demoBanner';
     b.style.cssText =
       'position:fixed;bottom:0;left:0;right:0;z-index:600;background:#F59E0B;color:#201500;' +
-      'font:600 12.5px -apple-system,Segoe UI,Roboto,sans-serif;padding:7px 14px;' +
+      'font:600 12px -apple-system,Segoe UI,Roboto,sans-serif;height:34px;padding:0 14px;' +
       'display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap';
     b.innerHTML =
       '<span><strong>MODE DEMO</strong> — data hanya di browser ini, pembayaran disimulasikan</span>' +

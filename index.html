@@ -1,311 +1,638 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#6C4CF1">
-<meta name="robots" content="noindex">
-<title>Masuk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css">
+<meta name="theme-color" content="#d92b21">
+<title>StockFlow: Kasir &amp; Stok untuk Warung Indonesia</title>
+<meta name="description" content="Kasir dan inventori berbasis web untuk warung, kafe dan toko kecil. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Gratis, dibuka dari HP.">
+<meta property="og:title" content="StockFlow: Kasir &amp; Stok untuk Warung Indonesia">
+<meta property="og:description" content="Satu QR untuk semua dompet digital. Stok terpotong sendiri. Struk langsung tercetak. Gratis.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
 
-<div class="auth">
-  <div class="auth-art">
-    <h2>Kelola toko Anda,<br>dari mana saja.</h2>
-    <p>Sistem kasir dan manajemen inventaris untuk UMKM Indonesia. Berjalan di HP, tablet, dan komputer.</p>
-    <div class="auth-feats">
-      <div class="auth-feat"><i>&#128722;</i> Kasir cepat dengan grid produk</div>
-      <div class="auth-feat"><i>&#128241;</i> QRIS resmi &mdash; terkonfirmasi otomatis</div>
-      <div class="auth-feat"><i>&#128230;</i> Stok terpotong tiap transaksi</div>
-      <div class="auth-feat"><i>&#128274;</i> Data tiap toko terisolasi</div>
+<a class="skip" href="#utama">Lompat ke isi</a>
+
+<!-- ============================================================
+     KEPALA , lembar bingkai dengan satu panel teks
+     ============================================================ -->
+<header class="hero">
+  <div class="sheet" id="sheet"></div>
+</header>
+
+<main id="utama">
+
+<!-- ============================================================
+     CARA KERJANYA , empat medan warna, kartu yang sama maju terus
+     ============================================================ -->
+<section class="steps" aria-labelledby="h-cara">
+  <div class="step">
+    <h2 id="h-cara">Cara kerjanya</h2>
+    <div class="step-card rise" data-ui>
+      <div class="u-head">Keranjang</div>
+      <div class="u-row"><span class="u-grow u-name">Kopi Susu Gula Aren</span><span class="u-num">2</span></div>
+      <div class="u-row"><span class="u-grow u-name">Nasi Goreng Spesial</span><span class="u-num">1</span></div>
+      <div class="u-total"><span>Total</span><span class="u-num">Rp 61.000</span></div>
+    </div>
+    <p class="step-say">Pertama barang dipilih.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-card rise" data-ui>
+      <div class="u-head">Bayar QRIS</div>
+      <div style="padding:12px;display:grid;place-items:center">
+        <div class="qr" data-qr="21" style="width:132px;height:132px"></div>
+      </div>
+      <div class="u-total"><span>Tagihan</span><span class="u-num">Rp 61.000</span></div>
+    </div>
+    <p class="step-say">Lalu satu QR muncul.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-card rise" data-ui>
+      <div class="u-head">Status pembayaran</div>
+      <div class="u-row"><span class="u-grow u-name">Diterima</span><span class="u-chip ok">LUNAS</span></div>
+      <div class="u-row"><span class="u-grow u-sub">Dibayar lewat</span><span class="u-num">GoPay</span></div>
+      <div class="u-row"><span class="u-grow u-sub">Waktu</span><span class="u-num">14:08</span></div>
+      <div class="u-total"><span>Masuk rekening</span><span class="u-num">Rp 61.000</span></div>
+    </div>
+    <p class="step-say">Pembeli bayar, sistem tahu sendiri.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-card rise" data-ui>
+      <div class="u-head">Stok terpotong</div>
+      <div class="u-row"><span class="u-grow u-name">Kopi Susu Gula Aren</span><span class="u-num">40 &rarr; 38</span></div>
+      <div class="u-row"><span class="u-grow u-name">Nasi Goreng Spesial</span><span class="u-num">25 &rarr; 24</span></div>
+      <div class="u-row"><span class="u-grow u-sub">Struk</span><span class="u-chip on">TERCETAK</span></div>
+    </div>
+    <p class="step-say">Stok berkurang, struk keluar.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     FITUR , papan dekatan pada bagian antarmuka yang nyata
+     ============================================================ -->
+<section aria-labelledby="h-fitur" style="padding:110px 0">
+  <div class="mosaic" id="mosaic"></div>
+</section>
+
+<!-- ============================================================
+     COBA SENDIRI , demo yang benar-benar jalan
+     ============================================================ -->
+<section class="demo-wrap" aria-labelledby="h-coba" style="background:var(--surface)">
+  <div class="demo-head rise">
+    <h2 id="h-coba">Coba sendiri</h2>
+    <p>Ketuk barangnya seperti kasir sungguhan. Totalnya berubah, QR-nya ikut berubah,
+       dan struk 58mm di bawah tercetak persis seperti ini.</p>
+  </div>
+
+  <div class="demo rise">
+    <div class="demo-stage">
+      <div data-ui style="background:var(--bg)">
+        <div class="u-head">Keranjang, Warung Demo</div>
+        <div id="dCart"></div>
+        <div class="u-total"><span>Total</span><span class="u-num" id="dTotal">Rp 0</span></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:start">
+        <div class="qr" id="dQr" data-qr="21" style="width:132px;height:132px"></div>
+        <div class="slip" id="dSlip"></div>
+      </div>
+    </div>
+
+    <div class="demo-ctrl">
+      <div class="u-head" style="background:var(--surface-2)">Ketuk untuk menambah</div>
+      <div id="dBtns"></div>
+      <div class="ctrl-foot">
+        <button class="link-plain" id="dReset" type="button">Kosongkan keranjang</button>
+      </div>
     </div>
   </div>
 
-  <div class="auth-form">
-    <div class="auth-inner">
-      <div class="auth-logo">
-        <div class="sb-mark">S</div><span>StockFlow</span>
+  <p class="demo-note">Harga dan nama barang di atas hanya contoh. Di tokomu, semuanya kamu isi sendiri.</p>
+</section>
+
+<!-- ============================================================
+     HARGA , struk rinci
+     ============================================================ -->
+<section class="price-sec" aria-labelledby="h-harga">
+  <div class="price-board">
+    <div class="price-say rise">
+      <h2 id="h-harga">Gratis, tanpa kecuali</h2>
+      <p>Tidak ada paket, tidak ada masa percobaan, tidak ada biaya per transaksi
+         yang mengalir ke kami. Yang berbayar hanya barang milik pihak lain, dan
+         itupun hanya kalau kamu memakainya.</p>
+      <a class="btn" href="masuk.html?daftar=1">Daftarkan toko</a>
+    </div>
+
+    <div class="price-slip rise">
+      <h3>Rincian biaya</h3>
+
+      <div class="price-item"><span>Aplikasi StockFlow</span><span>Rp 0</span></div>
+      <div class="price-item"><span>Database &amp; penyimpanan</span><span>Rp 0</span></div>
+      <div class="price-item"><span>Hosting halaman</span><span>Rp 0</span></div>
+      <div class="price-item"><span>Akun kasir karyawan</span><span>Rp 0</span></div>
+      <div class="price-item other"><span>QRIS di bawah Rp 100.000</span><span>0%</span></div>
+      <div class="price-item other"><span>QRIS di atas itu</span><span>0,7%</span></div>
+      <div class="price-item other"><span>Printer Bluetooth, sekali beli</span><span>&plusmn;150.000</span></div>
+
+      <div class="price-bar"></div>
+      <div class="price-total">
+        <b>Dibayar ke StockFlow</b>
+        <strong>Rp 0</strong>
       </div>
 
-      <div id="cfgWarn" class="hide" style="background:var(--warn-faint);border:1px solid var(--warn);border-radius:var(--r);padding:14px;margin-bottom:20px;font-size:13.5px;line-height:1.6">
-        <strong>Setup belum selesai.</strong><br>
-        Buka <code>js/config.js</code> dan isi <code>SUPABASE_URL</code> + <code>SUPABASE_ANON_KEY</code>.
-        Panduan lengkap ada di <code>README.md</code>.
-      </div>
-
-      <div id="cfgProblem" class="hide" style="background:var(--danger-faint);border:1px solid var(--danger);border-radius:var(--r);padding:14px;margin-bottom:20px;font-size:13.5px;line-height:1.6">
-        <strong>Ada yang salah di js/config.js</strong><br>
-        <span id="cfgProblemMsg"></span>
-      </div>
-
-      <div id="expiredWarn" class="hide" style="background:var(--warn-faint);border-radius:var(--r);padding:12px;margin-bottom:18px;font-size:13.5px">
-        Sesi Anda berakhir. Silakan masuk kembali.
-      </div>
-
-      <!-- ============ MASUK ============ -->
-      <div id="vLogin">
-        <h1>Masuk</h1>
-        <p class="sub">Masukkan email dan password akun Anda.</p>
-
-        <form onsubmit="doLogin();return false">
-          <div class="field">
-            <label class="label" for="lEmail">EMAIL</label>
-            <input type="email" id="lEmail" class="input" placeholder="nama@email.com"
-                   autocomplete="username" required>
-          </div>
-          <div class="field">
-            <label class="label" for="lPass">PASSWORD</label>
-            <input type="password" id="lPass" class="input" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-                   autocomplete="current-password" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="loginBtn">Masuk</button>
-        </form>
-
-        <p class="tc mt16 fs13">
-          <a href="#" onclick="show('vForgot');return false" class="c-mid">Lupa password?</a>
-        </p>
-
-        <p class="tc mt16 c-mid fs13">
-          Belum punya akun? <a href="#" onclick="show('vSignup');return false" class="fw7">Daftar toko baru</a>
-        </p>
-
-        <div style="border-top:1px solid var(--border);margin-top:22px;padding-top:18px">
-          <button class="btn btn-block" onclick="startDemo()">&#127919; Coba Mode Demo</button>
-          <div class="hint tc">Jelajahi semua fitur dengan data contoh, termasuk simulasi pembayaran QRIS.</div>
-        </div>
-      </div>
-
-      <!-- ============ DAFTAR ============ -->
-      <div id="vSignup" class="hide">
-        <h1>Daftar Toko</h1>
-        <p class="sub">Buat akun owner untuk toko Anda.</p>
-
-        <form onsubmit="doSignup();return false">
-          <div class="field">
-            <label class="label" for="sBiz">NAMA TOKO</label>
-            <input type="text" id="sBiz" class="input" placeholder="Toko Maju Jaya" required>
-          </div>
-          <div class="field">
-            <label class="label" for="sName">NAMA ANDA</label>
-            <input type="text" id="sName" class="input" placeholder="Nama lengkap"
-                   autocomplete="name" required>
-          </div>
-          <div class="field">
-            <label class="label" for="sEmail">EMAIL</label>
-            <input type="email" id="sEmail" class="input" placeholder="nama@email.com"
-                   autocomplete="username" required>
-          </div>
-          <div class="field">
-            <label class="label" for="sPass">PASSWORD</label>
-            <input type="password" id="sPass" class="input" placeholder="Minimal 8 karakter"
-                   autocomplete="new-password" required>
-            <div class="hint">Gunakan password yang belum Anda pakai di layanan lain.</div>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="signupBtn">
-            Daftar &amp; Mulai
-          </button>
-        </form>
-
-        <p class="tc mt24 c-mid fs13">
-          Sudah punya akun? <a href="#" onclick="show('vLogin');return false" class="fw7">Masuk di sini</a>
-        </p>
-      </div>
-
-      <!-- ============ LENGKAPI TOKO ============ -->
-      <div id="vSetup" class="hide">
-        <h1>Selesaikan Pendaftaran</h1>
-        <p class="sub">Akun Anda sudah aktif. Tinggal satu langkah lagi.</p>
-
-        <div style="background:var(--ok-faint);border-radius:var(--r);padding:13px;margin-bottom:20px;font-size:13.5px;line-height:1.6">
-          Masuk sebagai <strong id="setupEmail">&mdash;</strong>
-        </div>
-
-        <form onsubmit="doSetup();return false">
-          <div class="field">
-            <label class="label" for="cBiz">NAMA TOKO</label>
-            <input type="text" id="cBiz" class="input" placeholder="Toko Maju Jaya" required>
-          </div>
-          <div class="field">
-            <label class="label" for="cName">NAMA ANDA</label>
-            <input type="text" id="cName" class="input" placeholder="Nama lengkap" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="setupBtn">
-            Buat Toko &amp; Mulai
-          </button>
-        </form>
-
-        <p class="tc mt16 fs13">
-          <a href="#" onclick="Auth.logout();return false" class="c-mid">Keluar dan pakai akun lain</a>
-        </p>
-      </div>
-
-      <!-- ============ LUPA PASSWORD ============ -->
-      <div id="vForgot" class="hide">
-        <h1>Lupa Password</h1>
-        <p class="sub">Kami kirim tautan pengaturan ulang ke email Anda.</p>
-
-        <form onsubmit="doForgot();return false">
-          <div class="field">
-            <label class="label" for="fEmail">EMAIL</label>
-            <input type="email" id="fEmail" class="input" placeholder="nama@email.com" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block btn-lg mt8">Kirim Tautan</button>
-        </form>
-
-        <div id="forgotDone" class="hide mt16" style="background:var(--ok-faint);border-radius:var(--r);padding:14px;font-size:13.5px;line-height:1.6">
-          Jika email tersebut terdaftar, tautan pengaturan ulang sudah dikirim.
-          Periksa juga folder spam.
-        </div>
-
-        <p class="tc mt24 c-mid fs13">
-          <a href="#" onclick="show('vLogin');return false" class="fw7">Kembali ke halaman masuk</a>
-        </p>
-      </div>
+      <p class="price-fine">
+        Tarif QRIS ditetapkan Bank Indonesia dan dibayarkan ke penyedia pembayaran,
+        bukan ke kami. Printer dibeli sendiri dan sifatnya opsional.
+      </p>
     </div>
   </div>
-</div>
+</section>
 
-<script src="js/config.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/ui.js"></script>
+<!-- ============================================================
+     TANYA JAWAB
+     ============================================================ -->
+<section class="faq-sec" aria-labelledby="h-tanya">
+  <div class="faq-board">
+    <div class="faq-head"><h2 id="h-tanya">Yang sering ditanya</h2></div>
+
+    <div class="faq-list">
+      <details name="faq">
+        <summary><span class="faq-q">Uangnya masuk ke rekening siapa?</span><span class="faq-pm"></span></summary>
+        <div class="faq-a">
+          Ke rekeningmu sendiri. Setiap toko memasang akun pembayarannya masing-masing,
+          jadi dana tidak pernah singgah di kami. Kami tidak menerima, menyimpan,
+          atau menyalurkan uangmu.
+        </div>
+      </details>
+
+      <details name="faq">
+        <summary><span class="faq-q">Perlu beli HP atau mesin kasir baru?</span><span class="faq-pm"></span></summary>
+        <div class="faq-a">
+          Tidak. StockFlow berjalan di browser, jadi HP yang sekarang kamu pakai sudah cukup.
+          Tidak ada aplikasi yang perlu dipasang dan tidak ada yang perlu diperbarui.
+        </div>
+      </details>
+
+      <details name="faq">
+        <summary><span class="faq-q">Satu QR untuk semua dompet digital?</span><span class="faq-pm"></span></summary>
+        <div class="faq-a">
+          Benar. QRIS adalah standar Bank Indonesia, jadi satu kode yang sama bisa dipindai
+          dengan GoPay, OVO, DANA, ShopeePay, LinkAja, sampai aplikasi m-banking.
+          Nominalnya sudah terisi, jadi pembeli tidak bisa salah ketik.
+        </div>
+      </details>
+
+      <details name="faq">
+        <summary><span class="faq-q">Printer apa yang cocok?</span><span class="faq-pm"></span></summary>
+        <div class="faq-a">
+          Printer thermal 58mm yang mendukung Bluetooth 4.0 (BLE) dan perintah ESC/POS.
+          Cek kemasannya: kalau tertulis Bluetooth 2.0/4.0, hampir pasti bisa.
+          Kalau hanya 2.0, tidak bisa dijangkau dari browser.
+        </div>
+      </details>
+
+      <details name="faq">
+        <summary><span class="faq-q">Karyawan bisa lihat omzet saya?</span><span class="faq-pm"></span></summary>
+        <div class="faq-a">
+          Tidak. Akun staff hanya bisa membuka kasir, produk, dan stok.
+          Laporan keuangan dan pembatalan transaksi terkunci untuk owner,
+          dan penguncian itu ada di database, bukan sekadar disembunyikan di tampilan.
+        </div>
+      </details>
+
+      <details name="faq">
+        <summary><span class="faq-q">Kalau internet mati bagaimana?</span><span class="faq-pm"></span></summary>
+        <div class="faq-a">
+          Transaksi butuh internet karena datanya tersimpan di server supaya aman dan
+          bisa dibuka dari perangkat lain. Untuk warung dengan sinyal naik-turun,
+          siapkan tethering dari HP sebagai cadangan.
+        </div>
+      </details>
+
+      <details name="faq">
+        <summary><span class="faq-q">Data saya bisa dibawa keluar?</span><span class="faq-pm"></span></summary>
+        <div class="faq-a">
+          Bisa, kapan saja. Unduh seluruh data dalam satu berkas, atau transaksi saja
+          sebagai CSV untuk dibuka di Excel. Kalau ingin berhenti, akun beserta
+          seluruh isinya bisa dihapus permanen sendiri.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     AJAKAN
+     ============================================================ -->
+<section class="cta-row" aria-labelledby="h-mulai">
+  <div class="cta-side a" aria-hidden="true"></div>
+  <div class="cta-main rise">
+    <h2 id="h-mulai">Buka toko hari ini</h2>
+    <p>Daftar, isi beberapa produk, lalu jalankan transaksi pertama. Lima menit cukup.</p>
+    <div class="cta-acts">
+      <a class="btn btn-paper" href="masuk.html?daftar=1">Daftarkan toko</a>
+      <a class="btn btn-ink" href="masuk.html?demo=1&amp;autologin=1">Masuk ke demo</a>
+    </div>
+  </div>
+  <div class="cta-side b" aria-hidden="true"></div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     KAKI
+     ============================================================ -->
+<footer class="foot">
+  <div class="blocks" id="blocks" aria-label="StockFlow"></div>
+
+  <div class="foot-grid">
+    <nav class="foot-links" aria-label="Produk">
+      <b>Produk</b>
+      <a href="#h-cara">Cara kerja</a>
+      <a href="#h-coba">Coba sendiri</a>
+      <a href="#h-harga">Harga</a>
+    </nav>
+    <nav class="foot-links" aria-label="Akun">
+      <b>Akun</b>
+      <a href="masuk.html">Masuk</a>
+      <a href="masuk.html?daftar=1">Daftar</a>
+      <a href="masuk.html?demo=1&amp;autologin=1">Demo</a>
+    </nav>
+    <nav class="foot-links" aria-label="Ketentuan">
+      <b>Ketentuan</b>
+      <a href="privasi.html">Kebijakan Privasi</a>
+      <a href="ketentuan.html">Syarat &amp; Ketentuan</a>
+    </nav>
+    <div class="foot-contact">
+      Dibuat di Jakarta untuk warung, kafe dan toko kecil di Indonesia.<br>
+      Pembayaran diproses penyedia berizin Bank Indonesia.
+    </div>
+  </div>
+
+  <div class="foot-last">
+    <span>&copy; <span id="yr"></span> StockFlow</span>
+    <span class="spacer"></span>
+    <a class="btn" href="masuk.html?daftar=1" style="min-height:40px;font-size:15px">Mulai</a>
+  </div>
+</footer>
+
 <script>
-if (Auth.isLogged()) location.replace('pos.html');
+/* ============================================================
+   Kode QR digambar dari modulnya sendiri.
+   Bukan QRIS sungguhan , ini gambar, bukan kode yang bisa dibayar.
+   Polanya tetap (bukan acak) agar sama di setiap kunjungan.
+   ============================================================ */
+function drawQr(el) {
+  var n = Number(el.dataset.qr) || 21;
+  el.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+  el.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
 
-/* Datang dari link konfirmasi email: sesi ada, toko belum dibuat.
-   Langsung tawarkan penyelesaiannya daripada memaksa login ulang. */
-var _resumeSetup = !Demo.on() && Auth.needsSetup();
-if (!SF_CONFIGURED && !Demo.on()) document.getElementById('cfgWarn').classList.remove('hide');
+  var seed = 7;
+  function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
 
-if (SF_CONFIG_PROBLEM && !Demo.on()) {
-  document.getElementById('cfgProblemMsg').textContent = SF_CONFIG_PROBLEM;
-  document.getElementById('cfgProblem').classList.remove('hide');
+  /* tiga penanda sudut, seperti kode sungguhan */
+  function finder(r, c) {
+    return (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+  }
+  function finderOn(r, c) {
+    var rr = r < 7 ? r : r - (n - 7);
+    var cc = c < 7 ? c : c - (n - 7);
+    var ring = (rr === 0 || rr === 6 || cc === 0 || cc === 6);
+    var core = (rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4);
+    return ring || core;
+  }
+
+  var html = '';
+  for (var r = 0; r < n; r++) {
+    for (var c = 0; c < n; c++) {
+      var on = finder(r, c) ? finderOn(r, c) : rnd() > 0.52;
+      html += '<i class="' + (on ? '' : 'o') + '"></i>';
+    }
+  }
+  el.innerHTML = html;
 }
-if (new URLSearchParams(location.search).get('expired')) {
-  document.getElementById('expiredWarn').classList.remove('hide');
-}
+document.querySelectorAll('.qr').forEach(drawQr);
 
-function show(id) {
-  ['vLogin', 'vSignup', 'vForgot', 'vSetup'].forEach(function (v) {
-    document.getElementById(v).classList.toggle('hide', v !== id);
+/* ============================================================
+   LEMBAR KEPALA , bingkai berisi fragmen antarmuka yang nyata
+   ============================================================ */
+var rp = function (n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); };
+
+var FRAMES = [
+  { h: 196, strip: 'Grid produk', cls: 's-ink', ui:
+    '<div class="u-pgrid">' +
+      '<div class="u-pcard"><div class="u-name">Kopi Susu Gula Aren</div><div class="u-num">Rp 18.000</div></div>' +
+      '<div class="u-pcard"><div class="u-name">Es Teh Manis</div><div class="u-num">Rp 6.000</div></div>' +
+      '<div class="u-pcard"><div class="u-name">Nasi Goreng</div><div class="u-num">Rp 25.000</div></div>' +
+      '<div class="u-pcard"><div class="u-name">Ayam Geprek</div><div class="u-num">Rp 22.000</div></div>' +
+    '</div>' },
+
+  { h: 150, strip: 'Keranjang', cls: 's-red', ui:
+    '<div class="u-row"><span class="u-grow u-name">Kopi Susu</span><span class="u-num">2</span></div>' +
+    '<div class="u-row"><span class="u-grow u-name">Es Teh Manis</span><span class="u-num">1</span></div>' +
+    '<div class="u-total"><span>Total</span><span class="u-num">Rp 42.000</span></div>' },
+
+  { h: 178, strip: 'QRIS semua dompet', cls: 's-paper', raw:
+    '<div style="padding:14px"><div class="qr" data-qr="21" style="width:124px;height:124px"></div></div>' },
+
+  { h: 210, strip: 'Struk 58mm', cls: 's-ink', raw:
+    '<div class="slip" style="width:100%">' +
+      '<div class="slip-c slip-big">WARUNG DEMO</div>' +
+      '<div class="slip-c">Jl. Contoh No. 1</div>' +
+      '<div class="slip-rule"></div>' +
+      '<div class="slip-row"><span>Kopi Susu</span><span class="u-num">36.000</span></div>' +
+      '<div class="slip-row"><span>Es Teh</span><span class="u-num">6.000</span></div>' +
+      '<div class="slip-rule"></div>' +
+      '<div class="slip-row slip-big"><span>TOTAL</span><span class="u-num">42.000</span></div>' +
+      '<div class="slip-rule"></div>' +
+      '<div class="slip-c">Terima kasih</div>' +
+    '</div>' },
+
+  { h: 132, strip: 'Stok menipis', cls: 's-white', ui:
+    '<div class="u-head">Stok</div>' +
+    '<div class="u-row"><span class="u-grow u-name">Air Mineral</span><span class="u-chip ok">8</span></div>' +
+    '<div class="u-row"><span class="u-grow u-name">Roti Bakar</span><span class="u-chip ok">0</span></div>' +
+    '<div class="u-row"><span class="u-grow u-name">Kentang</span><span class="u-chip">22</span></div>' },
+
+  { h: 160, strip: 'Laporan harian', cls: 's-red', ui:
+    '<div class="u-head">Omzet 7 hari</div>' +
+    '<div class="u-bars">' +
+      '<i style="height:38%"></i><i style="height:62%"></i><i style="height:45%"></i>' +
+      '<i style="height:80%"></i><i style="height:55%"></i><i class="hi" style="height:100%"></i>' +
+      '<i style="height:70%"></i>' +
+    '</div>' +
+    '<div class="u-row"><span class="u-grow u-sub">Hari ini</span><span class="u-num">Rp 1.240.000</span></div>' },
+
+  { h: 118, strip: 'Pembayaran diterima', cls: 's-ink', ui:
+    '<div class="u-row"><span class="u-grow u-name">Lunas</span><span class="u-chip ok">QRIS</span></div>' +
+    '<div class="u-row"><span class="u-grow u-sub">GoPay, 14:08</span><span class="u-num">Rp 61.000</span></div>' },
+
+  { h: 142, strip: 'Scan barcode', cls: 's-paper', ui:
+    '<div class="u-head">Cari / scan</div>' +
+    '<div class="u-row"><span class="u-grow u-sub">899000000001</span></div>' +
+    '<div class="u-row"><span class="u-grow u-name">Kopi Susu Gula Aren</span><span class="u-num">Rp 18.000</span></div>' },
+
+  { h: 128, strip: 'Printer Bluetooth', cls: 's-white', ui:
+    '<div class="u-row"><span class="u-grow u-name">POS-58 Printer</span><span class="u-chip ok">SIAP</span></div>' +
+    '<div class="u-row"><span class="u-grow u-sub">58mm, 32 kolom</span></div>' },
+
+  { h: 150, strip: 'Owner dan staff', cls: 's-red', ui:
+    '<div class="u-row"><span class="u-swatch">JT</span><span class="u-grow u-name">Jasson</span><span class="u-chip on">Owner</span></div>' +
+    '<div class="u-row"><span class="u-swatch">RK</span><span class="u-grow u-name">Rika</span><span class="u-chip">Staff</span></div>' +
+    '<div class="u-row"><span class="u-swatch">BD</span><span class="u-grow u-name">Budi</span><span class="u-chip">Staff</span></div>' },
+
+  { h: 120, strip: 'Barang rusak', cls: 's-ink', ui:
+    '<div class="u-row"><span class="u-grow u-name">Roti Bakar</span><span class="u-num">&minus;3</span></div>' +
+    '<div class="u-row"><span class="u-grow u-sub">Kedaluwarsa</span><span class="u-num">Rp 15.000</span></div>' },
+
+  { h: 134, strip: 'Stock opname', cls: 's-paper', ui:
+    '<div class="u-head">Koreksi stok</div>' +
+    '<div class="u-row"><span class="u-grow u-sub">Tercatat</span><span class="u-num">40</span></div>' +
+    '<div class="u-row"><span class="u-grow u-sub">Hitungan fisik</span><span class="u-num">38</span></div>' +
+    '<div class="u-row"><span class="u-grow u-name">Selisih</span><span class="u-chip ok">&minus;2</span></div>' },
+];
+
+(function buildSheet() {
+  var sheet = document.getElementById('sheet');
+  var cols = 6;
+  var html = '';
+
+  /* Panel teks duduk di kolom 3–4, seperti bingkai lain */
+  var panel =
+    '<div class="hero-panel">' +
+      '<h1 class="hero-mark">StockFlow</h1>' +
+      '<p class="hero-say">Kasir, stok dan QRIS untuk warung. Dibuka dari HP, tanpa install.</p>' +
+      '<div class="hero-cta"><a class="btn btn-paper" href="masuk.html?daftar=1">Mulai gratis</a></div>' +
+      '<div class="hero-links">' +
+        '<a href="#h-coba">Coba sendiri</a>' +
+        '<a href="#h-harga">Harga</a>' +
+        '<a href="masuk.html">Masuk</a>' +
+      '</div>' +
+    '</div>';
+
+  for (var c = 0; c < cols; c++) {
+    html += '<div class="sheet-col">';
+    for (var i = c; i < FRAMES.length; i += cols) {
+      var f = FRAMES[i];
+      var inner = f.raw || ('<div data-ui>' + f.ui + '</div>');
+      html +=
+        '<div class="frame' + (i === 0 ? ' shutter' : '') + '">' +
+          '<div class="frame-body" style="height:' + f.h + 'px">' + inner + '</div>' +
+          '<div class="frame-strip ' + f.cls + '">' + f.strip + '</div>' +
+        '</div>';
+    }
+    html += '</div>';
+  }
+
+  sheet.innerHTML = html + panel;
+  sheet.querySelectorAll('.qr').forEach(drawQr);
+})();
+
+/* ============================================================
+   FITUR , dekatan pada bagian antarmuka, diperbesar
+   ============================================================ */
+(function buildMosaic() {
+  var T = [
+    { size: 'm-6x2', bg: 'tile white', head: 'Yang sudah jalan' },
+
+    { size: 'm-6x4', bg: 'tile paper', zoom: 2.6,
+      el: '<div data-ui style="width:200px"><div class="u-total"><span>Total</span><span class="u-num">Rp 61.000</span></div></div>',
+      name: 'Total selalu benar',
+      note: 'Dihitung di server, bukan di HP kasir.' },
+
+    { size: 'm-3x4', bg: 'tile red', zoom: 3.4,
+      el: '<div data-ui style="width:120px;background:transparent"><span class="u-chip ok" style="font-size:13px">LUNAS</span></div>',
+      name: 'Terkonfirmasi sendiri',
+      note: 'Tanpa cek mutasi.' },
+
+    { size: 'm-3x2', bg: 'tile dark', zoom: 3.2,
+      el: '<div data-ui style="width:120px;background:transparent;color:#fff"><span class="u-num" style="font-size:15px;font-weight:700">40 &rarr; 38</span></div>',
+      name: 'Stok ikut turun',
+      note: 'Saat uang masuk.' },
+
+    { size: 'm-3x2', bg: 'tile paper', zoom: 3.2,
+      el: '<div data-ui style="width:130px;background:transparent"><span class="u-num" style="font-size:15px;font-weight:700">Rp 18.000</span></div>',
+      name: 'Harga per barang',
+      note: 'Ubah kapan saja.' },
+
+    { size: 'm-6x2', bg: 'tile dark', zoom: 2.2,
+      el: '<div data-ui style="width:260px;background:transparent;color:#fff">' +
+          '<div class="u-bars" style="padding:0"><i style="height:38%"></i><i style="height:62%"></i>' +
+          '<i style="height:45%"></i><i style="height:80%"></i><i class="hi" style="height:100%"></i></div></div>',
+      name: 'Laba kotor dan bersih',
+      note: 'Setelah biaya operasional.' },
+
+    { size: 'm-3x4', bg: 'tile white', zoom: 1.9,
+      el: '<div style="width:150px"><div class="qr" data-qr="17" style="width:150px;height:150px"></div></div>',
+      name: 'Satu QR, semua dompet',
+      note: 'GoPay, OVO, DANA, ShopeePay.' },
+
+    { size: 'm-3x2', bg: 'tile red', zoom: 3.0,
+      el: '<div data-ui style="width:130px;background:transparent;color:#fff">' +
+          '<span class="u-num" style="font-size:14px;font-weight:700">58mm</span></div>',
+      name: 'Struk Bluetooth',
+      note: '32 kolom, ESC/POS.' },
+
+    { size: 'm-3x2', bg: 'tile paper', zoom: 2.4,
+      el: '<div data-ui style="width:150px;background:transparent">' +
+          '<span class="u-swatch" style="width:30px;height:30px">JT</span></div>',
+      name: 'Akun per karyawan',
+      note: 'Omzet tetap tertutup.' },
+  ];
+
+  document.getElementById('mosaic').innerHTML = T.map(function (t, i) {
+    if (t.head) {
+      return '<div class="m ' + t.size + ' ' + t.bg + ' m-head rise">' +
+             '<h2 id="h-fitur">' + t.head + '</h2></div>';
+    }
+    return '<div class="m ' + t.size + ' ' + t.bg + ' rise">' +
+      '<div class="m-zoom"><div style="transform:scale(' + t.zoom + ')">' + t.el + '</div></div>' +
+      '<div class="m-cap"><b>' + t.name + '</b><span>' + t.note + '</span></div>' +
+      '</div>';
+  }).join('');
+
+  document.querySelectorAll('#mosaic .qr').forEach(drawQr);
+})();
+
+/* ============================================================
+   DEMO , kasir yang benar-benar berjalan
+   ============================================================ */
+(function demo() {
+  var MENU = [
+    { n: 'Kopi Susu Gula Aren', p: 18000 },
+    { n: 'Es Teh Manis',        p: 6000 },
+    { n: 'Americano',           p: 15000 },
+    { n: 'Nasi Goreng Spesial', p: 25000 },
+    { n: 'Ayam Geprek',         p: 22000 },
+    { n: 'Kentang Goreng',      p: 15000 },
+    { n: 'Pisang Goreng',       p: 10000 },
+  ];
+  var cart = {};
+
+  var elCart  = document.getElementById('dCart');
+  var elTotal = document.getElementById('dTotal');
+  var elSlip  = document.getElementById('dSlip');
+  var elBtns  = document.getElementById('dBtns');
+
+  elBtns.innerHTML = MENU.map(function (m, i) {
+    return '<button class="ctrl-row" type="button" data-i="' + i + '" aria-pressed="false">' +
+      '<span>' + m.n + '</span><span class="u-num">' + rp(m.p) + '</span></button>';
+  }).join('');
+
+  function total() {
+    return Object.keys(cart).reduce(function (s, i) { return s + MENU[i].p * cart[i]; }, 0);
+  }
+
+  function render() {
+    var keys = Object.keys(cart);
+
+    elCart.innerHTML = keys.length
+      ? keys.map(function (i) {
+          return '<div class="u-row"><span class="u-grow u-name">' + MENU[i].n + '</span>' +
+                 '<span class="u-sub">&times;' + cart[i] + '</span>' +
+                 '<span class="u-num">' + rp(MENU[i].p * cart[i]) + '</span></div>';
+        }).join('')
+      : '<div class="u-row"><span class="u-grow u-sub">Belum ada barang. Ketuk daftar di sebelah.</span></div>';
+
+    var t = total();
+    elTotal.textContent = rp(t);
+
+    elSlip.innerHTML =
+      '<div class="slip-c slip-big">WARUNG DEMO</div>' +
+      '<div class="slip-c">Jl. Contoh No. 1, Jakarta</div>' +
+      '<div class="slip-rule"></div>' +
+      (keys.length
+        ? keys.map(function (i) {
+            return '<div class="slip-row"><span>' + MENU[i].n + '</span></div>' +
+                   '<div class="slip-row"><span>&nbsp;&nbsp;' + cart[i] + ' x ' +
+                   rp(MENU[i].p) + '</span><span class="u-num">' +
+                   rp(MENU[i].p * cart[i]) + '</span></div>';
+          }).join('')
+        : '<div class="slip-row"><span>Belum ada barang</span></div>') +
+      '<div class="slip-rule"></div>' +
+      '<div class="slip-row slip-big"><span>TOTAL</span><span class="u-num">' + rp(t) + '</span></div>' +
+      '<div class="slip-rule"></div>' +
+      '<div class="slip-c">Terima kasih</div>';
+
+    elBtns.querySelectorAll('.ctrl-row').forEach(function (b) {
+      b.setAttribute('aria-pressed', cart[b.dataset.i] ? 'true' : 'false');
+    });
+  }
+
+  elBtns.addEventListener('click', function (e) {
+    var b = e.target.closest('.ctrl-row');
+    if (!b) return;
+    var i = b.dataset.i;
+    cart[i] = (cart[i] || 0) + 1;
+    render();
   });
-}
 
-/* Tampilkan layar "lengkapi toko" dan isi apa yang sudah diketahui */
-function showSetup(prefillName) {
-  var u = Auth.user() || {};
-  document.getElementById('setupEmail').textContent = u.email || '';
-  if (prefillName) document.getElementById('cName').value = prefillName;
-  show('vSetup');
-}
+  document.getElementById('dReset').addEventListener('click', function () {
+    cart = {};
+    render();
+  });
 
-async function doSetup() {
-  var bizName = document.getElementById('cBiz').value.trim();
-  var name    = document.getElementById('cName').value.trim();
-  if (!bizName || !name) return UI.toast('Lengkapi kedua kolom', 'error');
+  render();
+})();
 
-  var btn = document.getElementById('setupBtn');
-  btn.disabled = true;
-  UI.loading(true);
+/* ============================================================
+   KAKI , nama dibangun dari balok
+   ============================================================ */
+(function blocks() {
+  var LETTERS = 'STOCKFLOW'.split('');
+  var H = [84, 62, 95, 70, 100, 66, 88, 74, 92];
+  var C = ['var(--ink)', 'var(--accent)', 'var(--ink)', 'var(--accent)',
+           'var(--ink)', 'var(--ink)', 'var(--accent)', 'var(--ink)', 'var(--accent)'];
 
-  var r = await Auth.completeSetup({ bizName: bizName, name: name });
+  document.getElementById('blocks').innerHTML = LETTERS.map(function (l, i) {
+    return '<span style="height:' + H[i] + '%;background:' + C[i] + '">' + l + '</span>';
+  }).join('');
+})();
 
-  UI.loading(false);
-  btn.disabled = false;
+document.getElementById('yr').textContent = new Date().getFullYear();
 
-  if (r.ok) {
-    UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'products.html'; }, 450);
-  } else {
-    UI.toast(r.msg, 'error');
+/* ============================================================
+   GERAK , masuk per bagian, dan satu rana di bingkai pertama
+   ============================================================ */
+(function motion() {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var risers = Array.prototype.slice.call(document.querySelectorAll('.rise'));
+  var shutter = document.querySelector('.shutter');
+
+  if (reduce || !('IntersectionObserver' in window)) {
+    risers.forEach(function (el) { el.classList.add('in'); });
+    if (shutter) shutter.classList.add('in');
+    return;
   }
-}
 
-async function doLogin() {
-  var email = document.getElementById('lEmail').value.trim();
-  var pass  = document.getElementById('lPass').value;
-  if (!email || !pass) return UI.toast('Isi email dan password', 'error');
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var el = en.target;
+      var sibs = Array.prototype.slice.call(
+        el.parentElement.querySelectorAll(':scope > .rise'));
+      el.style.transitionDelay = Math.min(sibs.indexOf(el), 6) * 75 + 'ms';
+      el.classList.add('in');
+      io.unobserve(el);
+    });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
 
-  var btn = document.getElementById('loginBtn');
-  btn.disabled = true;
-  UI.loading(true);
+  risers.forEach(function (el) { io.observe(el); });
 
-  var r = await Auth.login(email, pass);
-
-  UI.loading(false);
-  btn.disabled = false;
-
-  if (r.ok) {
-    UI.toast('Selamat datang!', 'ok');
-    setTimeout(function () { location.href = 'pos.html'; }, 350);
-  } else if (r.needSetup) {
-    /* Akun aktif tapi tokonya belum dibuat — selesaikan di sini */
-    UI.toast(r.msg, 'warn');
-    showSetup();
-  } else {
-    UI.toast(r.msg, 'error');
-  }
-}
-
-async function doSignup() {
-  var bizName = document.getElementById('sBiz').value.trim();
-  var name    = document.getElementById('sName').value.trim();
-  var email   = document.getElementById('sEmail').value.trim();
-  var pass    = document.getElementById('sPass').value;
-
-  if (!bizName || !name || !email) return UI.toast('Lengkapi semua kolom', 'error');
-  if (pass.length < 8) return UI.toast('Password minimal 8 karakter', 'error');
-  if (!/^\S+@\S+\.\S+$/.test(email)) return UI.toast('Format email tidak valid', 'error');
-
-  var btn = document.getElementById('signupBtn');
-  btn.disabled = true;
-  UI.loading(true);
-
-  var r = await Auth.signup({ bizName: bizName, name: name, email: email, password: pass });
-
-  UI.loading(false);
-  btn.disabled = false;
-
-  if (r.ok) {
-    UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'products.html'; }, 450);
-  } else if (r.needConfirm) {
-    UI.toast(r.msg, 'warn');
-    show('vLogin');
-  } else {
-    UI.toast(r.msg, 'error');
-  }
-}
-
-async function doForgot() {
-  var email = document.getElementById('fEmail').value.trim();
-  if (!email) return UI.toast('Masukkan email', 'error');
-
-  UI.loading(true);
-  await Auth.resetPassword(email);
-  UI.loading(false);
-
-  /* Pesan selalu sama, terdaftar atau tidak, agar tidak membocorkan
-     email mana yang punya akun. */
-  document.getElementById('forgotDone').classList.remove('hide');
-}
-
-function startDemo() {
-  localStorage.setItem('sf5_demo', '1');
-  location.href = 'index.html?demo=1&autologin=1';
-}
-
-/* Sesi tertinggal dari konfirmasi email — lanjutkan pembuatan toko */
-if (_resumeSetup) showSetup();
-
-/* Masuk otomatis setelah mode demo menyala */
-if (Demo.on() && new URLSearchParams(location.search).get('autologin')) {
-  document.getElementById('lEmail').value = Demo.credentials.email;
-  document.getElementById('lPass').value  = Demo.credentials.password;
-  doLogin();
-}
+  /* Rana membuka bingkai pertama begitu halaman siap */
+  if (shutter) requestAnimationFrame(function () {
+    setTimeout(function () { shutter.classList.add('in'); }, 120);
+  });
+})();
 </script>
 </body>
 </html>

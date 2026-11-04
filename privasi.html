@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#d92b21">
+<title>Kebijakan Privasi , StockFlow</title>
+<meta name="description" content="Kebijakan Privasi StockFlow: data apa yang dikumpulkan, untuk apa dipakai, berapa lama disimpan, dan hak Anda atas data tersebut.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+
+<nav class="doc-nav">
+  <a href="index.html" class="mark">StockFlow</a>
+  <span class="spacer"></span>
+  <a href="ketentuan.html" class="nav-link">Syarat &amp; Ketentuan</a>
+  <a href="masuk.html" class="nav-link">Masuk</a>
+</nav>
+
+<header class="doc-hero">
+  <h1>Kebijakan Privasi</h1>
+  <p>Berlaku sejak <span id="eff"></span></p>
+</header>
+
+<main class="doc-body">
+<p>
+    Dokumen ini menjelaskan data apa yang StockFlow kumpulkan, untuk apa dipakai,
+    dan hak apa yang Anda miliki atas data tersebut. Ditulis sesuai
+    <strong>Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi</strong>.
+  </p>
+  <p>
+    Dengan memakai StockFlow, Anda menyetujui ketentuan di halaman ini. Bila ada
+    yang tidak Anda setujui, mohon jangan menggunakan layanan ini.
+  </p>
+
+  <h2>1. Siapa pengelola data</h2>
+  <p>
+    StockFlow dikelola secara perseorangan oleh pengembang aplikasi ini. Untuk pertanyaan
+    mengenai data pribadi, hubungi lewat alamat surel yang tercantum di bagian
+    <a href="#kontak">Kontak</a>.
+  </p>
+  <p>
+    Perlu Anda ketahui sejak awal: StockFlow bukan perusahaan berbadan hukum dan
+    tidak memiliki tim dukungan khusus. Pertimbangkan hal ini sebelum menyimpan
+    data usaha yang sangat kritis.
+  </p>
+
+  <h2>2. Data yang kami kumpulkan</h2>
+
+  <h3>2.1 Data yang Anda berikan</h3>
+  <table>
+    <tr><th>Jenis data</th><th>Contoh</th><th>Mengapa dibutuhkan</th></tr>
+    <tr><td>Identitas akun</td><td>Nama, alamat surel</td><td>Membuat akun dan mengenali Anda saat masuk</td></tr>
+    <tr><td>Data toko</td><td>Nama toko, alamat, nomor telepon</td><td>Dicetak di struk dan ditampilkan di aplikasi</td></tr>
+    <tr><td>Data produk</td><td>Nama, harga, stok, foto</td><td>Menjalankan fungsi kasir dan inventori</td></tr>
+    <tr><td>Data transaksi</td><td>Item, nominal, metode bayar, waktu</td><td>Mencatat penjualan dan menyusun laporan</td></tr>
+    <tr><td>Nama pembeli</td><td>Diisi kasir bila diperlukan</td><td>Opsional, hanya untuk keperluan struk</td></tr>
+  </table>
+
+  <h3>2.2 Data yang tidak kami kumpulkan</h3>
+  <ul>
+    <li><strong>Password Anda.</strong> Otentikasi ditangani Supabase Auth. Password disimpan dalam bentuk <em>hash</em> dan tidak pernah dapat kami baca.</li>
+    <li><strong>Data kartu atau rekening pembeli.</strong> Seluruh proses pembayaran terjadi di sisi penyedia jasa pembayaran, bukan di aplikasi ini.</li>
+    <li><strong>Lokasi perangkat, kontak, atau isi penyimpanan Anda.</strong></li>
+  </ul>
+
+  <h3>2.3 Data teknis</h3>
+  <p>
+    Penyedia infrastruktur kami mencatat log teknis standar seperti alamat IP, jenis
+    peramban, dan waktu akses. Log ini dipakai untuk menjaga keamanan dan menelusuri
+    gangguan, bukan untuk membuat profil pengguna. Kami tidak memasang iklan dan tidak
+    memakai alat pelacak pihak ketiga.
+  </p>
+
+  <h2>3. Dasar dan tujuan pemrosesan</h2>
+  <p>Data Anda diproses atas dasar persetujuan Anda dan kebutuhan menjalankan layanan, untuk tujuan:</p>
+  <ul>
+    <li>Menyediakan fungsi kasir, inventori, dan pelaporan</li>
+    <li>Mengenali Anda dan membatasi akses sesuai peran (owner atau staff)</li>
+    <li>Memproses pembayaran melalui penyedia jasa pembayaran</li>
+    <li>Menjaga keamanan dan mencegah penyalahgunaan</li>
+  </ul>
+  <p>
+    Kami <strong>tidak menjual, menyewakan, atau menukarkan</strong> data Anda kepada
+    siapa pun, dan tidak memakainya untuk iklan.
+  </p>
+
+  <h2>4. Pihak ketiga yang terlibat</h2>
+  <p>Layanan ini berjalan di atas penyedia berikut:</p>
+  <table>
+    <tr><th>Penyedia</th><th>Peran</th><th>Data yang diproses</th></tr>
+    <tr><td>Supabase</td><td>Basis data, otentikasi, penyimpanan berkas</td><td>Seluruh data akun, toko, dan transaksi</td></tr>
+    <tr><td>Midtrans</td><td>Pemrosesan pembayaran QRIS</td><td>Nominal, nomor pesanan, nama item</td></tr>
+    <tr><td>GitHub Pages</td><td>Penyajian halaman web</td><td>Log akses teknis</td></tr>
+  </table>
+  <p>
+    Masing-masing memiliki kebijakan privasinya sendiri. Midtrans adalah penyedia jasa
+    pembayaran berizin Bank Indonesia.
+  </p>
+  <p>
+    Bila Anda memasang akun Midtrans milik toko Anda sendiri, data transaksi mengalir
+    ke akun tersebut dan tunduk pada perjanjian antara Anda dan Midtrans.
+  </p>
+
+  <h2>5. Lokasi dan keamanan penyimpanan</h2>
+  <p>
+    Data disimpan di pusat data Supabase. Bergantung pada wilayah yang dipilih saat
+    pemasangan, data dapat berada di luar wilayah Indonesia.
+  </p>
+  <p>Pengamanan yang diterapkan:</p>
+  <ul>
+    <li>Seluruh lalu lintas memakai enkripsi HTTPS</li>
+    <li><em>Row Level Security</em> di tingkat basis data, sehingga data satu toko tidak dapat dibaca toko lain</li>
+    <li>Password di-<em>hash</em> oleh penyedia otentikasi, bukan disimpan apa adanya</li>
+    <li>Kunci rahasia pembayaran hanya berada di sisi server dan tidak pernah dikirim ke peramban</li>
+  </ul>
+  <p>
+    Meski demikian, tidak ada sistem yang sepenuhnya kebal. Kami tidak dapat menjamin
+    keamanan mutlak, dan Anda ikut bertanggung jawab menjaga kerahasiaan password Anda.
+  </p>
+
+  <h2>6. Berapa lama data disimpan</h2>
+  <p>
+    Data disimpan selama akun Anda aktif. Bila Anda menghapus akun, seluruh data toko
+    &mdash; produk, transaksi, pengguna, dan berkas &mdash; dihapus permanen dari basis
+    data kami saat itu juga.
+  </p>
+  <p>
+    Salinan cadangan rutin yang dikelola Supabase mungkin masih memuat data tersebut
+    untuk waktu terbatas sebelum ikut terhapus mengikuti siklus cadangan mereka. Catatan
+    transaksi di sisi Midtrans tunduk pada kebijakan penyimpanan mereka sendiri.
+  </p>
+
+  <h2>7. Hak Anda</h2>
+  <p>Sesuai UU PDP, Anda berhak:</p>
+  <table>
+    <tr><th>Hak</th><th>Cara menggunakannya</th></tr>
+    <tr><td>Mengakses dan memperoleh salinan data</td><td>Pengaturan &rarr; Unduh Semua Data</td></tr>
+    <tr><td>Memperbaiki data yang keliru</td><td>Ubah langsung di menu terkait</td></tr>
+    <tr><td>Menghapus data</td><td>Pengaturan &rarr; Hapus Akun &amp; Semua Data</td></tr>
+    <tr><td>Menarik persetujuan</td><td>Hapus akun; pemrosesan berhenti seketika</td></tr>
+    <tr><td>Mengajukan keberatan atau keluhan</td><td>Hubungi kami lewat surel di bawah</td></tr>
+  </table>
+  <p>
+    Dua hak pertama dan ketiga dapat Anda jalankan sendiri kapan saja tanpa perlu
+    menghubungi siapa pun.
+  </p>
+
+  <h2>8. Data karyawan Anda</h2>
+  <p>
+    Bila Anda membuatkan akun untuk karyawan, Anda memasukkan data pribadi mereka
+    (nama dan surel) ke dalam sistem ini. Dalam hal itu, <strong>Anda</strong> yang
+    bertanggung jawab memberi tahu mereka dan memperoleh persetujuan mereka.
+  </p>
+  <p>
+    Karena pembuatan akun dilakukan oleh owner, password awal karyawan diketahui oleh
+    owner. Kami menyarankan karyawan segera menggantinya sendiri lewat menu Pengaturan.
+  </p>
+
+  <h2>9. Anak di bawah umur</h2>
+  <p>
+    Layanan ini ditujukan untuk pelaku usaha dan tidak dirancang bagi anak di bawah
+    18 tahun. Kami tidak dengan sengaja mengumpulkan data anak.
+  </p>
+
+  <h2>10. Perubahan kebijakan</h2>
+  <p>
+    Kebijakan ini dapat diperbarui sewaktu-waktu. Tanggal berlaku di bagian atas akan
+    ikut diperbarui. Perubahan yang bersifat mendasar akan kami sampaikan di dalam aplikasi.
+  </p>
+
+  <h2 id="kontak">11. Kontak</h2>
+  <p>
+    Pertanyaan, permintaan, atau keluhan mengenai data pribadi dapat dikirim ke:
+    <strong><span id="mail"></span></strong>
+  </p>
+  <p>
+    Bila Anda merasa hak Anda atas pelindungan data pribadi dilanggar, Anda juga berhak
+    mengadu kepada lembaga berwenang sesuai UU PDP.
+  </p>
+</main>
+
+<footer class="foot">
+  <div class="blocks" id="blocks" aria-label="StockFlow"></div>
+  <div class="foot-grid">
+    <nav class="foot-links" aria-label="Produk">
+      <b>Produk</b>
+      <a href="index.html">Beranda</a>
+      <a href="masuk.html">Masuk</a>
+      <a href="masuk.html?daftar=1">Daftar</a>
+    </nav>
+    <nav class="foot-links" aria-label="Ketentuan">
+      <b>Ketentuan</b>
+      <a href="privasi.html">Kebijakan Privasi</a>
+      <a href="ketentuan.html">Syarat &amp; Ketentuan</a>
+    </nav>
+    <div class="foot-contact">
+      Pertanyaan mengenai dokumen ini dapat dikirim ke
+      <strong><span id="mail"></span></strong>.
+    </div>
+  </div>
+  <div class="foot-last">
+    <span>&copy; <span id="yr"></span> StockFlow</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var L = 'STOCKFLOW'.split('');
+  var H = [84, 62, 95, 70, 100, 66, 88, 74, 92];
+  var C = ['var(--ink)','var(--accent)','var(--ink)','var(--accent)',
+           'var(--ink)','var(--ink)','var(--accent)','var(--ink)','var(--accent)'];
+  document.getElementById('blocks').innerHTML = L.map(function (l, i) {
+    return '<span style="height:' + H[i] + '%;background:' + C[i] + '">' + l + '</span>';
+  }).join('');
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  document.getElementById('eff').textContent =
+    new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('mail').textContent = ['jassontheodorus540','gmail.com'].join('@');
+})();
+</script>
+
+</body>
+</html>

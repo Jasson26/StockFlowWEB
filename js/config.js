@@ -24,7 +24,7 @@
    ============================================================ */
 
 let SUPABASE_URL      = 'https://epqlcuwyhkhjavtwlihl.supabase.co/rest/v1';
-let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwcWxjdXd5aGtoamF2dHdsaWhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MTk5MzMsImV4cCI6MjEwNzk5NTkzM30.YUwbA4T_jU4DwkVeOjh7-8AUWRI054BOyc9Q6edAuM4';
+let SUPABASE_ANON_KEY = 'sb_publishable_I6wyVmbF_ozk2WYNy1sNRA_X1Yi-aCo';
 
 /* ====== Jangan ubah di bawah ini ======
 

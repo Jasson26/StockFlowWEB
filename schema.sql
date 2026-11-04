@@ -729,3 +729,128 @@ create policy "stockflow update" on storage.objects for update to authenticated
   using (bucket_id = 'stockflow');
 create policy "stockflow delete" on storage.objects for delete to authenticated
   using (bucket_id = 'stockflow');
+
+-- ============================================================
+-- TAMBAHAN v5.1 — Kredensial pembayaran per toko
+--
+-- Tiap owner memasang Server Key Midtrans miliknya sendiri,
+-- sehingga dana masuk ke rekening mereka, bukan ke pemilik
+-- deployment.
+--
+-- Keamanan: tabel ini bisa DITULIS owner tapi TIDAK BISA DIBACA
+-- dari aplikasi. Tidak ada policy SELECT sama sekali, jadi key
+-- hanya terbaca oleh service_role di dalam Edge Function.
+-- Untuk kebutuhan tampilan, 4 karakter terakhir disimpan terpisah
+-- di kolom yang memang boleh dibaca.
+-- ============================================================
+
+drop table if exists payment_credentials cascade;
+
+create table payment_credentials (
+  business_id   uuid primary key references businesses(id) on delete cascade,
+  provider      text not null default 'midtrans',
+  server_key    text not null,                 -- rahasia, tidak pernah dikirim ke klien
+  is_production boolean not null default false,
+  key_hint      text,                          -- 4 karakter terakhir, aman ditampilkan
+  updated_at    timestamptz not null default now(),
+  updated_by    uuid references profiles(id) on delete set null
+);
+
+alter table payment_credentials enable row level security;
+
+-- Owner boleh memasang dan mengubah, TIDAK boleh membaca kembali.
+create policy pc_insert on payment_credentials for insert to authenticated
+  with check (business_id = app_business_id() and app_is_owner());
+create policy pc_update on payment_credentials for update to authenticated
+  using (business_id = app_business_id() and app_is_owner())
+  with check (business_id = app_business_id());
+create policy pc_delete on payment_credentials for delete to authenticated
+  using (business_id = app_business_id() and app_is_owner());
+-- Sengaja TIDAK ada policy SELECT.
+
+-- Status pemasangan untuk ditampilkan di UI (tanpa membocorkan key)
+create or replace function payment_credential_status()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select jsonb_build_object(
+       'configured', true,
+       'provider', provider,
+       'is_production', is_production,
+       'key_hint', key_hint,
+       'updated_at', updated_at)
+     from payment_credentials where business_id = app_business_id()),
+    jsonb_build_object('configured', false))
+$$;
+
+grant execute on function payment_credential_status() to authenticated;
+
+-- ============================================================
+-- Hapus akun & seluruh data toko (hak pengguna, UU PDP)
+-- Hanya owner. Menghapus businesses -> seluruh data ikut terhapus
+-- lewat ON DELETE CASCADE. Akun Auth dihapus oleh Edge Function.
+-- ============================================================
+create or replace function delete_my_business()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_biz uuid := app_business_id();
+  v_ids uuid[];
+begin
+  if v_biz is null then raise exception 'Tidak punya akses toko'; end if;
+  if not app_is_owner() then raise exception 'Hanya owner yang boleh menghapus toko'; end if;
+
+  select array_agg(id) into v_ids from profiles where business_id = v_biz;
+
+  delete from businesses where id = v_biz;
+
+  return jsonb_build_object('ok', true, 'user_ids', to_jsonb(v_ids));
+end
+$$;
+
+grant execute on function delete_my_business() to authenticated;
+
+-- ============================================================
+-- Export seluruh data toko (hak portabilitas data, UU PDP)
+-- ============================================================
+create or replace function export_my_data()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'exported_at', now(),
+    'business',    (select to_jsonb(b) - 'id' from businesses b where b.id = app_business_id()),
+    'users',       (select coalesce(jsonb_agg(jsonb_build_object(
+                      'name', p.name, 'role', p.role, 'active', p.active,
+                      'created_at', p.created_at)), '[]'::jsonb)
+                    from profiles p where p.business_id = app_business_id()),
+    'categories',  (select coalesce(jsonb_agg(to_jsonb(c)), '[]'::jsonb)
+                    from categories c where c.business_id = app_business_id()),
+    'products',    (select coalesce(jsonb_agg(to_jsonb(p)), '[]'::jsonb)
+                    from products p where p.business_id = app_business_id()),
+    'orders',      (select coalesce(jsonb_agg(to_jsonb(o)), '[]'::jsonb)
+                    from orders o where o.business_id = app_business_id()),
+    'order_items', (select coalesce(jsonb_agg(to_jsonb(i)), '[]'::jsonb)
+                    from order_items i
+                    where exists (select 1 from orders o
+                                  where o.id = i.order_id and o.business_id = app_business_id())),
+    'stock_movements', (select coalesce(jsonb_agg(to_jsonb(m)), '[]'::jsonb)
+                        from stock_movements m where m.business_id = app_business_id()),
+    'expenses',    (select case when app_is_owner()
+                      then coalesce((select jsonb_agg(to_jsonb(e)) from expenses e
+                                     where e.business_id = app_business_id()), '[]'::jsonb)
+                      else '[]'::jsonb end)
+  )
+$$;
+
+grant execute on function export_my_data() to authenticated;

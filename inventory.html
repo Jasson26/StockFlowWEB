@@ -14,17 +14,17 @@
 
   <div class="grid g3 mb16">
     <button class="stat" style="text-align:left;cursor:pointer" onclick="openMove('in')">
-      <div class="stat-lbl c-ok">&#11015; STOK MASUK</div>
+      <div class="stat-lbl c-ok"><span data-ico="arrowDown" data-ico-size="16"></span>STOK MASUK</div>
       <div class="stat-val" style="font-size:17px">Catat Pembelian</div>
       <div class="stat-sub">Barang datang dari supplier</div>
     </button>
     <button class="stat" style="text-align:left;cursor:pointer" onclick="openMove('out')">
-      <div class="stat-lbl c-warn">&#11014; STOK KELUAR</div>
+      <div class="stat-lbl c-warn"><span data-ico="arrowUp" data-ico-size="16"></span>STOK KELUAR</div>
       <div class="stat-val" style="font-size:17px">Catat Pengeluaran</div>
       <div class="stat-sub">Pemakaian, sampel, hadiah</div>
     </button>
     <button class="stat" style="text-align:left;cursor:pointer" onclick="openMove('adjust')">
-      <div class="stat-lbl c-brand">&#9878; KOREKSI</div>
+      <div class="stat-lbl c-brand"><span data-ico="scale" data-ico-size="16"></span>KOREKSI</div>
       <div class="stat-val" style="font-size:17px">Stock Opname</div>
       <div class="stat-sub">Samakan dengan hitungan fisik</div>
     </button>
@@ -104,6 +104,7 @@
   </div>
 </div>
 
+<script src="js/icons.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/demo.js"></script>
@@ -155,7 +156,7 @@ function render() {
 
   if (!list.length) {
     document.getElementById('rows').innerHTML =
-      '<tr><td colspan="5">' + UI.empty('&#128203;', 'Belum ada pergerakan stok', 'Catat stok masuk untuk memulai') + '</td></tr>';
+      '<tr><td colspan="5">' + UI.empty('empty', 'Belum ada pergerakan stok', 'Catat stok masuk untuk memulai') + '</td></tr>';
     return;
   }
 

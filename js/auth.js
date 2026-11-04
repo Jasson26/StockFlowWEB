@@ -106,6 +106,8 @@ const Auth = (function () {
       role: prof.role,
       business_id: prof.business_id,
       business_name: biz ? biz.name : 'Toko Saya',
+      business_address: biz ? biz.address : null,
+      business_phone: biz ? biz.phone : null,
       tax_percent: biz ? Number(biz.tax_percent || 0) : 0,
       qris_enabled: biz ? !!biz.qris_enabled : false,
       qris_static_url: biz ? biz.qris_static_url : null,
@@ -281,12 +283,12 @@ const Auth = (function () {
         } catch (e) {}
       }
       wipe();
-      location.href = 'index.html';
+      location.href = 'masuk.html';
     },
 
     /* Pasang di awal setiap halaman internal */
     guard(ownerOnly) {
-      if (!readTok() || !readProf()) { location.replace('index.html'); return false; }
+      if (!readTok() || !readProf()) { location.replace('masuk.html'); return false; }
       if (ownerOnly && !Auth.isOwner()) { location.replace('pos.html'); return false; }
       return true;
     },
@@ -294,7 +296,7 @@ const Auth = (function () {
     /* Dipanggil api.js saat server membalas 401 */
     sessionExpired() {
       wipe();
-      location.replace('index.html?expired=1');
+      location.replace('masuk.html?expired=1');
     },
   };
 })();

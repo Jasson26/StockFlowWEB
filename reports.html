@@ -21,7 +21,7 @@
       <button class="chip"    data-r="year"      onclick="setRange('year')">Tahun ini</button>
     </div>
     <div class="spacer"></div>
-    <button class="btn" onclick="exportCsv()">&#128229; Export CSV</button>
+    <button class="btn" onclick="exportCsv()"><span data-ico="download" data-ico-size="16"></span>Export CSV</button>
   </div>
 
   <!-- RINGKASAN KEUANGAN -->
@@ -104,6 +104,7 @@
   </div>
 </div>
 
+<script src="js/icons.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/demo.js"></script>
@@ -225,7 +226,7 @@ function render() {
           '<td class="num fw7 mono">' + UI.num(t.qty) + '</td>' +
           '<td class="num mono">' + UI.rp(t.rev) + '</td></tr>';
       }).join('')
-    : '<tr><td colspan="3">' + UI.empty('&#128202;', 'Belum ada penjualan', 'Pada periode ini') + '</td></tr>';
+    : '<tr><td colspan="3">' + UI.empty('chart', 'Belum ada penjualan', 'Pada periode ini') + '</td></tr>';
 
   /* ---------- STOK RENDAH ---------- */
   var low = products.filter(function (p) {
@@ -239,7 +240,7 @@ function render() {
           '<td class="num"><span class="badge ' + (st <= 0 ? 'danger' : 'warn') + '">' + UI.num(st) + '</span></td>' +
           '<td class="num c-dim mono">' + UI.num(p.min_stock) + '</td></tr>';
       }).join('')
-    : '<tr><td colspan="3">' + UI.empty('&#9989;', 'Semua stok aman', 'Tidak ada produk di bawah batas minimum') + '</td></tr>';
+    : '<tr><td colspan="3">' + UI.empty('check', 'Semua stok aman', 'Tidak ada produk di bawah batas minimum') + '</td></tr>';
 }
 
 /* ---------- Grafik batang sederhana (SVG, tanpa library) ---------- */
@@ -282,7 +283,7 @@ function drawChart(os) {
       '<div class="row fs12 c-dim mt8"><span>' +
       (byHour ? '00:00' : byMonth ? 'Jan' : UI.dateOnly(r[0].toISOString())) + '</span><div class="spacer"></div><span>' +
       (byHour ? '23:00' : byMonth ? 'Des' : 'Sekarang') + '</span></div>'
-    : UI.empty('&#128200;', 'Belum ada data', 'Grafik muncul setelah ada transaksi');
+    : UI.empty('chart', 'Belum ada data', 'Grafik muncul setelah ada transaksi');
 }
 
 /* ---------- Pengeluaran ---------- */
@@ -296,7 +297,7 @@ function renderExpList() {
           '<div style="flex:1;min-width:0"><div class="fw7 fs13">' + UI.esc(e.category) + '</div>' +
           '<div class="fs12 c-dim">' + UI.esc(e.note || UI.dateOnly(e.created_at)) + '</div></div>' +
           '<span class="mono fw7">' + UI.rp(e.amount) + '</span>' +
-          '<button class="btn btn-ghost btn-icon c-danger" onclick="delExp(\'' + e.id + '\')">&#128465;</button></div>';
+          '<button class="btn btn-ghost btn-icon c-danger" onclick="delExp(\'' + e.id + '\')">' + UI.ic('trash',16) + '</button></div>';
       }).join('')
     : '';
 }

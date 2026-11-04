@@ -85,13 +85,20 @@
       <div id="detHost"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn" onclick="window.print()">&#128424; Cetak</button>
+      <button class="btn hide" onclick="btReprint()" id="btPrintBtn">
+        <span data-ico="printer" data-ico-size="16"></span>Cetak Struk
+      </button>
+      <button class="btn" onclick="window.print()">
+        <span data-ico="print" data-ico-size="16"></span>Cetak
+      </button>
       <button class="btn btn-primary hide" id="checkBtn" onclick="recheck()">Periksa Status</button>
       <button class="btn btn-danger hide"  id="voidBtn"  onclick="doVoid()">Void Transaksi</button>
     </div>
   </div>
 </div>
 
+<script src="js/icons.js"></script>
+<script src="js/printer.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/api.js"></script>
@@ -100,7 +107,7 @@
 <script>
 if (!Auth.guard()) throw 'redirect';
 var U = Auth.user();
-var orders = [], payments = [], curId = null;
+var orders = [], payments = [], curId = null, curOrder = null, curItems = [];
 
 UI.shell('orders', 'Riwayat Transaksi');
 
@@ -170,7 +177,7 @@ function render() {
   if (!list.length) {
     document.getElementById('rows').innerHTML =
       '<tr><td colspan="7">' +
-      UI.empty('&#129534;', 'Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini') +
+      UI.empty('receipt', 'Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini') +
       '</td></tr>';
     return;
   }
@@ -186,7 +193,7 @@ function render() {
       '<td>' + UI.statusBadge(o.status) + '</td>' +
       '<td class="num fw8 mono">' + UI.rp(o.total) + '</td>' +
       '<td><button class="btn btn-ghost btn-icon" onclick="detail(\'' + o.id +
-        '\')" title="Lihat">&#128065;</button></td>' +
+        '\')" title="Lihat">' + UI.ic('eye',16) + '</button></td>' +
       '</tr>';
   }).join('');
 }
@@ -202,6 +209,8 @@ async function detail(id) {
 
   var items = r.data || [];
   var pay   = payOf(id);
+  curItems  = items;
+  curOrder  = o;
 
   document.getElementById('detHost').innerHTML =
     (o.status !== 'paid'
@@ -250,6 +259,7 @@ async function detail(id) {
   document.getElementById('checkBtn').classList.toggle('hide', !canCheck);
   document.getElementById('voidBtn').classList.toggle('hide', !canVoid);
 
+  syncPrintBtn();
   UI.openModal('mDet');
 }
 
@@ -276,6 +286,35 @@ async function recheck() {
   UI.closeModal('mDet');
   load();
 }
+
+/* ---------- Cetak ulang ke printer Bluetooth ---------- */
+function syncPrintBtn() {
+  document.getElementById('btPrintBtn').classList.toggle('hide', !Printer.connected());
+  UI.hydrateIcons(document);
+}
+
+async function btReprint() {
+  if (!curOrder) return;
+  try {
+    UI.loading(true);
+    await Printer.printReceipt(curOrder, curItems.map(function (i) {
+      return { name: i.name, price: i.price, qty: i.qty };
+    }), {
+      name: U.business_name,
+      address: U.business_address || null,
+      phone: U.business_phone || null,
+      receipt_note: U.receipt_note,
+    });
+    UI.loading(false);
+    UI.toast('Struk dicetak', 'ok');
+  } catch (e) {
+    UI.loading(false);
+    UI.toast(e.message || 'Gagal mencetak', 'error');
+  }
+}
+
+Printer.onChange(syncPrintBtn);
+Printer.reconnect().then(syncPrintBtn);
 
 function doVoid() {
   UI.confirm({

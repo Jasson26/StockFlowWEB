@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#6C4CF1">
+<meta name="theme-color" content="#0C121C">
 <meta name="robots" content="noindex">
 <title>Pengaturan — StockFlow</title>
 <link rel="stylesheet" href="css/app.css">
@@ -14,147 +14,292 @@
 <div class="content">
   <div style="max-width:720px">
 
-    <!-- ============ PROFIL SAYA ============ -->
+    <!-- ============ PROFIL ============ -->
     <div class="card mb16">
       <div class="row mb16">
-        <div class="sb-avatar" style="width:52px;height:52px;font-size:19px" id="avatar">?</div>
+        <div class="sb-avatar" style="width:48px;height:48px;font-size:17px" id="avatar">?</div>
         <div style="flex:1;min-width:0">
-          <div class="fw8 fs18" id="myName">&mdash;</div>
+          <div class="fw7 fs18" id="myName">&mdash;</div>
           <div class="fs13 c-mid" id="myEmail">&mdash;</div>
         </div>
         <span class="badge brand" id="myRole">&mdash;</span>
       </div>
 
       <div class="field">
-        <label class="label">UBAH PASSWORD SAYA</label>
-        <div class="row">
-          <input type="password" id="newPass" class="input" placeholder="Password baru (min. 8 karakter)"
-                 autocomplete="new-password">
-          <button class="btn btn-primary" onclick="savePass()">Simpan</button>
-        </div>
-        <div class="hint">Password di-hash oleh Supabase &mdash; aplikasi tidak pernah menyimpannya.</div>
-      </div>
-
-      <div class="field mb0">
-        <label class="label">UBAH NAMA SAYA</label>
+        <label class="label" for="myNameInput">NAMA SAYA</label>
         <div class="row">
           <input type="text" id="myNameInput" class="input" placeholder="Nama Anda">
           <button class="btn" onclick="saveName()">Simpan</button>
         </div>
       </div>
+
+      <div class="field mb0">
+        <label class="label" for="newPass">UBAH PASSWORD</label>
+        <div class="row">
+          <input type="password" id="newPass" class="input" placeholder="Password baru (min. 8 karakter)"
+                 autocomplete="new-password">
+          <button class="btn" onclick="savePass()">Simpan</button>
+        </div>
+        <div class="hint">Password di-hash oleh Supabase &mdash; aplikasi tidak pernah menyimpannya.</div>
+      </div>
     </div>
 
-    <!-- ============ INFORMASI TOKO (owner) ============ -->
-    <div class="card mb16" id="bizCard">
-      <div class="card-hd" style="margin:-18px -18px 18px;padding:15px 18px"><h3>Informasi Toko</h3></div>
-
-      <div class="field">
-        <label class="label">NAMA TOKO</label>
-        <input type="text" id="bName" class="input">
-        <div class="hint">Tampil di struk dan di header aplikasi.</div>
-      </div>
-
-      <div class="grid g2">
+    <!-- ============ TOKO (owner) ============ -->
+    <div class="card p0 mb16" id="bizCard">
+      <div class="card-hd"><h3>Informasi Toko</h3></div>
+      <div class="card-bd">
         <div class="field">
-          <label class="label">TELEPON</label>
-          <input type="text" id="bPhone" class="input" placeholder="08xxxxxxxxxx">
+          <label class="label" for="bName">NAMA TOKO</label>
+          <input type="text" id="bName" class="input">
+          <div class="hint">Tampil di struk dan di header aplikasi.</div>
         </div>
-        <div class="field">
-          <label class="label">PAJAK (%)</label>
-          <input type="number" id="bTax" class="input" placeholder="0" min="0" max="100" step="0.01">
-          <div class="hint">Isi 0 jika tidak memungut pajak.</div>
-        </div>
-      </div>
 
-      <div class="field">
-        <label class="label">ALAMAT</label>
-        <textarea id="bAddr" class="textarea" placeholder="Alamat toko"></textarea>
-      </div>
-
-      <div class="field">
-        <label class="label">CATATAN DI STRUK</label>
-        <input type="text" id="bNote" class="input" placeholder="Terima kasih atas kunjungan Anda">
-      </div>
-
-      <button class="btn btn-primary btn-block" onclick="saveBiz()">Simpan Informasi Toko</button>
-    </div>
-
-    <!-- ============ QRIS (owner) ============ -->
-    <div class="card mb16" id="qrisCard">
-      <div class="card-hd" style="margin:-18px -18px 18px;padding:15px 18px"><h3>Pembayaran QRIS</h3></div>
-
-      <!-- Mode otomatis -->
-      <div class="row mb16" style="padding:14px;background:var(--surface-2);border-radius:var(--r)">
-        <div style="flex:1">
-          <div class="fw7">QRIS Otomatis <span class="badge ok" id="qrisBadge">&mdash;</span></div>
-          <div class="fs13 c-mid mt8" style="line-height:1.6">
-            QR dibuat per transaksi dengan nominal terisi, dan pembayaran terkonfirmasi
-            sendiri. Perlu kredensial Midtrans terpasang di Edge Function.
+        <div class="grid g2">
+          <div class="field">
+            <label class="label" for="bPhone">TELEPON</label>
+            <input type="text" id="bPhone" class="input" placeholder="08xxxxxxxxxx">
+          </div>
+          <div class="field">
+            <label class="label" for="bTax">PAJAK (%)</label>
+            <input type="number" id="bTax" class="input" placeholder="0" min="0" max="100" step="0.01">
+            <div class="hint">Isi 0 jika tidak memungut pajak.</div>
           </div>
         </div>
-        <button class="btn" id="qrisToggle" onclick="toggleQris()">&mdash;</button>
-      </div>
 
-      <div id="qrisHelp" class="qr-notice mb16 hide">
-        <strong>Sebelum mengaktifkan</strong>
-        Pastikan Edge Function sudah dideploy dan <code>MIDTRANS_SERVER_KEY</code> sudah diisi.
-        Langkah lengkapnya ada di <code>DEPLOY.md</code>. Kalau belum, pembayaran QRIS akan gagal
-        saat dicoba di kasir.
-      </div>
+        <div class="field">
+          <label class="label" for="bAddr">ALAMAT</label>
+          <textarea id="bAddr" class="textarea" placeholder="Alamat toko"></textarea>
+        </div>
 
-      <!-- QRIS statis sebagai cadangan -->
-      <div style="border-top:1px solid var(--border);padding-top:18px">
-        <div class="fw7 mb8">QRIS Statis (cadangan)</div>
+        <div class="field">
+          <label class="label" for="bNote">CATATAN DI STRUK</label>
+          <input type="text" id="bNote" class="input" placeholder="Terima kasih atas kunjungan Anda">
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="saveBiz()">Simpan Informasi Toko</button>
+      </div>
+    </div>
+
+    <!-- ============ PEMBAYARAN (owner) ============ -->
+    <div class="card p0 mb16" id="payCard">
+      <div class="card-hd"><h3>Pembayaran QRIS</h3></div>
+      <div class="card-bd">
+
+        <div id="credStatus" class="mb16"></div>
+
         <p class="fs13 c-mid mb16" style="line-height:1.65">
-          Unggah gambar QRIS dari bank atau e-wallet Anda. Dipakai kalau QRIS otomatis
-          tidak aktif. Pembeli mengetik nominal sendiri dan
-          <strong>pembayaran tidak terkonfirmasi otomatis</strong> &mdash; Anda harus
-          memeriksa mutasi sebelum menyelesaikan transaksi.
+          Pasang Server Key Midtrans milik toko Anda. Dana pembayaran masuk
+          <strong>langsung ke rekening Anda</strong>, tidak melewati pihak lain.
+          Setelah terpasang, pembayaran terkonfirmasi otomatis dan kasir tidak perlu
+          mengecek mutasi.
         </p>
 
-        <div class="tc">
-          <div id="qrisPrev" style="max-width:240px;margin:0 auto 14px;border-radius:var(--r);background:var(--surface-2);border:1.5px dashed var(--border-strong);padding:18px;min-height:150px;display:grid;place-items:center">
-            <span class="c-dim fs13">Belum ada QRIS statis</span>
+        <div class="field">
+          <label class="label" for="mKey">SERVER KEY MIDTRANS</label>
+          <input type="password" id="mKey" class="input" placeholder="Mid-server-..." autocomplete="off">
+          <div class="hint">
+            Dari dashboard Midtrans &rarr; Settings &rarr; Access Keys.
+            Setelah disimpan, key tidak dapat ditampilkan kembali &mdash; hanya bisa diganti.
           </div>
-          <input type="file" id="qFile" accept="image/*" class="hide" onchange="pickQris(this)">
-          <div class="row" style="justify-content:center">
-            <button class="btn" onclick="document.getElementById('qFile').click()">&#128247; Pilih Gambar</button>
-            <button class="btn btn-danger hide" id="qDel" onclick="delQris()">Hapus</button>
-          </div>
-          <div class="hint mt8">Format JPG atau PNG, maksimal 5MB.</div>
         </div>
+
+        <div class="field">
+          <label class="label" for="mEnv">LINGKUNGAN</label>
+          <select id="mEnv" class="select">
+            <option value="false">Sandbox &mdash; uji coba, uang tidak nyata</option>
+            <option value="true">Production &mdash; uang sungguhan</option>
+          </select>
+          <div class="hint">Pastikan sesuai dengan key yang Anda pakai. Key sandbox tidak bekerja di production.</div>
+        </div>
+
+        <div class="row">
+          <button class="btn btn-primary" onclick="saveCred()" style="flex:1">Simpan Kredensial</button>
+          <button class="btn btn-danger hide" id="credDel" onclick="delCred()">Hapus</button>
+        </div>
+
+        <div class="notice plain mt16" id="qrisToggleBox"></div>
+
+        <!-- QRIS statis -->
+        <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:18px">
+          <div class="fw6 mb8">QRIS Statis (cadangan)</div>
+          <p class="fs13 c-mid mb16" style="line-height:1.65">
+            Untuk toko yang belum punya akun Midtrans. Unggah gambar QRIS dari bank atau
+            e-wallet Anda. Pembeli mengetik nominal sendiri dan
+            <strong>pembayaran tidak terkonfirmasi otomatis</strong>.
+          </p>
+
+          <div class="tc">
+            <div id="qrisPrev" style="max-width:220px;margin:0 auto 13px;border-radius:var(--r-sm);background:var(--surface-2);border:1px dashed var(--border-mid);padding:16px;min-height:140px;display:grid;place-items:center"></div>
+            <input type="file" id="qFile" accept="image/*" class="hide" onchange="pickQris(this)">
+            <div class="row" style="justify-content:center">
+              <button class="btn btn-sm" onclick="document.getElementById('qFile').click()" id="qPickBtn"></button>
+              <button class="btn btn-sm btn-danger hide" id="qDel" onclick="delQris()">Hapus</button>
+            </div>
+            <div class="hint mt8">Format JPG atau PNG, maksimal 5MB.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============ PRINTER STRUK ============ -->
+    <div class="card p0 mb16">
+      <div class="card-hd">
+        <span data-ico="printer" data-ico-size="17" class="c-mid"></span>
+        <h3>Printer Struk Bluetooth</h3>
+      </div>
+      <div class="card-bd">
+
+        <div id="prnSupport" class="mb16"></div>
+
+        <div class="row mb16" style="padding:13px;background:var(--surface-2);border-radius:var(--r-sm)">
+          <span data-ico="bluetooth" data-ico-size="18" id="prnDot" class="c-dim"></span>
+          <div style="flex:1;min-width:0">
+            <div class="fw6" id="prnName">Belum terhubung</div>
+            <div class="fs13 c-mid" id="prnState">Hubungkan printer untuk mencetak struk langsung.</div>
+          </div>
+        </div>
+
+        <div class="row mb16" id="prnActions">
+          <button class="btn btn-primary" onclick="prnConnect()" id="prnConnectBtn" style="flex:1">
+            Hubungkan Printer
+          </button>
+          <button class="btn hide" onclick="prnTest()" id="prnTestBtn">Tes Cetak</button>
+          <button class="btn btn-danger hide" onclick="prnDisconnect()" id="prnOffBtn">Putuskan</button>
+        </div>
+
+        <div class="row" style="padding-top:14px;border-top:1px solid var(--border)">
+          <div style="flex:1">
+            <div class="fw6">Cetak otomatis setelah transaksi</div>
+            <div class="fs13 c-mid">Struk langsung keluar tanpa menekan tombol cetak.</div>
+          </div>
+          <button class="btn btn-sm" id="prnAutoBtn" onclick="prnToggleAuto()">&mdash;</button>
+        </div>
+
+        <details class="mt16">
+          <summary class="fs13 c-mid" style="cursor:pointer">Printer saya tidak terdeteksi</summary>
+          <div class="fs13 c-mid mt12" style="line-height:1.7">
+            <p class="mb8">Periksa berurutan:</p>
+            <ol style="margin-left:18px">
+              <li>Printer menyala dan lampunya tidak berkedip cepat (berkedip = sedang pairing)</li>
+              <li>Printer <strong>tidak</strong> sedang terhubung ke HP atau aplikasi lain</li>
+              <li>Bluetooth komputer atau HP aktif</li>
+              <li>Jarak di bawah 5 meter</li>
+            </ol>
+            <p class="mt12 mb8">
+              Kalau tetap tidak muncul, kemungkinan printer Anda hanya mendukung
+              <strong>Bluetooth Classic (SPP)</strong>. Browser tidak bisa menjangkau jenis itu
+              &mdash; hanya printer dengan <strong>Bluetooth 4.0 / BLE</strong> yang bisa.
+              Cek kemasan atau spesifikasi printer Anda.
+            </p>
+            <p>Sebagai cadangan, struk tetap bisa dicetak lewat dialog print browser.</p>
+          </div>
+        </details>
       </div>
     </div>
 
     <!-- ============ TAMPILAN ============ -->
-    <div class="card mb16">
-      <div class="card-hd" style="margin:-18px -18px 18px;padding:15px 18px"><h3>Tampilan</h3></div>
-      <div class="row">
-        <div style="flex:1">
-          <div class="fw7">Mode Gelap</div>
-          <div class="fs13 c-mid">Nyaman untuk mata saat cahaya redup.</div>
+    <div class="card p0 mb16">
+      <div class="card-hd"><h3>Tampilan</h3></div>
+      <div class="card-bd">
+        <div class="row">
+          <div style="flex:1">
+            <div class="fw6">Mode Gelap</div>
+            <div class="fs13 c-mid">Nyaman untuk mata saat cahaya redup.</div>
+          </div>
+          <button class="btn" id="themeBtn" onclick="flipTheme()">&mdash;</button>
         </div>
-        <button class="btn" id="themeBtn" onclick="flipTheme()">&mdash;</button>
+      </div>
+    </div>
+
+    <!-- ============ DATA ANDA ============ -->
+    <div class="card p0 mb16">
+      <div class="card-hd"><h3>Data Anda</h3></div>
+      <div class="card-bd">
+        <div class="row mb16">
+          <div style="flex:1">
+            <div class="fw6">Unduh semua data</div>
+            <div class="fs13 c-mid">
+              Produk, transaksi, stok, dan pengaturan dalam satu berkas JSON.
+            </div>
+          </div>
+          <button class="btn" onclick="exportData()" id="expBtn">Unduh</button>
+        </div>
+
+        <div class="row" id="expCsvRow">
+          <div style="flex:1">
+            <div class="fw6">Unduh transaksi (CSV)</div>
+            <div class="fs13 c-mid">Untuk dibuka di Excel atau Google Sheets.</div>
+          </div>
+          <button class="btn" onclick="exportCsv()">Unduh CSV</button>
+        </div>
       </div>
     </div>
 
     <!-- ============ AKUN ============ -->
-    <div class="card">
-      <div class="row">
-        <div style="flex:1">
-          <div class="fw7">Keluar dari akun</div>
-          <div class="fs13 c-mid">Anda perlu masuk kembali dengan email dan password.</div>
+    <div class="card p0 mb16">
+      <div class="card-hd"><h3>Akun</h3></div>
+      <div class="card-bd">
+        <div class="row">
+          <div style="flex:1">
+            <div class="fw6">Keluar dari akun</div>
+            <div class="fs13 c-mid">Anda perlu masuk kembali dengan email dan password.</div>
+          </div>
+          <button class="btn" onclick="Auth.logout()">Keluar</button>
         </div>
-        <button class="btn btn-danger" onclick="Auth.logout()">Keluar</button>
       </div>
     </div>
 
-    <p class="tc c-dim fs12 mt24">StockFlow v5 &mdash; Kasir &amp; Inventori dengan QRIS resmi</p>
+    <!-- ============ ZONA BAHAYA (owner) ============ -->
+    <div class="card p0 mb16" id="dangerCard" style="border-color:var(--danger)">
+      <div class="card-hd" style="border-color:var(--danger)">
+        <h3 class="c-danger">Hapus Toko</h3>
+      </div>
+      <div class="card-bd">
+        <p class="fs13 c-mid mb16" style="line-height:1.65">
+          Menghapus toko beserta <strong>seluruh</strong> produk, transaksi, riwayat stok,
+          dan akun karyawan. Akun Anda sendiri juga ikut terhapus. Tindakan ini
+          <strong>permanen dan tidak dapat dibatalkan</strong>.
+        </p>
+        <p class="fs13 c-mid mb16">Unduh data Anda lebih dulu bila masih diperlukan.</p>
+        <button class="btn btn-danger" onclick="openDelete()">Hapus Toko &amp; Semua Data</button>
+      </div>
+    </div>
+
+    <p class="tc c-dim fs12 mt24" style="padding-bottom:8px">
+      StockFlow &middot;
+      <a href="privasi.html" class="c-dim">Kebijakan Privasi</a> &middot;
+      <a href="ketentuan.html" class="c-dim">Syarat &amp; Ketentuan</a>
+    </p>
 
   </div>
 </div>
 </div>
 
+<!-- MODAL HAPUS -->
+<div class="modal" id="mDel">
+  <div class="modal-box narrow">
+    <div class="modal-hd">
+      <h3 class="c-danger">Hapus Toko Permanen</h3>
+      <button class="modal-x" onclick="UI.closeModal('mDel')" id="delX"></button>
+    </div>
+    <div class="modal-bd">
+      <div class="notice danger mb16" id="delWarn"></div>
+      <div class="field mb0">
+        <label class="label" for="delConfirm">KETIK <strong>HAPUS</strong> UNTUK MELANJUTKAN</label>
+        <input type="text" id="delConfirm" class="input" placeholder="HAPUS" autocomplete="off"
+               oninput="syncDelBtn()">
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mDel')">Batal</button>
+      <button class="btn btn-danger" id="delBtn" onclick="doDelete()" disabled>Hapus Permanen</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/icons.js"></script>
+<script src="js/printer.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/api.js"></script>
@@ -163,87 +308,176 @@
 <script>
 if (!Auth.guard()) throw 'redirect';
 var U = Auth.user();
-var biz = null, qUrl = null;
+var biz = null, qUrl = null, cred = null;
 
 UI.shell('settings', 'Pengaturan');
 
-if (U.role !== 'owner') {
-  document.getElementById('bizCard').classList.add('hide');
-  document.getElementById('qrisCard').classList.add('hide');
+var isOwner = U.role === 'owner';
+if (!isOwner) {
+  ['bizCard', 'payCard', 'dangerCard', 'expCsvRow'].forEach(function (id) {
+    document.getElementById(id).classList.add('hide');
+  });
 }
 
-document.getElementById('avatar').textContent      = UI.initials(U.name);
-document.getElementById('myName').textContent      = U.name;
-document.getElementById('myEmail').textContent     = U.email || '';
-document.getElementById('myRole').textContent      = U.role === 'owner' ? 'Owner' : 'Staff';
-document.getElementById('myNameInput').value       = U.name;
+document.getElementById('delX').innerHTML   = UI.ic('close', 18);
+document.getElementById('qPickBtn').innerHTML = UI.ic('camera', 16) + ' Pilih Gambar';
+document.getElementById('avatar').textContent  = UI.initials(U.name);
+document.getElementById('myName').textContent  = U.name;
+document.getElementById('myEmail').textContent = U.email || '';
+document.getElementById('myRole').textContent  = isOwner ? 'Owner' : 'Staff';
+document.getElementById('myNameInput').value   = U.name;
+
+document.getElementById('delWarn').innerHTML =
+  UI.ic('alert', 17) + '<div><strong>Tidak ada cara memulihkan data ini</strong>' +
+  'Seluruh transaksi, produk, dan akun karyawan akan hilang permanen.</div>';
 
 function syncThemeBtn() {
-  var dark = (localStorage.getItem('sf5_theme') || 'light') === 'dark';
-  document.getElementById('themeBtn').textContent = dark ? 'Matikan' : 'Nyalakan';
+  document.getElementById('themeBtn').textContent = UI.isDark() ? 'Matikan' : 'Nyalakan';
 }
 function flipTheme() { UI.toggleTheme(); syncThemeBtn(); }
 syncThemeBtn();
 
+/* ============================================================
+   MUAT
+   ============================================================ */
 async function load() {
-  if (U.role !== 'owner') return;
+  if (!isOwner) return;
 
   UI.loading(true);
   var r = await API.from('businesses').select('*').limit(1).maybeSingle();
+  var c = await API.rpc('payment_credential_status', {});
   UI.loading(false);
-  if (!r.data) return;
 
-  biz = r.data;
-  document.getElementById('bName').value  = biz.name || '';
-  document.getElementById('bPhone').value = biz.phone || '';
-  document.getElementById('bTax').value   = biz.tax_percent || 0;
-  document.getElementById('bAddr').value  = biz.address || '';
-  document.getElementById('bNote').value  = biz.receipt_note || '';
+  if (r.data) {
+    biz = r.data;
+    document.getElementById('bName').value  = biz.name || '';
+    document.getElementById('bPhone').value = biz.phone || '';
+    document.getElementById('bTax').value   = biz.tax_percent || 0;
+    document.getElementById('bAddr').value  = biz.address || '';
+    document.getElementById('bNote').value  = biz.receipt_note || '';
+    qUrl = biz.qris_static_url;
+    showQris();
+  }
 
-  qUrl = biz.qris_static_url;
-  showQris();
-  syncQrisToggle();
+  cred = (c.data && (c.data.configured !== undefined ? c.data : c.data[0])) || { configured: false };
+  showCred();
 }
 
-/* ---------- QRIS otomatis ---------- */
-function syncQrisToggle() {
-  var on = !!(biz && biz.qris_enabled);
-  var b  = document.getElementById('qrisBadge');
-  b.textContent = on ? 'Aktif' : 'Nonaktif';
-  b.className   = 'badge ' + (on ? 'ok' : '');
-  document.getElementById('qrisToggle').textContent = on ? 'Matikan' : 'Aktifkan';
-  document.getElementById('qrisHelp').classList.toggle('hide', on);
+/* ============================================================
+   KREDENSIAL PEMBAYARAN
+   ============================================================ */
+function showCred() {
+  var host = document.getElementById('credStatus');
+  var on   = !!(biz && biz.qris_enabled);
+
+  if (cred && cred.configured) {
+    document.getElementById('mEnv').value = String(!!cred.is_production);
+    document.getElementById('credDel').classList.remove('hide');
+    host.innerHTML = UI.notice(
+      cred.is_production ? 'ok' : 'info',
+      'Kredensial terpasang' + (cred.is_production ? ' — Production' : ' — Sandbox'),
+      'Key berakhiran <strong>' + UI.esc(cred.key_hint || '????') + '</strong>, dipasang ' +
+      UI.dateOnly(cred.updated_at) + '. Dana masuk ke rekening akun Midtrans Anda.');
+  } else {
+    document.getElementById('credDel').classList.add('hide');
+    host.innerHTML = UI.notice('plain', 'Belum terpasang',
+      'Kasir akan memakai QRIS statis atau tunai sampai kredensial diisi.');
+  }
+
+  document.getElementById('qrisToggleBox').innerHTML =
+    '<div style="flex:1"><strong>QRIS otomatis di kasir</strong>' +
+    (on ? 'Aktif — kasir menampilkan QR dinamis.' : 'Nonaktif — kasir tidak menawarkan QRIS otomatis.') +
+    '</div><button class="btn btn-sm" onclick="toggleQris()">' +
+    (on ? 'Matikan' : 'Aktifkan') + '</button>';
+}
+
+async function saveCred() {
+  var key = document.getElementById('mKey').value.trim();
+  var prod = document.getElementById('mEnv').value === 'true';
+
+  if (!key) return UI.toast('Masukkan Server Key', 'error');
+  if (key.length < 20) return UI.toast('Server Key terlihat terlalu pendek', 'error');
+  if (/^Mid-client-|^SB-Mid-client-/i.test(key)) {
+    return UI.toast('Itu Client Key. Yang dibutuhkan Server Key.', 'error');
+  }
+
+  UI.loading(true);
+  var body = {
+    business_id: U.business_id,
+    provider: 'midtrans',
+    server_key: key,
+    is_production: prod,
+    key_hint: key.slice(-4),
+    updated_at: new Date().toISOString(),
+    updated_by: U.id,
+  };
+
+  /* Upsert manual: coba update dulu, kalau belum ada baru insert */
+  var up = await API.from('payment_credentials').update(body).eq('business_id', U.business_id).run();
+  var touched = up.data && up.data.length;
+  if (!touched) {
+    var ins = await API.from('payment_credentials').insert(body).run();
+    if (ins.error) { UI.loading(false); return UI.toast(ins.error.message, 'error'); }
+  } else if (up.error) {
+    UI.loading(false); return UI.toast(up.error.message, 'error');
+  }
+
+  var c = await API.rpc('payment_credential_status', {});
+  UI.loading(false);
+
+  cred = (c.data && (c.data.configured !== undefined ? c.data : c.data[0])) || { configured: true };
+  document.getElementById('mKey').value = '';
+  showCred();
+  UI.toast('Kredensial tersimpan', 'ok');
+}
+
+function delCred() {
+  UI.confirm({
+    title: 'Hapus kredensial?',
+    text: 'Pembayaran QRIS otomatis akan berhenti sampai Anda memasang key kembali.',
+    ok: 'Hapus', danger: true,
+  }).then(async function (ok) {
+    if (!ok) return;
+    UI.loading(true);
+    var r = await API.from('payment_credentials').remove().eq('business_id', U.business_id).run();
+    UI.loading(false);
+    if (r.error) return UI.toast(r.error.message, 'error');
+    cred = { configured: false };
+    showCred();
+    UI.toast('Kredensial dihapus', 'ok');
+  });
 }
 
 async function toggleQris() {
   var next = !(biz && biz.qris_enabled);
 
-  if (next) {
-    var ok = await UI.confirm({
-      title: 'Aktifkan QRIS otomatis?',
-      text: 'Pastikan Edge Function sudah dideploy dan kredensial Midtrans sudah diisi. ' +
-            'Kalau belum, pembayaran QRIS akan gagal di kasir.',
-      ok: 'Ya, aktifkan',
+  if (next && !(cred && cred.configured)) {
+    var go = await UI.confirm({
+      title: 'Kredensial belum terpasang',
+      text: 'Tanpa Server Key Midtrans, pembayaran QRIS akan gagal saat dicoba di kasir. ' +
+            'Tetap aktifkan?',
+      ok: 'Tetap aktifkan',
     });
-    if (!ok) return;
+    if (!go) return;
   }
 
   UI.loading(true);
   var r = await API.from('businesses').update({ qris_enabled: next }).eq('id', U.business_id).run();
   UI.loading(false);
-
   if (r.error) return UI.toast(r.error.message, 'error');
 
   biz.qris_enabled = next;
-  syncQrisToggle();
+  showCred();
   await Auth.reload();
   UI.toast(next ? 'QRIS otomatis aktif' : 'QRIS otomatis dimatikan', 'ok');
 }
 
-/* ---------- QRIS statis ---------- */
+/* ============================================================
+   QRIS STATIS
+   ============================================================ */
 function showQris() {
   document.getElementById('qrisPrev').innerHTML = qUrl
-    ? '<img src="' + UI.esc(qUrl) + '" style="width:100%;border-radius:8px;background:#fff">'
+    ? '<img src="' + UI.esc(qUrl) + '" style="width:100%;border-radius:6px;background:#fff">'
     : '<span class="c-dim fs13">Belum ada QRIS statis</span>';
   document.getElementById('qDel').classList.toggle('hide', !qUrl);
 }
@@ -266,8 +500,7 @@ function pickQris(inp) {
     UI.loading(false);
     if (up.error) return UI.toast(up.error.message, 'error');
 
-    qUrl = url;
-    showQris();
+    qUrl = url; showQris();
     await Auth.reload();
     UI.toast('QRIS statis tersimpan', 'ok');
   };
@@ -275,7 +508,7 @@ function pickQris(inp) {
 }
 
 function delQris() {
-  UI.confirm({ title: 'Hapus QRIS statis?', text: 'Anda bisa mengunggahnya kembali nanti.', ok: 'Hapus', danger: true })
+  UI.confirm({ title: 'Hapus QRIS statis?', text: 'Bisa diunggah kembali nanti.', ok: 'Hapus', danger: true })
     .then(async function (ok) {
       if (!ok) return;
       UI.loading(true);
@@ -290,7 +523,9 @@ function delQris() {
     });
 }
 
-/* ---------- Simpan info toko ---------- */
+/* ============================================================
+   INFO TOKO & PROFIL
+   ============================================================ */
 async function saveBiz() {
   var name = document.getElementById('bName').value.trim();
   if (!name) return UI.toast('Nama toko wajib diisi', 'error');
@@ -309,13 +544,11 @@ async function saveBiz() {
   UI.loading(false);
 
   if (r.error) return UI.toast(r.error.message, 'error');
-
   await Auth.reload();
   UI.toast('Informasi toko tersimpan', 'ok');
   setTimeout(function () { location.reload(); }, 600);
 }
 
-/* ---------- Profil sendiri ---------- */
 async function saveName() {
   var n = document.getElementById('myNameInput').value.trim();
   if (!n) return UI.toast('Nama tidak boleh kosong', 'error');
@@ -323,8 +556,8 @@ async function saveName() {
   UI.loading(true);
   var r = await API.from('profiles').update({ name: n }).eq('id', U.id).run();
   UI.loading(false);
-
   if (r.error) return UI.toast(r.error.message, 'error');
+
   await Auth.reload();
   UI.toast('Nama diperbarui', 'ok');
   setTimeout(function () { location.reload(); }, 600);
@@ -337,11 +570,191 @@ async function savePass() {
   UI.loading(true);
   var r = await Auth.changePassword(p);
   UI.loading(false);
-
   if (!r.ok) return UI.toast(r.msg, 'error');
+
   document.getElementById('newPass').value = '';
   UI.toast('Password diperbarui', 'ok');
 }
+
+/* ============================================================
+   EXPORT DATA
+   ============================================================ */
+function download(filename, content, type) {
+  var blob = new Blob([content], { type: type });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+async function exportData() {
+  UI.loading(true);
+  var r = await API.rpc('export_my_data', {});
+  UI.loading(false);
+
+  if (r.error) return UI.toast(r.error.message, 'error');
+
+  var stamp = new Date().toISOString().slice(0, 10);
+  download('stockflow-data-' + stamp + '.json',
+    JSON.stringify(r.data, null, 2), 'application/json');
+  UI.toast('Data diunduh', 'ok');
+}
+
+async function exportCsv() {
+  UI.loading(true);
+  var o = await API.from('orders').select('*').order('created_at', false).limit(5000);
+  UI.loading(false);
+
+  if (o.error) return UI.toast(o.error.message, 'error');
+  if (!o.data.length) return UI.toast('Belum ada transaksi', 'warn');
+
+  var head = ['No Invoice', 'Tanggal', 'Kasir', 'Pembeli', 'Metode', 'Status',
+              'Subtotal', 'Diskon', 'Pajak', 'Total', 'HPP', 'Laba'];
+  var esc = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+
+  var lines = [head.join(',')];
+  o.data.forEach(function (x) {
+    lines.push([
+      esc(x.order_no), esc(new Date(x.created_at).toLocaleString('id-ID')),
+      esc(x.cashier_name), esc(x.customer_name), esc(x.payment_method), esc(x.status),
+      x.subtotal, x.discount, x.tax, x.total, x.cost_total,
+      Number(x.total) - Number(x.cost_total),
+    ].join(','));
+  });
+
+  download('stockflow-transaksi-' + new Date().toISOString().slice(0, 10) + '.csv',
+    '﻿' + lines.join('\n'), 'text/csv;charset=utf-8');
+  UI.toast('CSV diunduh', 'ok');
+}
+
+/* ============================================================
+   HAPUS AKUN
+   ============================================================ */
+function openDelete() {
+  document.getElementById('delConfirm').value = '';
+  syncDelBtn();
+  UI.openModal('mDel');
+}
+
+function syncDelBtn() {
+  document.getElementById('delBtn').disabled =
+    document.getElementById('delConfirm').value.trim().toUpperCase() !== 'HAPUS';
+}
+
+async function doDelete() {
+  if (document.getElementById('delConfirm').value.trim().toUpperCase() !== 'HAPUS') return;
+
+  document.getElementById('delBtn').disabled = true;
+  UI.loading(true);
+
+  var r = await API.invoke('delete-account', { confirm: 'HAPUS' });
+
+  UI.loading(false);
+
+  if (r.error) {
+    document.getElementById('delBtn').disabled = false;
+    return UI.toast(r.error.message, 'error');
+  }
+
+  UI.toast('Toko dan seluruh data telah dihapus', 'ok');
+  setTimeout(function () {
+    try {
+      localStorage.removeItem('sf5_token');
+      localStorage.removeItem('sf5_profile');
+    } catch (e) {}
+    location.href = 'index.html';
+  }, 1400);
+}
+
+
+/* ============================================================
+   PRINTER STRUK
+   ============================================================ */
+var AUTO_KEY = 'sf5_print_auto';
+var prnAuto = (function () {
+  try { return localStorage.getItem(AUTO_KEY) === '1'; } catch (e) { return false; }
+})();
+
+function prnSyncAuto() {
+  document.getElementById('prnAutoBtn').textContent = prnAuto ? 'Matikan' : 'Nyalakan';
+}
+
+function prnToggleAuto() {
+  prnAuto = !prnAuto;
+  try { localStorage.setItem(AUTO_KEY, prnAuto ? '1' : '0'); } catch (e) {}
+  prnSyncAuto();
+  UI.toast(prnAuto ? 'Cetak otomatis aktif' : 'Cetak otomatis dimatikan', 'ok');
+}
+
+function prnRender(st) {
+  var sup = Printer.support();
+  var on  = st.connected;
+
+  document.getElementById('prnName').textContent =
+    on ? (st.name || 'Printer') : (st.remembered ? st.name + ' (terputus)' : 'Belum terhubung');
+
+  document.getElementById('prnState').textContent = on
+    ? 'Terhubung dan siap mencetak.'
+    : (sup.ok
+        ? 'Hubungkan printer untuk mencetak struk langsung.'
+        : 'Cetak lewat dialog print browser.');
+
+  document.getElementById('prnDot').className = on ? 'c-ok' : 'c-dim';
+
+  document.getElementById('prnConnectBtn').textContent = on ? 'Ganti Printer' : 'Hubungkan Printer';
+  document.getElementById('prnTestBtn').classList.toggle('hide', !on);
+  document.getElementById('prnOffBtn').classList.toggle('hide', !on);
+
+  /* Tombol dinonaktifkan kalau lingkungannya memang tidak mendukung */
+  document.getElementById('prnConnectBtn').disabled = !sup.ok;
+
+  document.getElementById('prnSupport').innerHTML = sup.ok
+    ? (on ? '' : UI.notice('plain', null,
+        'Printer thermal 58mm dengan Bluetooth 4.0 (BLE) dan perintah ESC/POS.'))
+    : UI.notice('warn', 'Bluetooth tidak tersedia di sini', UI.esc(sup.reason));
+
+  UI.hydrateIcons(document);
+}
+
+async function prnConnect() {
+  try {
+    UI.loading(true);
+    await Printer.connect();
+    UI.loading(false);
+    UI.toast('Printer terhubung', 'ok');
+  } catch (e) {
+    UI.loading(false);
+    /* Pengguna menutup dialog pemilihan bukan error yang perlu dilaporkan */
+    if (e && (e.name === 'NotFoundError' || /cancel/i.test(e.message || ''))) return;
+    UI.toast(e.message || 'Gagal menghubungkan printer', 'error');
+  }
+}
+
+async function prnTest() {
+  try {
+    UI.loading(true);
+    await Printer.printTest(U.business_name);
+    UI.loading(false);
+    UI.toast('Tes cetak dikirim', 'ok');
+  } catch (e) {
+    UI.loading(false);
+    UI.toast(e.message || 'Gagal mencetak', 'error');
+  }
+}
+
+function prnDisconnect() {
+  Printer.disconnect();
+  Printer.forget();
+  UI.toast('Printer diputuskan', 'ok');
+  prnRender(Printer.info());
+}
+
+Printer.onChange(prnRender);
+prnRender(Printer.info());
+prnSyncAuto();
+/* Sambung ulang diam-diam kalau printer pernah diizinkan */
+Printer.reconnect();
 
 load();
 </script>

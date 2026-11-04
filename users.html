@@ -103,6 +103,7 @@
   </div>
 </div>
 
+<script src="js/icons.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/api.js"></script>
@@ -127,7 +128,7 @@ async function load() {
 function render() {
   if (!users.length) {
     document.getElementById('rows').innerHTML =
-      '<tr><td colspan="6">' + UI.empty('&#128101;', 'Belum ada pengguna lain', 'Klik "+ Tambah Pengguna"') + '</td></tr>';
+      '<tr><td colspan="6">' + UI.empty('users', 'Belum ada pengguna lain', 'Klik "+ Tambah Pengguna"') + '</td></tr>';
     return;
   }
 
@@ -146,7 +147,7 @@ function render() {
       '<td><div class="row" style="gap:4px;justify-content:flex-end">' +
         '<button class="btn btn-ghost btn-icon" onclick="openEdit(\'' + u.id + '\')" title="Ubah">&#9999;</button>' +
         (me ? '' : '<button class="btn btn-ghost btn-icon c-danger" onclick="del(\'' + u.id +
-                   '\')" title="Hapus">&#128465;</button>') +
+                   '\')" title="Hapus">' + UI.ic('trash',16) + '</button>') +
       '</div></td></tr>';
   }).join('');
 }

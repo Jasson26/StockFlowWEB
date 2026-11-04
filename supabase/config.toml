@@ -1,0 +1,19 @@
+# Konfigurasi project Supabase untuk StockFlow v5
+# project_id diisi otomatis oleh `supabase link`
+
+[functions.payment-create]
+verify_jwt = true
+
+[functions.payment-status]
+verify_jwt = true
+
+[functions.create-staff]
+verify_jwt = true
+
+# Midtrans tidak mengirim JWT Supabase. Keamanan fungsi ini bertumpu
+# pada verifikasi signature SHA512 di dalam kodenya.
+[functions.payment-webhook]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = true

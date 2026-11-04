@@ -18,7 +18,7 @@
     </div>
     <select class="select" id="fCat" onchange="render()" style="width:auto;min-width:150px"></select>
     <div class="spacer"></div>
-    <button class="btn" onclick="openCat()">&#127991; Kategori</button>
+    <button class="btn" onclick="openCat()"><span data-ico="tag" data-ico-size="16"></span>Kategori</button>
     <button class="btn btn-primary" onclick="openEdit()">+ Produk</button>
   </div>
 
@@ -55,9 +55,9 @@
       <input type="hidden" id="eId">
 
       <div class="field tc">
-        <div id="imgPrev" style="width:120px;height:120px;border-radius:var(--r-lg);background:var(--surface-2);margin:0 auto 10px;display:grid;place-items:center;font-size:36px;overflow:hidden;border:1.5px solid var(--border)">&#128230;</div>
+        <div id="imgPrev" style="width:120px;height:120px;border-radius:var(--r-lg);background:var(--surface-2);margin:0 auto 10px;display:grid;place-items:center;font-size:36px;overflow:hidden;border:1.5px solid var(--border)"><span data-ico="box" data-ico-size="16"></span></div>
         <input type="file" id="eImg" accept="image/*" class="hide" onchange="pickImg(this)">
-        <button class="btn btn-sm" onclick="document.getElementById('eImg').click()">&#128247; Pilih Foto</button>
+        <button class="btn btn-sm" onclick="document.getElementById('eImg').click()"><span data-ico="camera" data-ico-size="16"></span>Pilih Foto</button>
         <button class="btn btn-sm btn-ghost hide" id="imgDel" onclick="delImg()">Hapus</button>
       </div>
 
@@ -136,6 +136,7 @@
   </div>
 </div>
 
+<script src="js/icons.js"></script>
 <script src="js/config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/demo.js"></script>
@@ -202,7 +203,7 @@ function render() {
   if (!list.length) {
     document.getElementById('rows').innerHTML =
       '<tr><td colspan="7">' +
-      UI.empty('&#128230;', products.length ? 'Tidak ada hasil' : 'Belum ada produk',
+      UI.empty('box', products.length ? 'Tidak ada hasil' : 'Belum ada produk',
                products.length ? 'Coba kata kunci lain' : 'Klik "+ Produk" untuk menambahkan') +
       '</td></tr>';
     return;
@@ -213,7 +214,7 @@ function render() {
     var cls = st <= 0 ? 'danger' : (st <= Number(p.min_stock || 0) ? 'warn' : 'ok');
     return '<tr>' +
       '<td><div style="width:38px;height:38px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;overflow:hidden;font-size:17px">' +
-        (p.image_url ? '<img src="' + UI.esc(p.image_url) + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">' : '&#128230;') +
+        (p.image_url ? '<img src="' + UI.esc(p.image_url) + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">' : UI.ic('box', 22)) +
       '</div></td>' +
       '<td><div class="fw7">' + UI.esc(p.name) + '</div>' +
         (p.active ? '' : '<span class="badge">Nonaktif</span>') + '</td>' +
@@ -223,7 +224,7 @@ function render() {
       '<td class="num"><span class="badge ' + cls + '">' + UI.num(st) + '</span></td>' +
       '<td><div class="row" style="gap:4px;justify-content:flex-end">' +
         '<button class="btn btn-ghost btn-icon" onclick="openEdit(\'' + p.id + '\')" title="Ubah">&#9999;</button>' +
-        '<button class="btn btn-ghost btn-icon c-danger" onclick="del(\'' + p.id + '\')" title="Hapus">&#128465;</button>' +
+        '<button class="btn btn-ghost btn-icon c-danger" onclick="del(\'' + p.id + '\')" title="Hapus">' + UI.ic('trash',16) + '</button>' +
       '</div></td></tr>';
   }).join('');
 }
@@ -254,7 +255,7 @@ function openEdit(id) {
 function showPrev() {
   document.getElementById('imgPrev').innerHTML = imgUrl
     ? '<img src="' + UI.esc(imgUrl) + '" style="width:100%;height:100%;object-fit:cover">'
-    : '&#128230;';
+    : UI.ic('box', 26);
   document.getElementById('imgDel').classList.toggle('hide', !imgUrl);
 }
 
@@ -350,7 +351,7 @@ function renderCatList() {
         return '<div class="row" style="padding:11px;border-radius:var(--r);background:var(--surface-2);margin-bottom:8px">' +
           '<div style="flex:1"><div class="fw7">' + UI.esc(c.name) + '</div>' +
           '<div class="fs12 c-dim">' + n + ' produk</div></div>' +
-          '<button class="btn btn-ghost btn-icon c-danger" onclick="delCat(\'' + c.id + '\')">&#128465;</button></div>';
+          '<button class="btn btn-ghost btn-icon c-danger" onclick="delCat(\'' + c.id + '\')">' + UI.ic('trash',16) + '</button></div>';
       }).join('')
     : '<p class="c-dim tc fs13" style="padding:16px 0">Belum ada kategori.</p>';
 }
