@@ -486,6 +486,12 @@ table.tbl tbody tr:hover { background: var(--surface-2); }
 }
 .modal-ft .btn { flex: 1; }
 
+/* Tombol struk: cetak penuh di atas, dua tombol lain berdampingan di bawah,
+   supaya tidak keluar dari kotak di layar sempit */
+.modal-ft.rcpt-ft { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.modal-ft.rcpt-ft .btn { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-ft.rcpt-ft .btn-primary { grid-column: 1 / -1; }
+
 @media (max-width: 600px) {
   .modal { padding: 0; align-items: flex-end; }
   .modal-box { max-width: none; border-radius: var(--r-xl) var(--r-xl) 0 0; max-height: 92dvh; border-bottom: none; }
