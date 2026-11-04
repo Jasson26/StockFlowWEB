@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Pengaturan — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261105b">
+<link rel="stylesheet" href="css/app.css?v=20261105e">
 <style>
 /* Satu kartu, isinya baris-baris. Label kiri, kontrol kanan. */
 .sheet { max-width: 640px; margin: 0 auto; }
@@ -209,6 +209,51 @@ details.adv[open] > summary { background: var(--surface-2); }
     <div class="srow-ctl"><button class="btn btn-sm" id="prnAutoBtn" onclick="prnToggleAuto()">&mdash;</button></div>
   </div>
 
+  <details class="adv" id="prnDiag" ontoggle="if(this.open) diagRender()">
+    <summary>
+      <span data-ico="info" data-ico-size="16" class="c-dim"></span>
+      Diagnosa printer
+      <span class="chev" data-ico="forward" data-ico-size="15"></span>
+    </summary>
+
+    <div class="srow split">
+      <div>
+        <label class="label" for="dChar">Jalur kirim</label>
+        <select id="dChar" class="select" onchange="diagSave()"></select>
+      </div>
+      <div>
+        <label class="label" for="dMode">Cara kirim</label>
+        <select id="dMode" class="select" onchange="diagSave()">
+          <option value="auto">Otomatis</option>
+          <option value="noresp">Tanpa respons</option>
+          <option value="resp">Dengan respons</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="dChunk">Byte/kirim</label>
+        <select id="dChunk" class="select" onchange="diagSave()">
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="180">180</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="srow">
+      <div class="srow-lbl">Uji</div>
+      <div class="srow-ctl">
+        <button class="btn btn-sm" onclick="diagPlain()">Teks polos</button>
+        <button class="btn btn-sm" onclick="prnTest()">Struk tes</button>
+        <button class="btn btn-sm" onclick="diagCopy()">Salin info</button>
+      </div>
+    </div>
+
+    <div class="srow stack">
+      <pre id="dLog" class="fs12 c-mid" style="margin:0;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow:auto;background:var(--surface-2);padding:10px;border-radius:8px">-</pre>
+    </div>
+  </details>
+
   <!-- ============ LAINNYA ============ -->
   <div class="sgrp">Lainnya</div>
 
@@ -268,13 +313,13 @@ details.adv[open] > summary { background: var(--surface-2); }
   </div>
 </div>
 
-<script src="js/icons.js?v=20261105b"></script>
-<script src="js/printer.js?v=20261105b"></script>
-<script src="js/config.js?v=20261105b"></script>
-<script src="js/demo.js?v=20261105b"></script>
-<script src="js/api.js?v=20261105b"></script>
-<script src="js/auth.js?v=20261105b"></script>
-<script src="js/ui.js?v=20261105b"></script>
+<script src="js/icons.js?v=20261105e"></script>
+<script src="js/printer.js?v=20261105e"></script>
+<script src="js/config.js?v=20261105e"></script>
+<script src="js/demo.js?v=20261105e"></script>
+<script src="js/api.js?v=20261105e"></script>
+<script src="js/auth.js?v=20261105e"></script>
+<script src="js/ui.js?v=20261105e"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 var U = Auth.user();
@@ -532,7 +577,7 @@ async function savePass() {
    ============================================================ */
 var AUTO_KEY = 'sf5_print_auto';
 var prnAuto = (function () {
-  try { return localStorage.getItem(AUTO_KEY) === '1'; } catch (e) { return false; }
+  try { return localStorage.getItem(AUTO_KEY) !== '0'; } catch (e) { return true; }
 })();
 
 function prnSyncAuto() {
@@ -561,6 +606,7 @@ function prnRender(st) {
   document.getElementById('prnTestBtn').classList.toggle('hide', !on);
   document.getElementById('prnOffBtn').classList.toggle('hide', !on);
   UI.hydrateIcons(document);
+  if (document.getElementById('prnDiag').open) diagRender();
 }
 
 async function prnConnect() {
@@ -579,12 +625,75 @@ async function prnConnect() {
 async function prnTest() {
   try {
     UI.loading(true);
+    await Printer.ensure();
     await Printer.printTest(U.business_name);
     UI.loading(false);
     UI.toast('Tes cetak dikirim', 'ok');
+    diagLog('Struk tes terkirim');
   } catch (e) {
     UI.loading(false);
     UI.toast(e.message || 'Gagal mencetak', 'error');
+    diagLog('GAGAL struk tes: ' + (e.message || e));
+  }
+}
+
+/* ---------- Diagnosa ---------- */
+var diagLines = [];
+function diagLog(msg) {
+  diagLines.push(new Date().toLocaleTimeString('id-ID') + '  ' + msg);
+  diagLines = diagLines.slice(-12);
+  diagRender();
+}
+
+function diagRender() {
+  var d = Printer.diag();
+  var sel = document.getElementById('dChar');
+  sel.innerHTML = '<option value="">Otomatis</option>' + d.list.map(function (w) {
+    var tag = (w.wwr ? 'tanpa-respons ' : '') + (w.write ? 'respons' : '');
+    return '<option value="' + w.uuid + '">' + w.uuid.slice(0, 8) + ' (' + tag.trim() + ')</option>';
+  }).join('');
+  sel.value = d.prefs.char || '';
+  document.getElementById('dMode').value  = d.prefs.mode || 'auto';
+  document.getElementById('dChunk').value = String(d.prefs.chunk || 20);
+
+  var info = [
+    'Browser : ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''),
+    'Printer : ' + (d.name || '-') + (d.connected ? ' (tersambung)' : ' (terputus)'),
+    'Dipakai : ' + (d.chosen || '-') + (d.mode ? '  [' + d.mode + ']' : ''),
+    'Jalur   : ' + (d.list.length ? '' : '-'),
+  ].concat(d.list.map(function (w) {
+    return '  ' + w.svc.slice(0, 8) + ' / ' + w.uuid.slice(0, 8) +
+           '  write=' + (w.write ? 'ya' : 'tidak') + ' wwr=' + (w.wwr ? 'ya' : 'tidak');
+  }));
+  if (d.lastError) info.push('Error   : ' + d.lastError);
+  document.getElementById('dLog').textContent =
+    info.join('\n') + (diagLines.length ? '\n\nLog:\n' + diagLines.join('\n') : '');
+}
+
+function diagSave() {
+  Printer.setPrefs({
+    char:  document.getElementById('dChar').value,
+    mode:  document.getElementById('dMode').value,
+    chunk: Number(document.getElementById('dChunk').value) || 20,
+  });
+  diagLog('Pengaturan kirim disimpan');
+}
+
+async function diagPlain() {
+  try {
+    await Printer.ensure();
+    await Printer.printPlain();
+    diagLog('Teks polos terkirim lewat ' + (Printer.diag().chosen || '-').slice(0, 8) +
+            ' [' + Printer.diag().mode + ']');
+  } catch (e) {
+    diagLog('GAGAL teks polos: ' + (e.message || e));
+  }
+}
+
+function diagCopy() {
+  var t = document.getElementById('dLog').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(t).then(function () { UI.toast('Info disalin', 'ok'); });
   }
 }
 

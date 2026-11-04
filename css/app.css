@@ -821,17 +821,22 @@ html[data-theme='dark'] .pay-opt.on { color: var(--bg); }
 /* ---------- Struk ---------- */
 .receipt {
   background: #fff; color: #111;
-  font-family: var(--ff-num); font-size: 12px; line-height: 1.55;
-  padding: 20px; border-radius: var(--r-sm);
-  max-width: 312px; margin: 0 auto;
+  font-family: var(--ff-num); font-size: 12.5px; line-height: 1.75;
+  padding: 26px 22px; border-radius: var(--r-sm);
+  max-width: 320px; margin: 0 auto;
 }
 .receipt .r-c { text-align: center; }
-.receipt .r-biz { font-size: 14px; font-weight: 700; letter-spacing: .02em; }
-.receipt hr { border: none; border-top: 1px dashed #bbb; margin: 8px 0; }
+.receipt .r-biz { font-size: 16px; font-weight: 700; letter-spacing: .04em; margin-bottom: 2px; }
+.receipt .r-sub { font-size: 11px; color: #555; }
+.receipt hr { border: none; border-top: 1px dashed #bbb; margin: 14px 0; }
 .receipt .r-row { display: flex; justify-content: space-between; gap: 10px; }
 .receipt .r-row.b { font-weight: 700; }
-.receipt .r-item { margin-bottom: 4px; }
+.receipt .r-item { margin-bottom: 8px; }
 .receipt .r-item-n { font-weight: 600; }
+.receipt .r-q { text-align: center; padding: 2px 0; }
+.receipt .r-q small { display: block; font-size: 10.5px; letter-spacing: .14em; color: #555; }
+.receipt .r-q b { display: block; font-size: 34px; line-height: 1.15; letter-spacing: .04em; }
+.receipt .r-foot { text-align: center; font-size: 11.5px; margin-top: 4px; }
 
 @media print {
   body * { visibility: hidden !important; }

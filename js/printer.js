@@ -36,6 +36,27 @@ const Printer = (function () {
   ];
 
   const LS_KEY = 'sf5_printer';
+  const PREF_KEY = 'sf5_printer_prefs';
+
+  /* Pilihan manual dari layar Diagnosa:
+     char = UUID characteristic, mode = 'auto' | 'noresp' | 'resp', chunk = byte per kirim */
+  function prefs() {
+    try { return Object.assign({ char: '', mode: 'auto', chunk: 20 },
+                               JSON.parse(localStorage.getItem(PREF_KEY) || '{}')); }
+    catch (e) { return { char: '', mode: 'auto', chunk: 20 }; }
+  }
+  function setPrefs(p) {
+    try { localStorage.setItem(PREF_KEY, JSON.stringify(Object.assign(prefs(), p || {}))); } catch (e) {}
+    /* Terapkan langsung bila sudah tersambung */
+    if (writable.length) {
+      const want = prefs().char;
+      const hit = writable.find((w) => w.uuid === want);
+      if (hit) charac = hit.c;
+    }
+  }
+
+  let writable = [];      // [{svc, uuid, c, write, wwr}] semua jalur yang bisa ditulis
+  let lastError = '';
 
   let device = null;
   let charac = null;      // characteristic untuk menulis
@@ -137,15 +158,26 @@ const Printer = (function () {
     }
 
     const all = [];
+    writable = [];
     for (const svc of services) {
-      if (SKIP_SERVICES.indexOf(String(svc.uuid).toLowerCase()) >= 0) continue;
+      const su = String(svc.uuid).toLowerCase();
+      if (SKIP_SERVICES.indexOf(su) >= 0) continue;
       let chars = [];
       try { chars = await svc.getCharacteristics(); } catch (e) { continue; }
       for (const c of chars) {
         if (c.properties && (c.properties.write || c.properties.writeWithoutResponse)) {
           all.push(c);
+          writable.push({ svc: su, uuid: String(c.uuid).toLowerCase(), c: c,
+                          write: !!c.properties.write, wwr: !!c.properties.writeWithoutResponse });
         }
       }
+    }
+
+    /* 0. pilihan manual dari Diagnosa */
+    const want = prefs().char;
+    if (want) {
+      const hit = all.find((c) => String(c.uuid).toLowerCase() === want);
+      if (hit) return hit;
     }
 
     /* 1. characteristic printer yang dikenal */
@@ -155,6 +187,67 @@ const Printer = (function () {
     }
     /* 2. cadangan: yang pertama bisa ditulis */
     return all[0] || null;
+  }
+
+  /* ---------- Tetap tersambung ----------
+     Printer thermal murah memutus BLE kalau lama tidak ada data, dan
+     sinyal kadang putus sesaat. Dua hal dilakukan:
+     1. kirim perintah kosong tiap 25 detik supaya tidak dianggap diam;
+     2. kalau tetap terputus, sambung ulang sendiri ke perangkat yang sama
+        (tanpa dialog), beberapa kali dengan jeda bertambah. */
+  let keepTimer = null, retryTimer = null, retryN = 0, manualOff = false;
+  const watched = typeof WeakSet !== 'undefined' ? new WeakSet() : null;
+
+  function watch(dev) {
+    manualOff = false;
+    retryN = 0;
+    if (watched && watched.has(dev)) return;
+    if (watched) watched.add(dev);
+    dev.addEventListener('gattserverdisconnected', function () {
+      charac = null;
+      stopKeepAlive();
+      emit();
+      if (!manualOff) scheduleRetry();
+    });
+  }
+
+  function scheduleRetry() {
+    clearTimeout(retryTimer);
+    const waits = [1000, 3000, 6000, 15000, 30000, 60000];
+    if (retryN >= 20) return;
+    const ms = waits[Math.min(retryN, waits.length - 1)];
+    retryN++;
+    retryTimer = setTimeout(async function () {
+      if (manualOff || connected()) return;
+      await reconnect();
+      if (connected()) retryN = 0; else scheduleRetry();
+    }, ms);
+  }
+
+  function startKeepAlive() {
+    stopKeepAlive();
+    keepTimer = setInterval(async function () {
+      if (!connected() || busy) return;
+      try {
+        /* ESC = 1: "printer aktif". Perintah sah ESC/POS yang tidak mencetak apa pun. */
+        const ping = new Uint8Array([0x1B, 0x3D, 0x01]);
+        if (charac.properties.writeWithoutResponse && charac.writeValueWithoutResponse) {
+          await charac.writeValueWithoutResponse(ping);
+        } else if (charac.writeValue) {
+          await charac.writeValue(ping);
+        }
+      } catch (e) {}
+    }, 25000);
+  }
+  function stopKeepAlive() { if (keepTimer) { clearInterval(keepTimer); keepTimer = null; } }
+
+  /* Saat tab kembali aktif, pastikan printer tersambung lagi */
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && !connected() && !manualOff && remembered()) {
+        reconnect();
+      }
+    });
   }
 
   async function connect() {
@@ -169,10 +262,7 @@ const Printer = (function () {
       optionalServices: SERVICE_UUIDS,
     });
 
-    device.addEventListener('gattserverdisconnected', function () {
-      charac = null;
-      emit();
-    });
+    watch(device);
 
     const server = await device.gatt.connect();
     charac = await findWritable(server);
@@ -189,6 +279,7 @@ const Printer = (function () {
     mtu = 20;
 
     remember(device.name || 'Printer', device.id);
+    startKeepAlive();
     emit();
     return info();
   }
@@ -197,6 +288,17 @@ const Printer = (function () {
      tanpa memunculkan dialog pemilihan. */
   async function reconnect() {
     if (connected()) return info();
+
+    /* Objek perangkat masih ada (halaman belum dimuat ulang): sambung
+       lagi langsung. Ini tidak butuh klik dan tidak memunculkan dialog. */
+    if (device && device.gatt) {
+      try {
+        const server = await device.gatt.connect();
+        charac = await findWritable(server);
+        if (charac) { mtu = 20; startKeepAlive(); emit(); return info(); }
+      } catch (e) {}
+    }
+
     if (!navigator.bluetooth || !navigator.bluetooth.getDevices) return null;
     if (!remembered()) return null;
 
@@ -207,15 +309,14 @@ const Printer = (function () {
       if (!dev) return null;
 
       device = dev;
-      device.addEventListener('gattserverdisconnected', function () {
-        charac = null; emit();
-      });
+      watch(device);
 
       const server = await device.gatt.connect();
       charac = await findWritable(server);
       if (!charac) { device = null; return null; }
 
       mtu = 20;
+      startKeepAlive();
       emit();
       return info();
     } catch (e) {
@@ -247,8 +348,11 @@ const Printer = (function () {
   }
 
   function disconnect() {
+    manualOff = true;
+    stopKeepAlive();
+    clearTimeout(retryTimer);
     try { if (device && device.gatt && device.gatt.connected) device.gatt.disconnect(); } catch (e) {}
-    device = null; charac = null;
+    device = null; charac = null; writable = [];
     emit();
   }
 
@@ -257,41 +361,69 @@ const Printer = (function () {
      ============================================================ */
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  /* Cara kirim. Bawaan: tanpa respons bila didukung (paling cocok untuk
+     printer thermal murah), dengan potongan kecil dan jeda. */
+  function sendMode() {
+    const m = prefs().mode;
+    const p = charac.properties;
+    if (m === 'resp'   && p.write) return 'resp';
+    if (m === 'noresp' && p.writeWithoutResponse) return 'noresp';
+    return p.writeWithoutResponse ? 'noresp' : 'resp';
+  }
+
   async function writeRaw(bytes) {
     if (!connected()) throw new Error('Printer belum terhubung');
     if (busy) throw new Error('Masih mencetak, tunggu sebentar');
     busy = true;
+    lastError = '';
 
-    /* Tulis DENGAN respons bila didukung: printer mengonfirmasi tiap
-       potongan, jadi tidak ada data yang terbuang karena buffer penuh.
-       Mengirim terlalu cepat tanpa respons adalah penyebab umum
-       kertas keluar kosong. */
-    const withResp = !!(charac.properties.write && (charac.writeValueWithResponse || charac.writeValue));
+    const mode  = sendMode();
+    const size  = Math.max(8, Math.min(180, Number(prefs().chunk) || 20));
+    const pause = mode === 'resp' ? 10 : 40;
 
     try {
-      await sleep(60); // beri jeda setelah sambung / init
-      for (let i = 0; i < bytes.length; i += mtu) {
-        const chunk = bytes.slice(i, i + mtu);
-        if (withResp) {
+      await sleep(80);
+      for (let i = 0; i < bytes.length; i += size) {
+        const chunk = bytes.slice(i, i + size);
+        if (mode === 'resp') {
           if (charac.writeValueWithResponse) await charac.writeValueWithResponse(chunk);
           else await charac.writeValue(chunk);
-          await sleep(8);
-        } else if (charac.writeValueWithoutResponse) {
-          await charac.writeValueWithoutResponse(chunk);
-          await sleep(35);
-        } else if (charac.writeValue) {
-          await charac.writeValue(chunk);
-          await sleep(35);
         } else {
-          throw new Error('Characteristic tidak bisa ditulis');
+          if (charac.writeValueWithoutResponse) await charac.writeValueWithoutResponse(chunk);
+          else await charac.writeValue(chunk);
         }
-        /* Tiap ~300 byte beri waktu kepala cetak mengejar */
-        if ((i / mtu) % 15 === 14) await sleep(withResp ? 40 : 120);
+        await sleep(pause);
+        if ((i / size) % 10 === 9) await sleep(mode === 'resp' ? 40 : 150);
       }
-      await sleep(250);
+      await sleep(300);
+    } catch (e) {
+      lastError = (e && (e.name ? e.name + ': ' : '') + (e.message || e)) || 'Gagal mengirim';
+      throw new Error('Gagal mengirim ke printer (' + lastError + ')');
     } finally {
       busy = false;
     }
+  }
+
+  /* Info untuk layar Diagnosa */
+  function diag() {
+    return {
+      connected: connected(),
+      name: device ? (device.name || 'Printer') : null,
+      chosen: charac ? String(charac.uuid).toLowerCase() : null,
+      mode: charac ? sendMode() : null,
+      prefs: prefs(),
+      list: writable.map((w) => ({ svc: w.svc, uuid: w.uuid, write: w.write, wwr: w.wwr })),
+      lastError: lastError,
+    };
+  }
+
+  /* Tes paling dasar: teks ASCII polos tanpa satu pun perintah ESC/POS.
+     Kalau ini pun tidak keluar, masalahnya di jalur/cara kirim, bukan isi struk. */
+  async function printPlain() {
+    const t = 'TES STOCKFLOW\n1234567890\nABCDEFGHIJ\n\n\n\n';
+    const out = new Uint8Array(t.length);
+    for (let i = 0; i < t.length; i++) out[i] = t.charCodeAt(i);
+    return writeRaw(out);
   }
 
   /* ============================================================
@@ -384,28 +516,47 @@ const Printer = (function () {
     };
     const mName = { cash: 'Tunai', qris: 'QRIS', transfer: 'Transfer' };
 
+    /* Nomor antrian: dari o.queue_no, atau urutan di akhir nomor invoice */
+    let queue = o.queue_no;
+    if (!queue) {
+      const m = /-(\d+)$/.exec(String(o.order_no || ''));
+      if (m) queue = String(Number(m[1])).padStart(3, '0');
+    }
+
     const b = new Builder();
     b.init().raw([ESC, 0x74, 0x00]); // tabel karakter PC437
+    b.raw([ESC, 0x33, 34]);           // jarak baris sedikit lebih lega
 
-    /* Kepala */
+    /* Kepala, rata tengah */
     b.align(1).bold(true).size(1, 1);
     b.line(biz.name || 'TOKO');
     b.size(0, 0).bold(false);
     if (biz.address) b.wrap(biz.address);
     if (biz.phone)   b.line(biz.phone);
+    const d = new Date(o.created_at || Date.now());
+    b.line(d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) +
+           ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+    b.line('');
     b.align(0).rule();
 
+    /* Nomor antrian besar di tengah */
+    if (queue) {
+      b.line('');
+      b.align(1).line('NO. ANTRIAN');
+      b.bold(true).size(1, 1).line(String(queue)).size(0, 0).bold(false);
+      b.line('');
+      b.align(0).rule();
+    }
+
     /* Keterangan transaksi */
-    const d = new Date(o.created_at || Date.now());
     b.pair('No.', String(o.order_no || '-'));
-    b.pair('Tanggal', d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-                      ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
-    if (o.cashier_name)  b.pair('Kasir', o.cashier_name);
-    if (o.customer_name && o.customer_name !== 'Umum') b.pair('Pembeli', o.customer_name);
+    if (o.cashier_name) b.pair('Kasir', o.cashier_name);
+    b.pair('Pembeli', o.customer_name || 'Umum');
     b.rule();
 
-    /* Rincian barang */
-    (items || []).forEach((i) => {
+    /* Rincian barang, diberi jarak antar item */
+    (items || []).forEach((i, idx) => {
+      if (idx) b.line('');
       b.wrap(i.name);
       b.pair('  ' + qty(i.qty) + ' x ' + rp(i.price), rp(Number(i.price) * Number(i.qty)));
     });
@@ -415,31 +566,31 @@ const Printer = (function () {
     b.pair('Subtotal', rp(o.subtotal));
     if (Number(o.discount)) b.pair('Diskon', '-' + rp(o.discount));
     if (Number(o.tax))      b.pair('Pajak', rp(o.tax));
-
+    b.line('');
     b.bold(true).size(0, 1);
     b.pair('TOTAL', rp(o.total));
     b.size(0, 0).bold(false);
-
+    b.line('');
     b.rule();
+
     b.pair(mName[o.payment_method] || o.payment_method || 'Bayar',
            rp(o.paid_amount || o.total));
     if (Number(o.change_amount)) b.pair('Kembali', rp(o.change_amount));
-    if (o.ref_note) b.pair('Ref', String(o.ref_note).toUpperCase());
 
     if (o.status && o.status !== 'paid') {
       b.rule();
       b.align(1).bold(true).line('** ' + String(o.status).toUpperCase() + ' **').bold(false).align(0);
     }
 
-    /* Penutup */
+    /* Penutup, rata tengah */
     b.rule();
-    b.align(1);
-    if (biz.receipt_note) b.wrap(biz.receipt_note);
     b.line('');
-    b.align(0).feed(3);
-
-    /* Perintah potong dikirim juga; printer tanpa pemotong akan mengabaikannya */
-    b.cut();
+    b.align(1);
+    b.wrap(biz.receipt_note || 'Terima kasih');
+    b.line('');
+    b.align(0);
+    b.raw([ESC, 0x32]); // kembalikan jarak baris bawaan
+    b.feed(4);
 
     return b.bytes();
   }
@@ -473,7 +624,8 @@ const Printer = (function () {
 
   return {
     COLS, support, connect, reconnect, ensure, disconnect, connected, info,
-    forget, printReceipt, printTest, buildReceipt, onChange,
+    forget, printReceipt, printTest, printPlain, buildReceipt, onChange,
+    diag, prefs, setPrefs,
     Builder, toAscii,
   };
 })();

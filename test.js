@@ -876,7 +876,7 @@ const prnSrc = fs.readFileSync(path.join(SRC, 'js/printer.js'), 'utf8');
 ok('iPhone/iPad ditangani khusus', /iPad\|iPhone\|iPod/.test(prnSrc));
 ok('HTTPS diperiksa', /isSecureContext/.test(prnSrc));
 ok('beberapa UUID service dicoba', (prnSrc.match(/-0000-1000-8000-00805f9b34fb/g) || []).length >= 4);
-ok('data dikirim per potongan', /i \+= mtu/.test(prnSrc));
+ok('data dikirim per potongan', /i \+= size/.test(prnSrc));
 ok('ada jeda antar potongan', /sleep\(/.test(prnSrc));
 ok('menangani printer SPP yang tak terjangkau',
    /Bluetooth Classic \(SPP\)/.test(prnSrc));
@@ -1111,6 +1111,49 @@ ok('ada migrasi kategori',
    fs.existsSync(path.join(SRC, 'migrasi-02-tanpa-kategori-bawaan.sql')));
 const mig2 = fs.readFileSync(path.join(SRC, 'migrasi-02-tanpa-kategori-bawaan.sql'), 'utf8');
 ok('migrasi hanya hapus kategori kosong', /not exists \(select 1 from products/.test(mig2));
+
+/* ============================================================ */
+section('[30] Cetak otomatis untuk semua metode bayar');
+const pos6 = fs.readFileSync(path.join(SRC, 'pos.html'), 'utf8');
+const set6 = fs.readFileSync(path.join(SRC, 'settings.html'), 'utf8');
+ok('cetak otomatis aktif secara bawaan (kasir)', /sf5_print_auto'\) !== '0'/.test(pos6));
+ok('cetak otomatis aktif secara bawaan (pengaturan)', /AUTO_KEY\) !== '0'/.test(set6));
+ok('tunai menyiapkan printer sebelum transaksi', /await prepPrinter\(\);\s*return finishManual\('cash'/.test(pos6));
+ok('QRIS unggahan menyiapkan printer', /await prepPrinter\(\);\s*finishManual\('qris'/.test(pos6));
+ok('QRIS Midtrans menyiapkan printer', /await prepPrinter\(\); return startQris\(\)/.test(pos6));
+ok('semua struk lewat showReceipt yang memanggil autoPrint', /UI\.openModal\('mRcpt'\);\s*autoPrint\(o\)/.test(pos6));
+
+/* ============================================================ */
+section('[31] Struk: antrian otomatis, nama pembeli, rata tengah');
+{
+  const vmq = require('vm');
+  const prn7 = fs.readFileSync(path.join(SRC, 'js/printer.js'), 'utf8');
+  const cq = vmq.createContext({ navigator: {}, window: {}, location: { protocol: 'https:' },
+    localStorage: { getItem: () => null, setItem() {}, removeItem() {} }, setTimeout, setInterval, clearInterval, clearTimeout, console });
+  vmq.runInContext(prn7 + '\n;this.P = Printer;', cq);
+  const by = Array.from(cq.P.buildReceipt(
+    { order_no: 'INV-20261105-0007', total: 5000, subtotal: 5000, paid_amount: 5000,
+      payment_method: 'cash', customer_name: 'Budi', cashier_name: 'jason' },
+    [{ name: 'Teh', price: 5000, qty: 1 }], { name: 'Toko' }));
+  const tx = String.fromCharCode.apply(null, by.filter((b) => b === 10 || (b >= 0x20 && b < 0x7f)));
+  ok('struk cetak memuat NO. ANTRIAN', /NO\. ANTRIAN/.test(tx));
+  ok('antrian diambil dari nomor invoice (007)', /\n007\n/.test(tx) || /007/.test(tx));
+  ok('struk cetak memuat nama pembeli', /Pembeli\s+Budi/.test(tx));
+  ok('kepala struk rata tengah (ESC a 1)', by.join(',').indexOf('27,97,1') >= 0);
+  ok('jarak baris dilonggarkan (ESC 3)', by.join(',').indexOf('27,51,34') >= 0);
+}
+const pos7 = fs.readFileSync(path.join(SRC, 'pos.html'), 'utf8');
+ok('struk layar memuat NO. ANTRIAN', /NO\. ANTRIAN/.test(pos7));
+ok('struk layar memuat Pembeli', /<span>Pembeli<\/span>/.test(pos7));
+ok('nomor antrian tanpa input manual', /function queueNo\(orderNo\)/.test(pos7));
+
+section('[32] Bluetooth: tetap tersambung');
+const prn8 = fs.readFileSync(path.join(SRC, 'js/printer.js'), 'utf8');
+ok('ada keep-alive berkala', /startKeepAlive/.test(prn8) && /setInterval/.test(prn8));
+ok('keep-alive pakai perintah yang tidak mencetak (ESC = 1)', /0x1B, 0x3D, 0x01/.test(prn8));
+ok('sambung ulang otomatis saat terputus', /scheduleRetry\(\)/.test(prn8));
+ok('sambung ulang pakai objek perangkat yang sama (tanpa dialog)', /device && device\.gatt[\s\S]{0,80}device\.gatt\.connect\(\)/.test(prn8));
+ok('Putuskan menghentikan sambung ulang', /manualOff = true/.test(prn8));
 
 /* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')

@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#6C4CF1">
 <meta name="robots" content="noindex">
 <title>Kasir — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261105b">
+<link rel="stylesheet" href="css/app.css?v=20261105e">
 </head>
 <body>
 
@@ -178,13 +178,13 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261105b"></script>
-<script src="js/printer.js?v=20261105b"></script>
-<script src="js/config.js?v=20261105b"></script>
-<script src="js/demo.js?v=20261105b"></script>
-<script src="js/api.js?v=20261105b"></script>
-<script src="js/auth.js?v=20261105b"></script>
-<script src="js/ui.js?v=20261105b"></script>
+<script src="js/icons.js?v=20261105e"></script>
+<script src="js/printer.js?v=20261105e"></script>
+<script src="js/config.js?v=20261105e"></script>
+<script src="js/demo.js?v=20261105e"></script>
+<script src="js/api.js?v=20261105e"></script>
+<script src="js/auth.js?v=20261105e"></script>
+<script src="js/ui.js?v=20261105e"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 
@@ -196,6 +196,7 @@ var activeCat = 'all';
 var method    = 'cash';
 var busy      = false;
 var lastItems = [];
+var lastCustomer = 'Umum';
 
 /* State pembayaran QRIS yang sedang berjalan */
 var qr = { orderId: null, gatewayId: null, expiresAt: 0, pollTimer: null, tickTimer: null, orderNo: null };
@@ -463,18 +464,23 @@ async function submitPay() {
     if (!U.qris_enabled && !U.qris_static_url) {
       return UI.toast('QRIS belum disiapkan. Buka Pengaturan.', 'error');
     }
-    if (U.qris_enabled) return startQris();
+    if (U.qris_enabled) { await prepPrinter(); return startQris(); }
     /* QRIS yang diunggah: kasir memastikan dananya masuk sebelum menutup */
     return UI.confirm({
       title: 'Pembayaran sudah masuk?',
       text: 'Pastikan notifikasi pembayaran sudah muncul di HP Anda.',
       ok: 'Ya, sudah',
-    }).then(function (ok) { if (ok) finishManual('qris', 'QRIS'); });
+    }).then(async function (ok) {
+      if (!ok) return;
+      await prepPrinter();
+      finishManual('qris', null);
+    });
   }
 
   if (method === 'cash') {
     var paid = Number(document.getElementById('paid').value) || 0;
     if (paid < totals().total) return UI.toast('Uang diterima kurang dari total', 'error');
+    await prepPrinter();
     return finishManual('cash', null);
   }
 
@@ -497,7 +503,7 @@ async function finishManual(payMethod, ref) {
     p_discount: t.disc,
     p_tax: t.tax,
     p_paid: payMethod === 'cash' ? (Number(document.getElementById('paid').value) || t.total) : t.total,
-    p_customer: document.getElementById('cust').value.trim() || 'Umum',
+    p_customer: (lastCustomer = document.getElementById('cust').value.trim() || 'Umum'),
     p_method: payMethod,
   });
 
@@ -533,7 +539,7 @@ async function startQris() {
     }),
     p_discount: t.disc,
     p_tax: t.tax,
-    p_customer: document.getElementById('cust').value.trim() || 'Umum',
+    p_customer: (lastCustomer = document.getElementById('cust').value.trim() || 'Umum'),
     p_method: 'qris',
   });
 
@@ -707,6 +713,13 @@ function resetCart() {
 /* ============================================================
    STRUK
    ============================================================ */
+/* Nomor antrian = urutan transaksi hari ini di toko ini (reset tiap hari).
+   Diambil dari nomor invoice INV-YYYYMMDD-0007 -> 7, jadi tidak perlu input. */
+function queueNo(orderNo) {
+  var m = /-(\d+)$/.exec(String(orderNo || ''));
+  return m ? String(Number(m[1])).padStart(3, '0') : '';
+}
+
 function showReceipt(o) {
   var mName = { cash: 'Tunai', qris: 'QRIS', transfer: 'Transfer' }[o.payment_method] || o.payment_method;
 
@@ -716,29 +729,37 @@ function showReceipt(o) {
       '<span>' + UI.rp(i.price * i.qty) + '</span></div></div>';
   }).join('');
 
+  var queue = queueNo(o.order_no);
+  var cust  = o.customer_name || lastCustomer || 'Umum';
+
   document.getElementById('rcptHost').innerHTML =
     '<div class="receipt">' +
       '<div class="r-c"><div class="r-biz">' + UI.esc(U.business_name) + '</div>' +
-      '<div style="font-size:11px">' + UI.dt(new Date().toISOString()) + '</div></div>' +
+      (U.business_address ? '<div class="r-sub">' + UI.esc(U.business_address) + '</div>' : '') +
+      (U.business_phone   ? '<div class="r-sub">' + UI.esc(U.business_phone) + '</div>' : '') +
+      '<div class="r-sub">' + UI.dt(new Date().toISOString()) + '</div></div>' +
       '<hr>' +
+      (queue ? '<div class="r-q"><small>NO. ANTRIAN</small><b>' + queue + '</b></div><hr>' : '') +
       '<div class="r-row"><span>No.</span><span>' + UI.esc(o.order_no) + '</span></div>' +
       '<div class="r-row"><span>Kasir</span><span>' + UI.esc(U.name) + '</span></div>' +
+      '<div class="r-row"><span>Pembeli</span><span>' + UI.esc(cust) + '</span></div>' +
       '<hr>' +
       itemsHtml +
       '<hr>' +
       '<div class="r-row"><span>Subtotal</span><span>' + UI.rp(o.subtotal) + '</span></div>' +
       (Number(o.discount) ? '<div class="r-row"><span>Diskon</span><span>-' + UI.rp(o.discount) + '</span></div>' : '') +
       (Number(o.tax)      ? '<div class="r-row"><span>Pajak</span><span>' + UI.rp(o.tax) + '</span></div>' : '') +
-      '<div class="r-row b" style="font-size:14px;margin-top:4px"><span>TOTAL</span>' +
+      '<div class="r-row b" style="font-size:15px;margin-top:6px"><span>TOTAL</span>' +
       '<span>' + UI.rp(o.total) + '</span></div>' +
       '<hr>' +
       '<div class="r-row"><span>' + mName + '</span><span>' + UI.rp(o.paid_amount || o.total) + '</span></div>' +
       (Number(o.change_amount) ? '<div class="r-row"><span>Kembali</span><span>' + UI.rp(o.change_amount) + '</span></div>' : '') +
-      (o.ref_note ? '<div class="r-row"><span>Ref</span><span>' + UI.esc(o.ref_note) + '</span></div>' : '') +
       '<hr>' +
-      '<div class="r-c" style="font-size:11px">' + UI.esc(U.receipt_note || 'Terima kasih') + '</div>' +
+      '<div class="r-foot">' + UI.esc(U.receipt_note || 'Terima kasih') + '</div>' +
     '</div>';
 
+  o.customer_name = cust;
+  o.queue_no = queue;
   lastOrder = o;
   syncPrintBtn();
   UI.openModal('mRcpt');
@@ -804,24 +825,43 @@ async function btPrint() {
 }
 
 /* Cetak otomatis bila diaktifkan di Pengaturan */
-async function autoPrint(o) {
-  var auto = false;
-  try { auto = localStorage.getItem('sf5_print_auto') === '1'; } catch (e) {}
-  if (!auto) return;
+/* Cetak otomatis aktif secara bawaan; bisa dimatikan di Pengaturan. */
+function autoOn() {
+  try { return localStorage.getItem('sf5_print_auto') !== '0'; } catch (e) { return true; }
+}
 
-  /* Tanpa gestur pengguna hanya boleh sambung ulang diam-diam.
-     Kalau gagal, biarkan kasir menekan tombolnya sendiri. */
+/* Dipanggil TEPAT saat kasir menekan tombol bayar, sebelum menunggu server.
+   Di momen ini browser masih mengizinkan dialog pilih printer, jadi kalau
+   sambungan terputus (mis. halaman dimuat ulang) printer bisa disambung lagi
+   sehingga struk tetap keluar otomatis setelah transaksi selesai. */
+async function prepPrinter() {
+  if (!autoOn() || !Printer.support().ok || Printer.connected()) return;
+  try {
+    await Printer.reconnect();
+    if (!Printer.connected() && Printer.info().remembered) await Printer.connect();
+  } catch (e) { /* kasir membatalkan: transaksi tetap jalan tanpa cetak */ }
+}
+
+async function autoPrint(o) {
+  if (!autoOn()) return;
+
   if (!Printer.connected()) {
     await Printer.reconnect();
-    if (!Printer.connected()) return;
+    if (!Printer.connected()) {
+      if (Printer.support().ok && Printer.info().remembered) {
+        UI.toast('Printer terputus. Tekan Cetak struk.', 'warn');
+      }
+      return;
+    }
   }
 
   try {
     await Printer.printReceipt(o, lastItems, bizInfo());
-    UI.toast('Struk dicetak otomatis', 'ok');
+    UI.toast('Struk dicetak', 'ok');
   } catch (e) {
     UI.toast('Cetak otomatis gagal: ' + (e.message || ''), 'warn');
   }
+}
 }
 
 Printer.onChange(syncPrintBtn);
