@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#6C4CF1">
 <meta name="robots" content="noindex">
 <title>Kasir — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261105f">
+<link rel="stylesheet" href="css/app.css?v=20261105g">
 </head>
 <body>
 
@@ -178,13 +178,13 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261105f"></script>
-<script src="js/printer.js?v=20261105f"></script>
-<script src="js/config.js?v=20261105f"></script>
-<script src="js/demo.js?v=20261105f"></script>
-<script src="js/api.js?v=20261105f"></script>
-<script src="js/auth.js?v=20261105f"></script>
-<script src="js/ui.js?v=20261105f"></script>
+<script src="js/icons.js?v=20261105g"></script>
+<script src="js/printer.js?v=20261105g"></script>
+<script src="js/config.js?v=20261105g"></script>
+<script src="js/demo.js?v=20261105g"></script>
+<script src="js/api.js?v=20261105g"></script>
+<script src="js/auth.js?v=20261105g"></script>
+<script src="js/ui.js?v=20261105g"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 
@@ -824,7 +824,6 @@ async function btPrint() {
   }
 }
 
-/* Cetak otomatis bila diaktifkan di Pengaturan */
 /* Cetak otomatis aktif secara bawaan; bisa dimatikan di Pengaturan. */
 function autoOn() {
   try { return localStorage.getItem('sf5_print_auto') !== '0'; } catch (e) { return true; }
@@ -861,7 +860,6 @@ async function autoPrint(o) {
   } catch (e) {
     UI.toast('Cetak otomatis gagal: ' + (e.message || ''), 'warn');
   }
-}
 }
 
 Printer.onChange(syncPrintBtn);

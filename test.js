@@ -1156,6 +1156,28 @@ ok('sambung ulang pakai objek perangkat yang sama (tanpa dialog)', /device && de
 ok('Putuskan menghentikan sambung ulang', /manualOff = true/.test(prn8));
 
 /* ============================================================ */
+section('[33] Semua skrip di halaman bisa di-parse (tidak ada syntax error)');
+{
+  const vmS = require('vm');
+  fs.readdirSync(SRC).filter((f) => f.endsWith('.html')).forEach((f) => {
+    const html = fs.readFileSync(path.join(SRC, f), 'utf8');
+    const blocks = html.match(/<script>([\s\S]*?)<\/script>/g) || [];
+    blocks.forEach((b, i) => {
+      const code = b.replace(/^<script>/, '').replace(/<\/script>$/, '');
+      let err = '';
+      try { new vmS.Script(code, { filename: f }); } catch (e) { err = e.message; }
+      ok(f + ' skrip #' + (i + 1) + ' valid', !err, err);
+    });
+  });
+  fs.readdirSync(path.join(SRC, 'js')).forEach((f) => {
+    let err = '';
+    try { new vmS.Script(fs.readFileSync(path.join(SRC, 'js', f), 'utf8'), { filename: f }); }
+    catch (e) { err = e.message; }
+    ok('js/' + f + ' valid', !err, err);
+  });
+}
+
+/* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')
                   : ('SEMUA LULUS — ' + pass + ' tes');
 console.log('\n' + '='.repeat(56));
