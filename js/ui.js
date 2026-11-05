@@ -126,19 +126,19 @@ const UI = (function () {
   const isDark = () => (localStorage.getItem('sf5_theme') || 'light') === 'dark';
 
   /* ---------- Menu ---------- */
+  /* staff: hanya Kasir, Riwayat, dan Barang Rusak.
+     bottom: dipasang di bawah sidebar, dekat profil. */
   const MENU = [
     { sec: 'Transaksi' },
     { id: 'pos',       icon: 'pos',      label: 'Kasir',        href: 'pos.html',       tab: true },
     { id: 'orders',    icon: 'receipt',  label: 'Riwayat',      href: 'orders.html',    tab: true },
-    { sec: 'Inventori' },
-    { id: 'products',  icon: 'box',      label: 'Produk',       href: 'products.html',  tab: true },
-    { id: 'inventory', icon: 'refresh',  label: 'Stok',         href: 'inventory.html' },
-    { id: 'damaged',   icon: 'alert',    label: 'Barang Rusak', href: 'damaged.html' },
-    { sec: 'Analisis', owner: true },
+    { sec: 'Toko' },
+    { id: 'products',  icon: 'box',      label: 'Produk',       href: 'products.html',  tab: true, owner: true },
+    { id: 'inventory', icon: 'refresh',  label: 'Stok',         href: 'inventory.html', owner: true },
+    { id: 'damaged',   icon: 'alert',    label: 'Barang Rusak', href: 'damaged.html',   tab: 'staff' },
     { id: 'reports',   icon: 'chart',    label: 'Laporan',      href: 'reports.html',   tab: true, owner: true },
-    { sec: 'Pengaturan' },
-    { id: 'users',     icon: 'users',    label: 'Pengguna',     href: 'users.html',  owner: true },
-    { id: 'settings',  icon: 'settings', label: 'Pengaturan',   href: 'settings.html' },
+    { id: 'users',     icon: 'users',    label: 'Pengguna',     href: 'users.html',     owner: true, bottom: true },
+    { id: 'settings',  icon: 'settings', label: 'Pengaturan',   href: 'settings.html',  owner: true, bottom: true },
   ];
 
   /* ---------- Shell ---------- */
@@ -147,13 +147,15 @@ const UI = (function () {
     const isOwner = u.role === 'owner';
     const visible = MENU.filter((m) => !m.owner || isOwner);
 
-    const navItems = visible.map((m) => {
-      if (m.sec) return '<div class="sb-sec">' + m.sec + '</div>';
-      return '<a href="' + m.href + '" class="sb-item' + (m.id === active ? ' on' : '') + '">' +
-        '<span class="sb-ico">' + ic(m.icon, 19) + '</span><span>' + m.label + '</span></a>';
-    }).join('');
+    const link = (m) =>
+      '<a href="' + m.href + '" class="sb-item' + (m.id === active ? ' on' : '') + '">' +
+      '<span class="sb-ico">' + ic(m.icon, 19) + '</span><span>' + m.label + '</span></a>';
 
-    const tabs = visible.filter((m) => m.tab)
+    const navItems = visible.filter((m) => !m.bottom).map((m) =>
+      m.sec ? '<div class="sb-sec">' + m.sec + '</div>' : link(m)).join('');
+    const bottomItems = visible.filter((m) => m.bottom).map(link).join('');
+
+    const tabs = visible.filter((m) => m.tab === true || (m.tab === 'staff' && !isOwner))
       .concat([{ id: 'more', icon: 'menu', label: 'Lainnya', href: '#', more: true }])
       .map((m) => {
         const on = m.id === active ||
@@ -173,10 +175,11 @@ const UI = (function () {
         '<div class="sb-brand">' + (typeof Icons !== 'undefined' ? Icons.logo(28) : '') +
           '<div class="sb-name">StockFlow</div></div>' +
         '<nav class="sb-nav">' + navItems + '</nav>' +
+        (bottomItems ? '<nav class="sb-bottom">' + bottomItems + '</nav>' : '') +
         '<div class="sb-foot"><div class="sb-user">' +
           '<div class="sb-avatar">' + initials(u.name) + '</div>' +
           '<div class="sb-uinfo"><div class="sb-uname">' + esc(u.name || '') + '</div>' +
-          '<div class="sb-urole">' + esc(u.role || '') + '</div></div>' +
+          '<div class="sb-urole">' + (isOwner ? 'Owner' : 'Staff') + '</div></div>' +
           '<button class="btn btn-ghost btn-icon btn-sm" onclick="Auth.logout()" title="Keluar">' +
             ic('logout', 17) + '</button>' +
         '</div></div>' +
@@ -194,7 +197,8 @@ const UI = (function () {
 
   function openMore() {
     const u = Auth.user() || {};
-    const items = MENU.filter((m) => !m.sec && !m.tab && (!m.owner || u.role === 'owner'));
+    const own = u.role === 'owner';
+    const items = MENU.filter((m) => !m.sec && !(m.tab === true || (m.tab === 'staff' && !own)) && (!m.owner || own));
     const wrap = document.createElement('div');
     wrap.className = 'modal open';
     wrap.innerHTML =
@@ -213,6 +217,51 @@ const UI = (function () {
     document.body.appendChild(wrap);
     wrap.querySelector('[data-x]').onclick = () => wrap.remove();
     wrap.onclick = (e) => { if (e.target === wrap) wrap.remove(); };
+  }
+
+  /* ---------- Izin owner untuk keluar dari akun staff ----------
+     Mengembalikan Promise<boolean>. Password dicocokkan di server
+     (Edge Function owner-verify); email owner tidak pernah dikirim ke sini. */
+  function ownerUnlock() {
+    return new Promise((resolve) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'modal open';
+      wrap.innerHTML =
+        '<div class="modal-box narrow"><div class="modal-hd"><h3>Izin owner</h3>' +
+        '<button class="modal-x" data-x>' + ic('close', 18) + '</button></div>' +
+        '<div class="modal-bd">' +
+          '<p class="fs13 c-mid mb16">Masukkan password akun owner untuk keluar dari mode staff.</p>' +
+          '<input type="password" class="input" data-pw placeholder="Password owner" autocomplete="off">' +
+          '<div class="fs12 c-danger mt8 hide" data-err></div>' +
+        '</div><div class="modal-ft">' +
+          '<button class="btn" data-x>Batal</button>' +
+          '<button class="btn btn-primary" data-ok>Keluar</button>' +
+        '</div></div>';
+      document.body.appendChild(wrap);
+
+      const pw = wrap.querySelector('[data-pw]');
+      const err = wrap.querySelector('[data-err]');
+      const okBtn = wrap.querySelector('[data-ok]');
+      const done = (v) => { wrap.remove(); resolve(v); };
+
+      wrap.querySelectorAll('[data-x]').forEach((b) => { b.onclick = () => done(false); });
+      const go = async () => {
+        if (!pw.value) { pw.focus(); return; }
+        okBtn.disabled = true;
+        const r = await API.invoke('owner-verify', { password: pw.value });
+        okBtn.disabled = false;
+        if (r.error) {
+          err.textContent = r.error.message || 'Password owner salah';
+          err.classList.remove('hide');
+          pw.select();
+          return;
+        }
+        done(true);
+      };
+      okBtn.onclick = go;
+      pw.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+      setTimeout(() => pw.focus(), 50);
+    });
   }
 
   /* ---------- Empty state ----------
@@ -268,7 +317,7 @@ const UI = (function () {
   return {
     rp, num, dt, dateOnly, esc, initials, mmss, ic, hydrateIcons,
     toast, loading, openModal, closeModal, confirm,
-    applyTheme, toggleTheme, isDark, shell, openMore,
+    applyTheme, toggleTheme, isDark, shell, openMore, ownerUnlock,
     empty, notice, range, statusBadge, ORDER_STATUS,
   };
 })();

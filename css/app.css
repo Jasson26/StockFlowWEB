@@ -184,6 +184,7 @@ html.demo-on body { padding-bottom: var(--demo-h); }
 .sb-item.on .ico { stroke-width: 2; }
 .sb-ico { width: 20px; display: grid; place-items: center; flex-shrink: 0; }
 
+.sb-bottom { padding: 8px 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .sb-foot { padding: 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .sb-user { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: var(--r-sm); }
 .sb-avatar {
@@ -980,3 +981,10 @@ html[data-theme='dark'] .feat-ico { color: var(--text); }
 .nowrap{white-space:nowrap}
 @media (max-width:767px){ .hide-mobile{display:none !important} }
 @media (min-width:768px){ .only-mobile{display:none !important} }
+
+/* ---------- Pilihan dua sisi (Owner / Karyawan) ---------- */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px;
+       background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; }
+.seg-btn { border: 0; background: none; padding: 9px; border-radius: 7px; font: inherit;
+           font-size: 14px; font-weight: 600; color: var(--text-mid); cursor: pointer; }
+.seg-btn.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }

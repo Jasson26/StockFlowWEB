@@ -3,32 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#6C4CF1">
+<meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Pengguna — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261105g">
+<link rel="stylesheet" href="css/app.css?v=20261106b">
+<style>
+.code-pill {
+  font-family: var(--ff-num); font-weight: 700; letter-spacing: .12em;
+  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 3px 8px; border-radius: 6px; font-size: 13px;
+}
+.code-big {
+  font-family: var(--ff-num); font-weight: 700; font-size: 30px; letter-spacing: .16em;
+  text-align: center; padding: 16px; border-radius: 12px;
+  background: var(--surface-2); border: 1px dashed var(--border-mid); user-select: all;
+}
+</style>
 </head>
 <body>
-
 <div id="app">
 <div class="content">
 
-  <div class="card mb16" style="background:var(--brand-faint);border-color:var(--brand)">
-    <div class="fw7 mb8">Hak akses</div>
-    <div class="fs13 c-mid" style="line-height:1.65">
-      <strong>Owner</strong> &mdash; akses penuh: kasir, produk, stok, laporan keuangan, pengguna, pengaturan, dan void transaksi.<br>
-      <strong>Staff</strong> &mdash; hanya kasir, riwayat, produk, stok, dan barang rusak.
-      Tidak bisa melihat laporan keuangan, mengelola pengguna, atau membatalkan transaksi yang sudah lunas.
-    </div>
-    <div class="fs12 c-dim mt12" style="line-height:1.6">
-      Pembatasan ini ditegakkan di database (Row Level Security), bukan hanya disembunyikan
-      di tampilan &mdash; staff tetap tidak bisa mengambil data keuangan walau mencoba lewat jalur lain.
-    </div>
-  </div>
-
   <div class="row mb16">
+    <div class="c-mid fs13">Karyawan masuk dengan <strong>username + kode unik</strong>, tanpa email.</div>
     <div class="spacer"></div>
-    <button class="btn btn-primary" onclick="openEdit()">+ Tambah Pengguna</button>
+    <button class="btn btn-primary" onclick="openAdd()">+ Tambah Karyawan</button>
   </div>
 
   <div class="card p0">
@@ -37,10 +36,10 @@
         <thead><tr>
           <th style="width:48px"></th>
           <th>Nama</th>
-          <th>Peran</th>
+          <th>Username</th>
+          <th>Kode</th>
           <th>Status</th>
-          <th class="hide-mobile">Dibuat</th>
-          <th style="width:90px"></th>
+          <th style="width:150px"></th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -50,189 +49,180 @@
 </div>
 </div>
 
-<!-- MODAL -->
-<div class="modal" id="mEdit">
-  <div class="modal-box">
+<!-- TAMBAH -->
+<div class="modal" id="mAdd">
+  <div class="modal-box narrow">
     <div class="modal-hd">
-      <h3 id="eTitle">Tambah Pengguna</h3>
-      <button class="modal-x" onclick="UI.closeModal('mEdit')">&times;</button>
+      <h3>Tambah Karyawan</h3>
+      <button class="modal-x" onclick="UI.closeModal('mAdd')">&times;</button>
     </div>
     <div class="modal-bd">
-      <input type="hidden" id="eId">
-
       <div class="field">
-        <label class="label">NAMA LENGKAP *</label>
-        <input type="text" id="eName" class="input" placeholder="Nama karyawan">
+        <label class="label" for="aName">NAMA</label>
+        <input type="text" id="aName" class="input" placeholder="Nama karyawan">
       </div>
-
-      <div class="field" id="emailField">
-        <label class="label">EMAIL *</label>
-        <input type="email" id="eEmail" class="input" placeholder="email@contoh.com" autocomplete="off">
-        <div class="hint">Dipakai karyawan untuk masuk. Tidak bisa diubah setelah dibuat.</div>
-      </div>
-
-      <div class="field">
-        <label class="label" id="passLbl">PASSWORD *</label>
-        <input type="text" id="ePass" class="input" placeholder="Minimal 8 karakter" autocomplete="off">
-        <div class="hint" id="passHint">
-          Sampaikan ke karyawan lewat jalur pribadi, lalu minta mereka menggantinya
-          sendiri di menu Pengaturan.
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="label">PERAN *</label>
-        <select id="eRole" class="select">
-          <option value="staff">Staff &mdash; kasir &amp; inventori</option>
-          <option value="owner">Owner &mdash; akses penuh</option>
-        </select>
-      </div>
-
-      <div class="field" id="activeField">
-        <label class="label">STATUS</label>
-        <select id="eActive" class="select">
-          <option value="true">Aktif &mdash; bisa masuk</option>
-          <option value="false">Nonaktif &mdash; tidak bisa masuk</option>
-        </select>
+      <div class="field mb0">
+        <label class="label" for="aUser">USERNAME</label>
+        <input type="text" id="aUser" class="input" placeholder="misal: budi"
+               autocapitalize="none" spellcheck="false" autocomplete="off">
+        <div class="hint">Huruf kecil, angka, titik atau strip. 3–24 karakter.</div>
       </div>
     </div>
     <div class="modal-ft">
-      <button class="btn" onclick="UI.closeModal('mEdit')">Batal</button>
-      <button class="btn btn-primary" onclick="save()" id="saveBtn">Simpan</button>
+      <button class="btn" onclick="UI.closeModal('mAdd')">Batal</button>
+      <button class="btn btn-primary" onclick="create()" id="addBtn">Buat</button>
     </div>
   </div>
 </div>
 
-<script src="js/icons.js?v=20261105g"></script>
-<script src="js/config.js?v=20261105g"></script>
-<script src="js/demo.js?v=20261105g"></script>
-<script src="js/api.js?v=20261105g"></script>
-<script src="js/auth.js?v=20261105g"></script>
-<script src="js/ui.js?v=20261105g"></script>
+<!-- KODE BARU -->
+<div class="modal" id="mCode">
+  <div class="modal-box narrow">
+    <div class="modal-hd">
+      <h3>Kode masuk</h3>
+      <button class="modal-x" onclick="UI.closeModal('mCode')">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <div class="fs13 c-mid mb8">Username</div>
+      <div class="fw7 mb16" id="cUser">&mdash;</div>
+      <div class="fs13 c-mid mb8">Kode unik</div>
+      <div class="code-big" id="cCode">&mdash;</div>
+      <div class="hint mt12">Berikan ke karyawan. Kode bisa dilihat lagi di daftar ini.</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="copyCode()">Salin</button>
+      <button class="btn btn-primary" onclick="UI.closeModal('mCode')">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/icons.js?v=20261106b"></script>
+<script src="js/config.js?v=20261106b"></script>
+<script src="js/demo.js?v=20261106b"></script>
+<script src="js/api.js?v=20261106b"></script>
+<script src="js/auth.js?v=20261106b"></script>
+<script src="js/ui.js?v=20261106b"></script>
 <script>
 if (!Auth.guard(true)) throw 'redirect';
 var U = Auth.user();
-var users = [];
+var people = [], codes = {};
 
-UI.shell('users', 'Kelola Pengguna');
+UI.shell('users', 'Pengguna');
 
 async function load() {
   UI.loading(true);
-  var r = await API.from('profiles').select('*').order('created_at');
+  var r = await API.from('profiles').select('id,name,username,role,active,created_at').order('created_at');
+  var c = await API.from('staff_codes').select('profile_id,username,code');
   UI.loading(false);
+
   if (r.error) return UI.toast(r.error.message, 'error');
-  users = r.data || [];
+  people = r.data || [];
+  codes = {};
+  (c.data || []).forEach(function (x) { codes[x.profile_id] = x; });
   render();
 }
 
 function render() {
-  if (!users.length) {
-    document.getElementById('rows').innerHTML =
-      '<tr><td colspan="6">' + UI.empty('users', 'Belum ada pengguna lain', 'Buat akun kasir supaya karyawan bisa melayani tanpa melihat laporan keuangan.', { label: 'Tambah pengguna', onclick: 'openEdit()' }) + '</td></tr>';
+  var host = document.getElementById('rows');
+  if (!people.length) {
+    host.innerHTML = '<tr><td colspan="6">' + UI.empty('users', 'Belum ada karyawan') + '</td></tr>';
     return;
   }
-
-  document.getElementById('rows').innerHTML = users.map(function (u) {
-    var me = u.id === U.id;
+  host.innerHTML = people.map(function (p) {
+    var me = p.id === U.id;
+    var owner = p.role === 'owner';
+    var sc = codes[p.id];
+    var actions = owner ? '' :
+      '<button class="btn btn-sm btn-ghost" onclick="toggle(\'' + p.id + '\')">' + (p.active ? 'Nonaktifkan' : 'Aktifkan') + '</button>' +
+      '<button class="btn btn-sm btn-ghost" title="Kode baru" onclick="regen(\'' + p.id + '\')">' + UI.ic('refresh', 15) + '</button>' +
+      '<button class="btn btn-sm btn-ghost c-danger" title="Hapus" onclick="del(\'' + p.id + '\')">' + UI.ic('trash', 15) + '</button>';
     return '<tr>' +
-      '<td><div class="sb-avatar" style="width:34px;height:34px;font-size:13px">' +
-        UI.initials(u.name) + '</div></td>' +
-      '<td><div class="fw7">' + UI.esc(u.name) +
-        (me ? ' <span class="badge">Anda</span>' : '') + '</div></td>' +
-      '<td><span class="badge ' + (u.role === 'owner' ? 'brand' : '') + '">' +
-        (u.role === 'owner' ? 'Owner' : 'Staff') + '</span></td>' +
-      '<td><span class="badge ' + (u.active ? 'ok' : 'danger') + '">' +
-        (u.active ? 'Aktif' : 'Nonaktif') + '</span></td>' +
-      '<td class="hide-mobile c-dim fs13">' + UI.dateOnly(u.created_at) + '</td>' +
-      '<td><div class="row" style="gap:4px;justify-content:flex-end">' +
-        '<button class="btn btn-ghost btn-icon" onclick="openEdit(\'' + u.id + '\')" title="Ubah">&#9999;</button>' +
-        (me ? '' : '<button class="btn btn-ghost btn-icon c-danger" onclick="del(\'' + u.id +
-                   '\')" title="Hapus">' + UI.ic('trash',16) + '</button>') +
-      '</div></td></tr>';
+      '<td><div class="sb-avatar" style="width:34px;height:34px;font-size:12px">' + UI.initials(p.name) + '</div></td>' +
+      '<td><div class="fw6">' + UI.esc(p.name) + (me ? ' <span class="c-dim fs12">(Anda)</span>' : '') + '</div>' +
+        '<div class="fs12 c-dim">' + (owner ? 'Owner' : 'Staff') + '</div></td>' +
+      '<td class="mono fs13">' + UI.esc(sc ? sc.username : (p.username || '—')) + '</td>' +
+      '<td>' + (sc ? '<span class="code-pill">' + UI.esc(sc.code) + '</span>' : '<span class="c-dim">—</span>') + '</td>' +
+      '<td>' + (p.active ? '<span class="badge ok">Aktif</span>' : '<span class="badge">Nonaktif</span>') + '</td>' +
+      '<td class="tr" style="white-space:nowrap">' + actions + '</td>' +
+    '</tr>';
   }).join('');
 }
 
-function openEdit(id) {
-  var u = id ? users.find(function (x) { return x.id === id; }) : null;
-
-  document.getElementById('eTitle').textContent = u ? 'Ubah Pengguna' : 'Tambah Pengguna';
-  document.getElementById('eId').value     = u ? u.id : '';
-  document.getElementById('eName').value   = u ? u.name : '';
-  document.getElementById('eEmail').value   = '';
-  document.getElementById('ePass').value   = '';
-  document.getElementById('eRole').value   = u ? u.role : 'staff';
-  document.getElementById('eActive').value = u ? String(u.active) : 'true';
-
-  /* Email hanya diisi saat membuat akun baru */
-  document.getElementById('emailField').classList.toggle('hide', !!u);
-  document.getElementById('activeField').classList.toggle('hide', !u);
-
-  document.getElementById('passLbl').textContent = u ? 'RESET PASSWORD' : 'PASSWORD *';
-  document.getElementById('passHint').textContent = u
-    ? 'Biarkan kosong jika tidak ingin mengubah password.'
-    : 'Sampaikan ke karyawan lewat jalur pribadi, lalu minta mereka menggantinya sendiri.';
-
-  UI.openModal('mEdit');
+function openAdd() {
+  document.getElementById('aName').value = '';
+  document.getElementById('aUser').value = '';
+  UI.openModal('mAdd');
 }
 
-async function save() {
-  var id    = document.getElementById('eId').value;
-  var name  = document.getElementById('eName').value.trim();
-  var email = document.getElementById('eEmail').value.trim().toLowerCase();
-  var pass  = document.getElementById('ePass').value;
-  var role  = document.getElementById('eRole').value;
-  var act   = document.getElementById('eActive').value === 'true';
+/* Username dirapikan sambil mengetik */
+document.getElementById('aUser').addEventListener('input', function (e) {
+  e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 24);
+});
 
-  if (!name) return UI.toast('Nama wajib diisi', 'error');
+function showCode(username, code) {
+  document.getElementById('cUser').textContent = username;
+  document.getElementById('cCode').textContent = code;
+  UI.openModal('mCode');
+}
 
-  if (!id) {
-    if (!/^\S+@\S+\.\S+$/.test(email)) return UI.toast('Format email tidak valid', 'error');
-    if (pass.length < 8) return UI.toast('Password minimal 8 karakter', 'error');
-  } else if (pass && pass.length < 8) {
-    return UI.toast('Password minimal 8 karakter', 'error');
-  }
+function copyCode() {
+  var t = document.getElementById('cCode').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { UI.toast('Kode disalin', 'ok'); });
+}
 
-  var btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  UI.loading(true);
+async function create() {
+  var name = document.getElementById('aName').value.trim();
+  var user = document.getElementById('aUser').value.trim();
+  if (!name) return UI.toast('Isi nama', 'error');
+  if (!/^[a-z0-9._-]{3,24}$/.test(user)) return UI.toast('Username 3–24 karakter', 'error');
 
-  var r;
-  if (id) {
-    var body = { action: 'update', user_id: id, name: name, role: role, active: act };
-    if (pass) body.password = pass;
-    r = await API.invoke('create-staff', body);
-  } else {
-    r = await API.invoke('create-staff', {
-      action: 'create', name: name, email: email, password: pass, role: role,
-    });
-  }
-
-  UI.loading(false);
-  btn.disabled = false;
-
+  var btn = document.getElementById('addBtn');
+  btn.disabled = true; UI.loading(true);
+  var r = await API.invoke('create-staff', { action: 'create', name: name, username: user });
+  UI.loading(false); btn.disabled = false;
   if (r.error) return UI.toast(r.error.message, 'error');
 
-  UI.toast(id ? 'Pengguna diperbarui' : 'Akun karyawan dibuat', 'ok');
-  UI.closeModal('mEdit');
+  UI.closeModal('mAdd');
+  showCode(r.data.username, r.data.code);
   load();
 }
 
+async function toggle(id) {
+  var p = people.find(function (x) { return x.id === id; });
+  UI.loading(true);
+  var r = await API.invoke('create-staff', { action: 'update', user_id: id, active: !p.active });
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  UI.toast(p.active ? 'Dinonaktifkan' : 'Diaktifkan', 'ok');
+  load();
+}
+
+function regen(id) {
+  var p = people.find(function (x) { return x.id === id; });
+  UI.confirm({ title: 'Buat kode baru?', text: 'Kode lama ' + p.name + ' tidak bisa dipakai lagi.', ok: 'Buat kode baru' })
+    .then(async function (ok) {
+      if (!ok) return;
+      UI.loading(true);
+      var r = await API.invoke('create-staff', { action: 'update', user_id: id, regen_code: true });
+      UI.loading(false);
+      if (r.error) return UI.toast(r.error.message, 'error');
+      showCode((codes[id] && codes[id].username) || p.username || '', r.data.code);
+      load();
+    });
+}
+
 function del(id) {
-  var u = users.find(function (x) { return x.id === id; });
-  UI.confirm({
-    title: 'Hapus pengguna?',
-    text: '"' + u.name + '" tidak akan bisa masuk lagi dan akunnya dihapus permanen. ' +
-          'Riwayat transaksi yang pernah dia buat tetap tersimpan.',
-    ok: 'Hapus', danger: true,
-  }).then(async function (ok) {
-    if (!ok) return;
-    UI.loading(true);
-    var r = await API.invoke('create-staff', { action: 'delete', user_id: id });
-    UI.loading(false);
-    if (r.error) return UI.toast(r.error.message, 'error');
-    UI.toast('Pengguna dihapus', 'ok');
-    load();
-  });
+  var p = people.find(function (x) { return x.id === id; });
+  UI.confirm({ title: 'Hapus karyawan?', text: p.name + ' tidak bisa masuk lagi. Riwayat transaksinya tetap tersimpan.', ok: 'Hapus', danger: true })
+    .then(async function (ok) {
+      if (!ok) return;
+      UI.loading(true);
+      var r = await API.invoke('create-staff', { action: 'delete', user_id: id });
+      UI.loading(false);
+      if (r.error) return UI.toast(r.error.message, 'error');
+      UI.toast('Karyawan dihapus', 'ok');
+      load();
+    });
 }
 
 load();

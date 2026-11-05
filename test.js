@@ -354,20 +354,15 @@ ok('void dua kali ditolak', !!r.error, JSON.stringify(r));
 
 /* ============================================================ */
 section('[12] Pengelolaan pengguna');
-r = Demo.invoke('create-staff', {
-  action: 'create', name: 'Kasir Baru', email: 'baru@toko.id', password: 'rahasia123', role: 'staff',
-});
-ok('owner bisa membuat staff', !r.error, JSON.stringify(r.error));
+r = Demo.invoke('create-staff', { action: 'create', name: 'Kasir Baru', username: 'kasirbaru' });
+ok('owner bisa membuat staff tanpa email', !r.error, JSON.stringify(r.error));
+ok('staff baru mendapat kode unik', r.data && /^[A-Z0-9]{6,}$/.test(r.data.code), JSON.stringify(r.data));
 
-r = Demo.invoke('create-staff', {
-  action: 'create', name: 'Dobel', email: 'baru@toko.id', password: 'rahasia123', role: 'staff',
-});
-eq('email ganda ditolak', r.error.message, 'Email sudah terdaftar');
+r = Demo.invoke('create-staff', { action: 'create', name: 'Dobel', username: 'kasirbaru' });
+eq('username ganda ditolak', r.error.message, 'Username sudah dipakai di toko ini');
 
-r = Demo.invoke('create-staff', {
-  action: 'create', name: 'Pendek', email: 'pendek@toko.id', password: 'abc', role: 'staff',
-});
-eq('password pendek ditolak', r.error.message, 'Password minimal 8 karakter');
+r = Demo.invoke('create-staff', { action: 'create', name: 'Aneh', username: 'A B' });
+eq('username tidak valid ditolak', r.error.message, 'Username 3–24 karakter');
 
 db = JSON.parse(localStorage.getItem('sf5_demo_data'));
 const ownerId = db.profiles.find((p) => p.role === 'owner').id;
@@ -385,9 +380,9 @@ ok('tidak bisa hapus diri sendiri',
 
 /* Akun nonaktif tidak bisa masuk */
 db = JSON.parse(localStorage.getItem('sf5_demo_data'));
-const staffBaru = db.profiles.find((p) => p._email === 'baru@toko.id');
-Demo.invoke('create-staff', { action: 'update', user_id: staffBaru.id, active: false });
-a = Demo.login('baru@toko.id', 'rahasia123');
+const staffDemo = db.profiles.find((p) => p.role === 'staff' && p._email);
+Demo.invoke('create-staff', { action: 'update', user_id: staffDemo.id, active: false });
+a = Demo.login(staffDemo._email, staffDemo._pw);
 ok('akun nonaktif ditolak masuk', !a.ok && /dinonaktifkan/.test(a.msg), JSON.stringify(a));
 
 Demo.login('demo@stockflow.id', 'demo1234');
@@ -589,7 +584,7 @@ ok('login mengarahkan ke vSetup saat needSetup',
    /r\.needSetup[\s\S]{0,200}showSetup\(\)/.test(idxSrc));
 ok('sesi tertinggal dilanjutkan otomatis',
    /_resumeSetup[\s\S]{0,200}showSetup\(\)/.test(idxSrc));
-ok('show\(\) ikut mengelola vSetup', /'vLogin',\s*'vSignup',\s*'vForgot',\s*'vSetup'/.test(idxSrc));
+ok('show\(\) ikut mengelola vSetup', /'vSetup'\]\.forEach/.test(idxSrc));
 
 /* Simulasi perilaku isLogged pada tiga keadaan sesi */
 function isLoggedSim(tok, prof) { return !!tok && !!prof && !!prof.business_id; }
@@ -1175,6 +1170,85 @@ section('[33] Semua skrip di halaman bisa di-parse (tidak ada syntax error)');
     catch (e) { err = e.message; }
     ok('js/' + f + ' valid', !err, err);
   });
+}
+
+/* ============================================================ */
+section('[34] Owner vs staff, kode karyawan, log produk, bukti rusak, harga');
+{
+  const R = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
+  const ui9 = R('js/ui.js'), au9 = R('js/auth.js'), mg3 = R('migrasi-03-owner-staff-log.sql');
+  const cfg = R('supabase/config.toml');
+  const cs = R('supabase/functions/create-staff/index.ts');
+  const sl = R('supabase/functions/staff-login/index.ts');
+  const ov = R('supabase/functions/owner-verify/index.ts');
+
+  /* Menu */
+  ok('produk/stok/laporan hanya owner',
+     /id: 'products'[^\n]*owner: true/.test(ui9) && /id: 'inventory'[^\n]*owner: true/.test(ui9) && /id: 'reports'[^\n]*owner: true/.test(ui9));
+  ok('barang rusak terlihat untuk staff', /id: 'damaged'(?![^\n]*owner: true)/.test(ui9));
+  ok('Pengguna & Pengaturan di bawah', /id: 'users'[^\n]*bottom: true/.test(ui9) && /id: 'settings'[^\n]*bottom: true/.test(ui9));
+  ok('Kasir & Riwayat di grup Transaksi', /sec: 'Transaksi'[\s\S]{0,80}id: 'pos'[\s\S]{0,140}id: 'orders'/.test(ui9));
+  ['products.html', 'inventory.html', 'settings.html', 'reports.html', 'users.html'].forEach((f) =>
+    ok(f + ' dijaga owner-only', /Auth\.guard\(true\)/.test(R(f))));
+
+  /* Keluar dari mode staff */
+  ok('staff keluar butuh izin owner', /role === 'staff'[\s\S]{0,160}UI\.ownerUnlock\(\)/.test(au9));
+  ok('password salah tidak dibalas 401 (agar tidak dianggap sesi habis)', /Password owner salah', 403/.test(ov));
+  ok('sesi uji owner langsung dicabut', /auth\/v1\/logout/.test(ov));
+
+  /* Login karyawan */
+  ok('karyawan dibuat tanpa email asli', /staff\.stockflow\.invalid/.test(cs) && !/b\.email/.test(cs));
+  ok('kode tanpa huruf mirip', /ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'/.test(cs));
+  ok('kode dibuat dengan crypto.getRandomValues', /crypto\.getRandomValues/.test(cs));
+  ok('hanya owner bisa hapus karyawan', /caller\.role !== 'owner'/.test(cs) && /action === 'delete'/.test(cs));
+  ok('staff-login tanpa JWT', /\[functions\.staff-login\]\s*verify_jwt = false/.test(cfg));
+  ok('staff-login: pesan gagal seragam', (sl.match(/denied\(\)/g) || []).length >= 4);
+  ok('staff-login: kode tidak dipakai sebagai password', /randomPassword\(\)/.test(sl));
+  ok('halaman masuk punya tab Karyawan', /id="vStaff"/.test(R('masuk.html')) && /Auth\.staffLogin/.test(R('masuk.html')));
+
+  /* Database */
+  ok('kode staff hanya bisa dibaca owner', /sc_select_owner[\s\S]{0,140}app_is_owner\(\)/.test(mg3));
+  ok('produk hanya ditulis owner', /prod_write[\s\S]{0,160}app_is_owner\(\)/.test(mg3));
+  ok('kategori hanya ditulis owner', /cat_write[\s\S]{0,160}app_is_owner\(\)/.test(mg3));
+  ok('log stok hanya ditulis owner langsung', /mv_insert[\s\S]{0,140}app_is_owner\(\)/.test(mg3));
+  ok('staff wajib bukti foto', /not app_is_owner\(\) and coalesce\(trim\(p_evidence\)/.test(mg3));
+  ok('migrasi 03 tidak membuang tabel', !/drop table/i.test(mg3));
+  ok('jenis log create & edit', /'create','edit'/.test(mg3));
+  ok('schema penuh ikut memuat migrasi 03', /record_damage/.test(R('schema.sql')) && /staff_codes/.test(R('schema.sql')));
+
+  /* Produk */
+  const pr9 = R('products.html');
+  ok('stok bisa diedit saat ubah produk', /eStock'\)\.disabled = false/.test(pr9));
+  ok('log produk baru rinci', /Produk baru "/.test(pr9));
+  ok('log edit mencatat nilai lama -> baru', /harga jual ' \+ UI\.rp\(old\.price\) \+ ' → '/.test(pr9));
+  ok('log stok dari edit produk', /stok ' \+ UI\.num\(oldStock\) \+ ' → '/.test(pr9));
+
+  /* Barang rusak */
+  const dm9 = R('damaged.html');
+  ok('barang rusak lewat RPC record_damage', /API\.rpc\('record_damage'/.test(dm9));
+  ok('form punya foto bukti (kamera)', /capture="environment"/.test(dm9));
+  ok('staff tanpa foto ditolak di layar', /!isOwner && !evFile/.test(dm9));
+  ok('kerugian disembunyikan dari staff', /isOwner \? '<div class="stat"><div class="stat-lbl">Estimasi Kerugian/.test(dm9));
+  {
+    Demo.login('kasir@stockflow.id', 'demo1234');
+    const d0 = JSON.parse(localStorage.getItem('sf5_demo_data'));
+    const sd = d0.profiles.find((p) => p._email === 'kasir@stockflow.id');
+    if (sd && !sd.active) { sd.active = true; localStorage.setItem('sf5_demo_data', JSON.stringify(d0)); Demo.login('kasir@stockflow.id', 'demo1234'); }
+    let x = Demo.rpc('record_damage', { p_product_id: 'p1', p_qty: 1, p_note: 'tes' });
+    ok('demo: staff tanpa bukti ditolak', x.error && /bukti/.test(x.error.message), JSON.stringify(x));
+    x = Demo.rpc('record_damage', { p_product_id: 'p1', p_qty: 1, p_note: 'tes', p_evidence: 'https://x/y.jpg' });
+    ok('demo: staff dengan bukti diterima', !x.error, JSON.stringify(x.error));
+    Demo.login('demo@stockflow.id', 'demo1234');
+    x = Demo.rpc('record_damage', { p_product_id: 'p1', p_qty: 1, p_note: 'tes' });
+    ok('demo: owner tanpa bukti diterima', !x.error, JSON.stringify(x.error));
+  }
+
+  /* Halaman depan */
+  const ix9 = R('index.html');
+  ok('harga mulai Rp 100rb', /Rp 100rb/.test(ix9));
+  ok('tidak ada lagi "gratis"', !/gratis/i.test(ix9));
+  ok('ada maskot animasi', /function struki\(/.test(ix9) && /@keyframes st-bob/.test(R('css/landing.css')));
+  ok('animasi menghormati reduced-motion', /prefers-reduced-motion: reduce\)\s*\{\s*\.st-body/.test(R('css/landing.css')));
 }
 
 /* ============================================================ */

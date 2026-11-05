@@ -1,12 +1,14 @@
 // ============================================================
-// create-staff — owner membuat / mengubah / menghapus akun karyawan
+// create-staff — owner mengelola akun karyawan
 //
-// Membuat user di Supabase Auth butuh service_role key, yang tidak
-// boleh ada di browser. Karena itu dikerjakan di sini.
+// Karyawan TIDAK memakai email. Owner cukup mengisi nama dan
+// username; sistem membuat kode unik yang dipakai untuk masuk.
+// Di belakang layar Supabase Auth tetap butuh email, jadi dibuat
+// alamat internal yang tidak pernah ditampilkan dan tidak menerima surat.
 //
 // Body salah satu dari:
-//   { action:'create', name, email, password, role }
-//   { action:'update', user_id, name?, role?, active?, password? }
+//   { action:'create', name, username }
+//   { action:'update', user_id, name?, active?, regen_code? }
 //   { action:'delete', user_id }
 // ============================================================
 
@@ -14,7 +16,31 @@ import {
   corsHeaders, json, fail, sbAdmin, authAdmin, getCaller,
 } from '../_shared/lib.ts';
 
-const MIN_PASSWORD = 8;
+/* Tanpa huruf/angka yang mirip (O/0, I/1/L) supaya mudah didiktekan */
+const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function newCode(len = 8): string {
+  const bytes = new Uint8Array(len);
+  crypto.getRandomValues(bytes);
+  let s = '';
+  for (const b of bytes) s += ALPHABET[b % ALPHABET.length];
+  return s;
+}
+
+function randomPassword(): string {
+  const b = new Uint8Array(24);
+  crypto.getRandomValues(b);
+  return btoa(String.fromCharCode(...b));
+}
+
+const USERNAME_RE = /^[a-z0-9._-]{3,24}$/;
+
+async function targetInBiz(userId: string, bizId: string) {
+  const r = await sbAdmin(`/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=id,business_id,role,active`);
+  const t = (await r.json())?.[0];
+  if (!t || t.business_id !== bizId) return null;
+  return t;
+}
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('Origin');
@@ -22,12 +48,9 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return fail('Metode tidak diizinkan', 405, origin);
 
   try {
-    /* ---------- Hanya owner ---------- */
     const caller = await getCaller(req);
     if (!caller) return fail('Sesi tidak sah. Silakan masuk kembali.', 401, origin);
-    if (caller.role !== 'owner') {
-      return fail('Hanya owner yang boleh mengelola pengguna', 403, origin);
-    }
+    if (caller.role !== 'owner') return fail('Hanya owner yang boleh mengelola pengguna', 403, origin);
 
     const b = await req.json().catch(() => ({}));
     const action = String(b.action || '');
@@ -35,172 +58,118 @@ Deno.serve(async (req) => {
     /* ============ CREATE ============ */
     if (action === 'create') {
       const name     = String(b.name || '').trim();
-      const email    = String(b.email || '').trim().toLowerCase();
-      const password = String(b.password || '');
-      const role     = b.role === 'owner' ? 'owner' : 'staff';
+      const username = String(b.username || '').trim().toLowerCase();
 
-      if (!name)  return fail('Nama wajib diisi', 400, origin);
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return fail('Format email tidak valid', 400, origin);
-      }
-      if (password.length < MIN_PASSWORD) {
-        return fail(`Password minimal ${MIN_PASSWORD} karakter`, 400, origin);
+      if (!name) return fail('Nama wajib diisi', 400, origin);
+      if (!USERNAME_RE.test(username)) {
+        return fail('Username 3–24 karakter: huruf kecil, angka, titik, strip', 400, origin);
       }
 
-      /* 1. Buat user di Auth (email langsung dikonfirmasi) */
+      /* Username unik di dalam toko */
+      const dup = await sbAdmin(
+        `/rest/v1/staff_codes?business_id=eq.${caller.businessId}&username=ilike.${encodeURIComponent(username)}&select=profile_id`,
+      );
+      if (((await dup.json()) || []).length) return fail('Username sudah dipakai di toko ini', 409, origin);
+
+      const internalEmail = `staff.${crypto.randomUUID()}@staff.stockflow.invalid`;
+
       const aRes = await authAdmin('/users', {
         method: 'POST',
         body: JSON.stringify({
-          email,
-          password,
+          email: internalEmail,
+          password: randomPassword(),
           email_confirm: true,
-          user_metadata: { name },
+          user_metadata: { name, username, staff: true },
         }),
       });
-
       const aBody = await aRes.json().catch(() => ({}));
-      if (!aRes.ok) {
-        const msg = String(aBody.msg || aBody.error_description || aBody.message || '');
-        if (/already|exists|registered/i.test(msg)) {
-          return fail('Email sudah terdaftar', 409, origin);
-        }
+      if (!aRes.ok || !aBody.id) {
         console.error('createUser gagal', aRes.status, JSON.stringify(aBody));
-        return fail('Gagal membuat akun: ' + (msg || aRes.status), 400, origin);
+        return fail('Gagal membuat akun karyawan', 400, origin);
       }
+      const newId = aBody.id as string;
 
-      const newId = aBody.id;
-      if (!newId) return fail('Auth tidak mengembalikan id pengguna', 500, origin);
-
-      /* 2. Buat profil di toko pemanggil */
       const pRes = await sbAdmin('/rest/v1/profiles', {
         method: 'POST',
-        headers: { Prefer: 'return=representation' },
         body: JSON.stringify({
-          id: newId,
-          business_id: caller.businessId,
-          name,
-          role,
-          active: true,
+          id: newId, business_id: caller.businessId, name, username, role: 'staff', active: true,
         }),
       });
-
       if (!pRes.ok) {
-        /* Rollback: hapus user Auth agar tidak jadi akun menggantung */
         await authAdmin(`/users/${newId}`, { method: 'DELETE' });
-        const t = await pRes.text();
-        console.error('insert profile gagal', t);
-        return fail('Gagal menyimpan profil pengguna', 500, origin);
+        console.error('insert profile gagal', await pRes.text());
+        return fail('Gagal menyimpan profil karyawan', 500, origin);
       }
 
-      return json({ ok: true, user_id: newId }, 200, origin);
+      /* Kode unik; ulangi kalau kebetulan bentrok */
+      let code = '';
+      for (let i = 0; i < 5; i++) {
+        code = newCode();
+        const cRes = await sbAdmin('/rest/v1/staff_codes', {
+          method: 'POST',
+          body: JSON.stringify({ profile_id: newId, business_id: caller.businessId, username, code }),
+        });
+        if (cRes.ok) break;
+        code = '';
+      }
+      if (!code) {
+        await authAdmin(`/users/${newId}`, { method: 'DELETE' });
+        return fail('Gagal membuat kode unik, coba lagi', 500, origin);
+      }
+
+      return json({ ok: true, user_id: newId, username, code }, 200, origin);
     }
 
     /* ============ UPDATE ============ */
     if (action === 'update') {
       const userId = String(b.user_id || '');
-      if (!userId) return fail('user_id wajib diisi', 400, origin);
-
-      /* Pastikan target ada di toko yang sama */
-      const tRes = await sbAdmin(
-        `/rest/v1/profiles?id=eq.${userId}&select=id,business_id,role,active`,
-      );
-      const target = (await tRes.json())?.[0];
-      if (!target) return fail('Pengguna tidak ditemukan', 404, origin);
-      if (target.business_id !== caller.businessId) {
-        return fail('Pengguna bukan anggota toko Anda', 403, origin);
-      }
+      const t = await targetInBiz(userId, caller.businessId);
+      if (!t) return fail('Pengguna tidak ditemukan di toko Anda', 404, origin);
+      if (t.role === 'owner') return fail('Akun owner tidak diubah dari sini', 400, origin);
 
       const patch: Record<string, unknown> = {};
       if (typeof b.name === 'string' && b.name.trim()) patch.name = b.name.trim();
-      if (b.role === 'owner' || b.role === 'staff')     patch.role = b.role;
-      if (typeof b.active === 'boolean')                patch.active = b.active;
-
-      /* Jangan sampai toko kehilangan owner aktif terakhir */
-      const losingOwner =
-        (patch.role && patch.role !== 'owner' && target.role === 'owner') ||
-        (patch.active === false && target.role === 'owner');
-
-      if (losingOwner) {
-        const oRes = await sbAdmin(
-          `/rest/v1/profiles?business_id=eq.${caller.businessId}` +
-          `&role=eq.owner&active=is.true&select=id`,
-        );
-        const owners = (await oRes.json()) || [];
-        if (owners.length <= 1) {
-          return fail('Toko harus punya minimal satu owner aktif', 409, origin);
-        }
-      }
-
+      if (typeof b.active === 'boolean') patch.active = b.active;
       if (Object.keys(patch).length) {
-        const uRes = await sbAdmin(`/rest/v1/profiles?id=eq.${userId}`, {
-          method: 'PATCH',
-          body: JSON.stringify(patch),
-        });
-        if (!uRes.ok) {
-          console.error('patch profile gagal', await uRes.text());
-          return fail('Gagal memperbarui profil', 500, origin);
-        }
+        const u = await sbAdmin(`/rest/v1/profiles?id=eq.${userId}`, { method: 'PATCH', body: JSON.stringify(patch) });
+        if (!u.ok) return fail('Gagal memperbarui profil', 500, origin);
       }
 
-      /* Reset password bila diminta */
-      if (b.password) {
-        const pw = String(b.password);
-        if (pw.length < MIN_PASSWORD) {
-          return fail(`Password minimal ${MIN_PASSWORD} karakter`, 400, origin);
+      let code: string | undefined;
+      if (b.regen_code) {
+        for (let i = 0; i < 5 && !code; i++) {
+          const c = newCode();
+          const r = await sbAdmin(`/rest/v1/staff_codes?profile_id=eq.${userId}`, {
+            method: 'PATCH', body: JSON.stringify({ code: c }),
+          });
+          if (r.ok) code = c;
         }
-        const aRes = await authAdmin(`/users/${userId}`, {
-          method: 'PUT',
-          body: JSON.stringify({ password: pw }),
-        });
-        if (!aRes.ok) {
-          console.error('update password gagal', await aRes.text());
-          return fail('Gagal mengubah password', 500, origin);
-        }
+        if (!code) return fail('Gagal membuat kode baru', 500, origin);
+        /* Kode lama tidak berlaku lagi: putuskan sesi yang sedang berjalan */
+        await authAdmin(`/users/${userId}`, { method: 'PUT', body: JSON.stringify({ password: randomPassword() }) });
       }
 
-      return json({ ok: true }, 200, origin);
+      return json({ ok: true, code }, 200, origin);
     }
 
     /* ============ DELETE ============ */
     if (action === 'delete') {
       const userId = String(b.user_id || '');
-      if (!userId) return fail('user_id wajib diisi', 400, origin);
-      if (userId === caller.userId) {
-        return fail('Tidak bisa menghapus akun sendiri', 400, origin);
-      }
+      if (userId === caller.userId) return fail('Tidak bisa menghapus akun sendiri', 400, origin);
+      const t = await targetInBiz(userId, caller.businessId);
+      if (!t) return fail('Pengguna tidak ditemukan di toko Anda', 404, origin);
+      if (t.role === 'owner') return fail('Akun owner tidak bisa dihapus dari sini', 400, origin);
 
-      const tRes = await sbAdmin(
-        `/rest/v1/profiles?id=eq.${userId}&select=id,business_id,role,active`,
-      );
-      const target = (await tRes.json())?.[0];
-      if (!target) return fail('Pengguna tidak ditemukan', 404, origin);
-      if (target.business_id !== caller.businessId) {
-        return fail('Pengguna bukan anggota toko Anda', 403, origin);
+      /* Profil & kode ikut terhapus lewat ON DELETE CASCADE */
+      const d = await authAdmin(`/users/${userId}`, { method: 'DELETE' });
+      if (!d.ok) {
+        console.error('delete user gagal', await d.text());
+        return fail('Gagal menghapus karyawan', 500, origin);
       }
-
-      if (target.role === 'owner') {
-        const oRes = await sbAdmin(
-          `/rest/v1/profiles?business_id=eq.${caller.businessId}` +
-          `&role=eq.owner&active=is.true&select=id`,
-        );
-        const owners = (await oRes.json()) || [];
-        if (owners.length <= 1) {
-          return fail('Toko harus punya minimal satu owner aktif', 409, origin);
-        }
-      }
-
-      /* Hapus user Auth — profil ikut terhapus lewat ON DELETE CASCADE */
-      const dRes = await authAdmin(`/users/${userId}`, { method: 'DELETE' });
-      if (!dRes.ok) {
-        console.error('delete user gagal', await dRes.text());
-        return fail('Gagal menghapus pengguna', 500, origin);
-      }
-
       return json({ ok: true }, 200, origin);
     }
 
     return fail('action tidak dikenal', 400, origin);
-
   } catch (e) {
     console.error('create-staff error', e);
     return fail('Terjadi kesalahan di server', 500, origin);

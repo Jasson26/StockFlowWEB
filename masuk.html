@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Masuk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261105g">
+<link rel="stylesheet" href="css/app.css?v=20261106b">
 </head>
 <body>
 
@@ -46,7 +46,10 @@
       <!-- ============ MASUK ============ -->
       <div id="vLogin">
         <h1>Masuk</h1>
-        <p class="sub">Masukkan email dan password akun Anda.</p>
+        <div class="seg mb20" role="tablist">
+          <button type="button" class="seg-btn on" onclick="show('vLogin')">Owner</button>
+          <button type="button" class="seg-btn" onclick="show('vStaff')">Karyawan</button>
+        </div>
 
         <form onsubmit="doLogin();return false">
           <div class="field">
@@ -74,6 +77,30 @@
           <button class="btn btn-block" onclick="startDemo()" id="demoBtn">Coba Mode Demo</button>
           <div class="hint tc">Jelajahi semua fitur dengan data contoh, termasuk simulasi pembayaran QRIS.</div>
         </div>
+      </div>
+
+      <!-- ============ MASUK KARYAWAN ============ -->
+      <div id="vStaff" class="hide">
+        <h1>Masuk</h1>
+        <div class="seg mb20" role="tablist">
+          <button type="button" class="seg-btn" onclick="show('vLogin')">Owner</button>
+          <button type="button" class="seg-btn on" onclick="show('vStaff')">Karyawan</button>
+        </div>
+
+        <form onsubmit="doStaffLogin();return false">
+          <div class="field">
+            <label class="label" for="kUser">USERNAME</label>
+            <input type="text" id="kUser" class="input" placeholder="misal: budi"
+                   autocomplete="username" autocapitalize="none" spellcheck="false" required>
+          </div>
+          <div class="field">
+            <label class="label" for="kCode">KODE UNIK</label>
+            <input type="text" id="kCode" class="input mono" placeholder="Dari owner, misal K7Q2XM4P"
+                   autocomplete="off" autocapitalize="characters" spellcheck="false"
+                   style="letter-spacing:.12em;text-transform:uppercase" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="staffBtn">Masuk</button>
+        </form>
       </div>
 
       <!-- ============ DAFTAR ============ -->
@@ -161,12 +188,12 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261105g"></script>
-<script src="js/config.js?v=20261105g"></script>
-<script src="js/demo.js?v=20261105g"></script>
-<script src="js/api.js?v=20261105g"></script>
-<script src="js/auth.js?v=20261105g"></script>
-<script src="js/ui.js?v=20261105g"></script>
+<script src="js/icons.js?v=20261106b"></script>
+<script src="js/config.js?v=20261106b"></script>
+<script src="js/demo.js?v=20261106b"></script>
+<script src="js/api.js?v=20261106b"></script>
+<script src="js/auth.js?v=20261106b"></script>
+<script src="js/ui.js?v=20261106b"></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 document.getElementById('artLogo').innerHTML  = Icons.logo(26);
@@ -197,7 +224,7 @@ if (new URLSearchParams(location.search).get('expired')) {
 }
 
 function show(id) {
-  ['vLogin', 'vSignup', 'vForgot', 'vSetup'].forEach(function (v) {
+  ['vLogin', 'vStaff', 'vSignup', 'vForgot', 'vSetup'].forEach(function (v) {
     document.getElementById(v).classList.toggle('hide', v !== id);
   });
 }
@@ -253,6 +280,26 @@ async function doLogin() {
     /* Akun aktif tapi tokonya belum dibuat — selesaikan di sini */
     UI.toast(r.msg, 'warn');
     showSetup();
+  } else {
+    UI.toast(r.msg, 'error');
+  }
+}
+
+async function doStaffLogin() {
+  var user = document.getElementById('kUser').value.trim();
+  var code = document.getElementById('kCode').value.trim();
+  if (!user || !code) return UI.toast('Isi username dan kode', 'error');
+
+  var btn = document.getElementById('staffBtn');
+  btn.disabled = true;
+  UI.loading(true);
+  var r = await Auth.staffLogin(user, code);
+  UI.loading(false);
+  btn.disabled = false;
+
+  if (r.ok) {
+    UI.toast('Selamat bekerja!', 'ok');
+    setTimeout(function () { location.href = 'pos.html'; }, 350);
   } else {
     UI.toast(r.msg, 'error');
   }

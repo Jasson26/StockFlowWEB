@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6C4CF1">
 <title>Stok — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261105g">
+<link rel="stylesheet" href="css/app.css?v=20261106b">
 </head>
 <body>
 
@@ -41,6 +41,8 @@
         <option value="sale">Penjualan</option>
         <option value="damaged">Rusak</option>
         <option value="adjust">Koreksi</option>
+        <option value="create">Produk baru</option>
+        <option value="edit">Edit produk</option>
       </select>
     </div>
     <div class="table-wrap">
@@ -104,15 +106,15 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261105g"></script>
-<script src="js/config.js?v=20261105g"></script>
-<script src="js/demo.js?v=20261105g"></script>
-<script src="js/demo.js?v=20261105g"></script>
-<script src="js/api.js?v=20261105g"></script>
-<script src="js/auth.js?v=20261105g"></script>
-<script src="js/ui.js?v=20261105g"></script>
+<script src="js/icons.js?v=20261106b"></script>
+<script src="js/config.js?v=20261106b"></script>
+<script src="js/demo.js?v=20261106b"></script>
+<script src="js/demo.js?v=20261106b"></script>
+<script src="js/api.js?v=20261106b"></script>
+<script src="js/auth.js?v=20261106b"></script>
+<script src="js/ui.js?v=20261106b"></script>
 <script>
-if (!Auth.guard()) throw 'redirect';
+if (!Auth.guard(true)) throw 'redirect';
 var U = Auth.user();
 var products = [], moves = [], mode = 'in';
 
@@ -123,16 +125,22 @@ var TYPE = {
   out:     { label: 'Keluar',    badge: 'warn',   sign: '-' },
   sale:    { label: 'Penjualan', badge: 'brand',  sign: '-' },
   damaged: { label: 'Rusak',     badge: 'danger', sign: '-' },
-  adjust:  { label: 'Koreksi',   badge: '',       sign: '=' },
+  adjust:  { label: 'Koreksi',   badge: '',       sign: '±' },
+  create:  { label: 'Produk baru', badge: 'ok',   sign: '+' },
+  edit:    { label: 'Edit produk', badge: '',     sign: '' },
 };
+var people = {};
 
 async function load() {
   UI.loading(true);
   var rp_ = await API.from('products').select('*').order('name');
   var rm = await API.from('stock_movements').select('*')
             .order('created_at', false).limit(200);
+  var rpp = await API.from('profiles').select('id,name');
   UI.loading(false);
 
+  people = {};
+  (rpp.data || []).forEach(function (x) { people[x.id] = x.name; });
   products = rp_.data || [];
   moves    = rm.data || [];
 
@@ -166,8 +174,11 @@ function render() {
       '<td class="c-mid fs13 nowrap">' + UI.dt(m.created_at) + '</td>' +
       '<td class="fw7">' + UI.esc(pName(m.product_id)) + '</td>' +
       '<td><span class="badge ' + t.badge + '">' + t.label + '</span></td>' +
-      '<td class="num fw7 mono">' + t.sign + UI.num(m.qty) + '</td>' +
-      '<td class="hide-mobile c-dim fs13">' + UI.esc(m.note || '—') + '</td>' +
+      '<td class="num fw7 mono">' + (m.type === 'edit' ? '—' : t.sign + UI.num(m.qty)) + '</td>' +
+      '<td class="hide-mobile c-dim fs13">' + UI.esc(m.note || '—') +
+        (m.user_id && people[m.user_id] ? '<div class="fs12 c-dim">oleh ' + UI.esc(people[m.user_id]) + '</div>' : '') +
+        (m.evidence_url ? '<div><a href="' + UI.esc(m.evidence_url) + '" target="_blank" rel="noopener" class="fs12">Lihat bukti</a></div>' : '') +
+      '</td>' +
       '</tr>';
   }).join('');
 }

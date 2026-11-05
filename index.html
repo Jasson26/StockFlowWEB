@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1F2937">
 <title>StockFlow: Kasir &amp; Stok untuk Warung Indonesia</title>
-<meta name="description" content="Aplikasi kasir dan inventori gratis untuk warung, kafe dan toko kecil. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Dibuka dari HP, tanpa install.">
+<meta name="description" content="Aplikasi kasir dan inventori untuk warung, kafe dan toko kecil, mulai Rp 100rb per bulan. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Dibuka dari HP, tanpa install.">
 <meta property="og:title" content="StockFlow: Kasir &amp; Stok untuk Warung Indonesia">
-<meta property="og:description" content="Catat penjualan, pantau stok, terima QRIS. Gratis, dibuka dari HP.">
+<meta property="og:description" content="Catat penjualan, pantau stok, terima QRIS. Mulai Rp 100rb/bulan, dibuka dari HP.">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="css/landing.css?v=20261105g">
+<link rel="stylesheet" href="css/landing.css?v=20261106b">
 </head>
 <body>
 
@@ -27,7 +27,7 @@
       <a href="#tanya">Tanya jawab</a>
     </div>
     <a href="masuk.html" class="btn">Masuk</a>
-    <a href="masuk.html?daftar=1" class="btn btn-primary">Daftar gratis</a>
+    <a href="masuk.html?daftar=1" class="btn btn-primary">Daftar</a>
   </div>
 </nav>
 
@@ -35,16 +35,23 @@
 
 <!-- ============ HERO ============ -->
 <header class="wrap hero">
+  <div class="mascot-stage" aria-hidden="true">
+    <div class="bubble" id="bubble">Struk siap!</div>
+    <div class="mascot" id="mascotHero"></div>
+    <span class="float f1">Rp</span>
+    <span class="float f2">QRIS</span>
+    <span class="float f3">+1</span>
+  </div>
   <h1>Kasir dan stok warung Anda, rapi di satu tempat</h1>
   <p>
     Catat penjualan, pantau stok, dan terima pembayaran QRIS yang terkonfirmasi
     sendiri. Dibuka dari HP yang sudah Anda punya, tanpa install apa pun.
   </p>
   <div class="hero-acts">
-    <a href="masuk.html?daftar=1" class="btn btn-primary btn-lg btn-block-m">Daftar gratis</a>
+    <a href="masuk.html?daftar=1" class="btn btn-primary btn-lg btn-block-m">Daftarkan toko</a>
     <a href="masuk.html?demo=1&amp;autologin=1" class="btn btn-lg btn-block-m">Lihat demo</a>
   </div>
-  <p class="hero-note">Gratis selamanya &middot; Tanpa kartu kredit &middot; Siap dipakai dalam 5 menit</p>
+  <p class="hero-note">Mulai Rp 100rb/bulan &middot; Coba demo dulu &middot; Siap dipakai dalam 5 menit</p>
 </header>
 
 <!-- ============ PRATINJAU ============ -->
@@ -140,13 +147,15 @@
 <section class="sec" id="harga">
   <div class="wrap">
     <div class="sec-head">
-      <h2>Gratis, tanpa kecuali</h2>
-      <p>Tidak ada paket, tidak ada masa percobaan, tidak ada biaya tersembunyi.</p>
+      <h2>Harga sederhana</h2>
+      <p>Satu paket, semua fitur. Tanpa biaya tersembunyi.</p>
     </div>
 
     <div class="price rise">
-      <div class="price-big">Rp 0</div>
-      <div class="price-sub">selamanya, untuk semua fitur</div>
+      <div class="price-peek" id="mascotPeek" aria-hidden="true"></div>
+      <div class="price-from">mulai dari</div>
+      <div class="price-big">Rp 100rb</div>
+      <div class="price-sub">per bulan, per toko</div>
 
       <div class="price-list" id="priceList"></div>
 
@@ -155,9 +164,8 @@
       </a>
 
       <p class="price-fine">
-        Yang berbayar hanya milik pihak lain: biaya QRIS yang ditetapkan Bank Indonesia
-        (0% untuk transaksi di bawah Rp 100.000) dan printer Bluetooth bila Anda
-        ingin mencetak struk. Keduanya opsional dan tidak dibayarkan ke kami.
+        Biaya QRIS mengikuti ketentuan Bank Indonesia dan dibayar ke penyedia pembayaran,
+        bukan ke kami. Printer Bluetooth opsional.
       </p>
     </div>
   </div>
@@ -190,9 +198,9 @@
 
       <details name="faq">
         <summary><span class="q">Karyawan bisa lihat omzet saya?</span><span class="pm"></span></summary>
-        <div class="a">Tidak. Akun staff hanya bisa membuka kasir, produk, dan stok.
-          Laporan keuangan terkunci untuk owner, dan penguncian itu ada di database,
-          bukan sekadar disembunyikan di tampilan.</div>
+        <div class="a">Tidak. Karyawan hanya bisa membuka kasir, riwayat, dan catat barang rusak
+          (wajib foto bukti). Produk, stok, dan laporan hanya untuk owner, dan penguncian
+          itu ada di database, bukan sekadar disembunyikan.</div>
       </details>
 
       <details name="faq">
@@ -218,7 +226,7 @@
       <h2>Siap mulai hari ini?</h2>
       <p>Daftar, isi beberapa produk, lalu jalankan transaksi pertama. Lima menit cukup.</p>
       <div class="hero-acts">
-        <a href="masuk.html?daftar=1" class="btn btn-lg btn-block-m">Daftar gratis</a>
+        <a href="masuk.html?daftar=1" class="btn btn-lg btn-block-m">Daftarkan toko</a>
         <a href="masuk.html?demo=1&amp;autologin=1" class="btn btn-lg ghost btn-block-m">Lihat demo dulu</a>
       </div>
     </div>
@@ -255,9 +263,83 @@
   <div class="foot-last">&copy; <span id="yr"></span> StockFlow</div>
 </footer>
 
-<script src="js/icons.js?v=20261105g"></script>
+<script src="js/icons.js?v=20261106b"></script>
 <script>
 document.getElementById('navLogo').innerHTML  = Icons.logo(28);
+
+/* ============================================================
+   Maskot "Struki": kertas struk kecil yang hidup.
+   Digambar sendiri dengan SVG; animasi lewat CSS.
+   ============================================================ */
+function struki(wave) {
+  return '<svg viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg" class="struki">' +
+    /* bayangan */
+    '<ellipse class="st-shadow" cx="80" cy="172" rx="44" ry="6" fill="#0F172A" opacity=".12"/>' +
+    '<g class="st-body">' +
+      /* tangan kiri */
+      '<path d="M34 92 q-16 6 -18 22" stroke="#1F2937" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+      /* tangan kanan (melambai) */
+      '<g class="' + (wave ? 'st-wave' : '') + '" style="transform-origin:126px 88px">' +
+        '<path d="M126 88 q18 -6 22 -26" stroke="#1F2937" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+        '<circle cx="148" cy="60" r="6" fill="#FFFFFF" stroke="#1F2937" stroke-width="4"/>' +
+      '</g>' +
+      /* badan kertas dengan pinggiran bergerigi */
+      '<path d="M36 24 h88 a8 8 0 0 1 8 8 v112 l-8 8 -8 -8 -8 8 -8 -8 -8 8 -8 -8 -8 8 -8 -8 -8 8 -8 -8 -8 8 -8 -8 v-112 a8 8 0 0 1 8 -8 z" ' +
+        'fill="#FFFFFF" stroke="#1F2937" stroke-width="4" stroke-linejoin="round"/>' +
+      /* garis tulisan struk */
+      '<rect x="50" y="104" width="60" height="5" rx="2.5" fill="#CBD5E1"/>' +
+      '<rect x="50" y="116" width="40" height="5" rx="2.5" fill="#CBD5E1"/>' +
+      '<rect x="96" y="116" width="14" height="5" rx="2.5" fill="#7C3AED"/>' +
+      '<rect x="50" y="128" width="60" height="5" rx="2.5" fill="#E2E8F0"/>' +
+      /* mata */
+      '<g class="st-eyes">' +
+        '<ellipse cx="64" cy="62" rx="6" ry="7.5" fill="#1F2937"/>' +
+        '<ellipse cx="96" cy="62" rx="6" ry="7.5" fill="#1F2937"/>' +
+        '<circle cx="66" cy="59" r="2" fill="#FFFFFF"/>' +
+        '<circle cx="98" cy="59" r="2" fill="#FFFFFF"/>' +
+      '</g>' +
+      /* pipi */
+      '<ellipse cx="54" cy="78" rx="7" ry="4.5" fill="#C4B5FD" opacity=".85"/>' +
+      '<ellipse cx="106" cy="78" rx="7" ry="4.5" fill="#C4B5FD" opacity=".85"/>' +
+      /* senyum */
+      '<path d="M70 80 q10 9 20 0" stroke="#1F2937" stroke-width="4" stroke-linecap="round" fill="none"/>' +
+    '</g>' +
+  '</svg>';
+}
+
+document.getElementById('mascotHero').innerHTML = struki(true);
+document.getElementById('mascotPeek').innerHTML = struki(true);
+
+/* Gelembung bicara bergantian */
+(function () {
+  var lines = ['Struk siap!', 'QRIS lunas!', 'Stok aman', 'Antrian 007', 'Halo, Bos!'];
+  var el = document.getElementById('bubble');
+  if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var i = 0;
+  setInterval(function () {
+    el.classList.add('swap');
+    setTimeout(function () {
+      i = (i + 1) % lines.length;
+      el.textContent = lines[i];
+      el.classList.remove('swap');
+    }, 220);
+  }, 2600);
+})();
+
+/* Maskot melirik ke arah kursor */
+(function () {
+  var stage = document.querySelector('.mascot-stage');
+  if (!stage || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  window.addEventListener('pointermove', function (e) {
+    var eyes = stage.querySelector('.st-eyes');
+    if (!eyes) return;
+    var r = stage.getBoundingClientRect();
+    var dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / 300));
+    var dy = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / 300));
+    eyes.setAttribute('transform', 'translate(' + (dx * 3).toFixed(1) + ' ' + (dy * 2.5).toFixed(1) + ')');
+  }, { passive: true });
+})();
+
 document.getElementById('footLogo').innerHTML = Icons.logo(26);
 document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -273,8 +355,8 @@ document.getElementById('feats').innerHTML = [
    'Omzet, laba kotor, dan laba bersih setelah biaya. Lengkap dengan produk terlaris dan peringatan stok menipis.'],
   ['printer', 'Struk langsung cetak',
    'Terhubung ke printer thermal Bluetooth. Bisa diatur agar struk keluar sendiri setiap transaksi selesai.'],
-  ['users', 'Akun untuk karyawan',
-   'Kasir masuk dengan akun sendiri dan tidak bisa melihat laporan keuangan atau membatalkan transaksi lunas.'],
+  ['users', 'Karyawan tanpa email',
+   'Owner cukup buat username, sistem memberi kode unik. Karyawan masuk dengan kode itu dan tidak bisa keluar tanpa izin owner.'],
   ['shield', 'Data toko terkunci',
    'Pembatasan ada di database, bukan sekadar disembunyikan. Data toko lain tidak bisa terbaca.'],
 ].map(function (f) {
@@ -284,12 +366,11 @@ document.getElementById('feats').innerHTML = [
 
 /* ---------- Daftar yang termasuk ---------- */
 document.getElementById('priceList').innerHTML = [
-  'Kasir, produk, dan stok tanpa batas',
-  'Pembayaran tunai, transfer, dan QRIS',
-  'Laporan penjualan dan laba rugi',
-  'Akun karyawan sebanyak yang dibutuhkan',
-  'Cetak struk ke printer Bluetooth',
-  'Unduh dan hapus data kapan saja',
+  'Tanpa install: jalan di HP, tablet, dan laptop',
+  'QRIS untuk semua e-wallet, uang langsung ke rekening Anda',
+  'Struk keluar otomatis ke printer Bluetooth',
+  'Stok terpotong sendiri, setiap perubahan tercatat',
+  'Karyawan tak terbatas, masuk pakai kode tanpa email',
 ].map(function (t) {
   return '<div class="price-row">' + Icons.svg('check', 17) + '<span>' + t + '</span></div>';
 }).join('');

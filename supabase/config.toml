@@ -17,3 +17,10 @@ verify_jwt = false
 
 [functions.delete-account]
 verify_jwt = true
+
+# Karyawan belum punya sesi saat masuk; keamanan ada pada pengecekan kode di server.
+[functions.staff-login]
+verify_jwt = false
+
+[functions.owner-verify]
+verify_jwt = true

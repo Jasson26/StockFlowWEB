@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6C4CF1">
 <title>Produk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261105g">
+<link rel="stylesheet" href="css/app.css?v=20261106b">
 </head>
 <body>
 
@@ -90,7 +90,7 @@
 
       <div class="grid g2">
         <div class="field">
-          <label class="label">STOK AWAL</label>
+          <label class="label" id="eStockLbl">STOK AWAL</label>
           <input type="number" id="eStock" class="input" placeholder="0" min="0">
         </div>
         <div class="field">
@@ -125,15 +125,15 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261105g"></script>
-<script src="js/config.js?v=20261105g"></script>
-<script src="js/demo.js?v=20261105g"></script>
-<script src="js/demo.js?v=20261105g"></script>
-<script src="js/api.js?v=20261105g"></script>
-<script src="js/auth.js?v=20261105g"></script>
-<script src="js/ui.js?v=20261105g"></script>
+<script src="js/icons.js?v=20261106b"></script>
+<script src="js/config.js?v=20261106b"></script>
+<script src="js/demo.js?v=20261106b"></script>
+<script src="js/demo.js?v=20261106b"></script>
+<script src="js/api.js?v=20261106b"></script>
+<script src="js/auth.js?v=20261106b"></script>
+<script src="js/ui.js?v=20261106b"></script>
 <script>
-if (!Auth.guard()) throw 'redirect';
+if (!Auth.guard(true)) throw 'redirect';
 var U = Auth.user();
 var products = [], cats = [], imgUrl = null, imgFile = null;
 
@@ -235,7 +235,8 @@ function openEdit(id) {
 
   imgUrl = p ? p.image_url : null;
   showPrev();
-  document.getElementById('eStock').disabled = !!p;
+  document.getElementById('eStock').disabled = false;
+  document.getElementById('eStockLbl').textContent = p ? 'STOK' : 'STOK AWAL';
   UI.openModal('mEdit');
 }
 
@@ -285,19 +286,21 @@ async function save() {
     image_url: url,
   };
 
+  var newStock = Math.max(0, Number(document.getElementById('eStock').value) || 0);
   var res;
-  if (id) {
-    res = await API.from('products').update(body).eq('id', id).run();
-  } else {
-    body.stock = Number(document.getElementById('eStock').value) || 0;
-    res = await API.from('products').insert(body).select('*').single();
 
-    /* Catat stok awal sebagai pergerakan stok masuk */
-    if (!res.error && body.stock > 0) {
-      await API.from('stock_movements').insert({
-        business_id: U.business_id, product_id: res.data.id, type: 'in',
-        qty: body.stock, cost: body.cost, note: 'Stok awal', user_id: U.id,
-      }).select('id');
+  if (id) {
+    var old = products.find(function (x) { return x.id === id; }) || {};
+    body.stock = newStock;
+    res = await API.from('products').update(body).eq('id', id).run();
+    if (!res.error) await logEdit(id, old, body);
+  } else {
+    body.stock = newStock;
+    res = await API.from('products').insert(body).select('*').single();
+    if (!res.error) {
+      await logMove(res.data.id, 'create', body.stock,
+        'Produk baru "' + name + '" — stok awal ' + UI.num(body.stock) + ' ' + body.unit +
+        ', harga jual ' + UI.rp(body.price) + ', harga beli ' + UI.rp(body.cost));
     }
   }
 
@@ -307,6 +310,38 @@ async function save() {
   UI.toast(id ? 'Produk diperbarui' : 'Produk ditambahkan', 'ok');
   UI.closeModal('mEdit');
   load();
+}
+
+/* ---------- Log produk ----------
+   Setiap penambahan dan perubahan produk dicatat di log stok dengan
+   rincian nilai lama -> baru, supaya jelas siapa mengubah apa. */
+async function logMove(pid, type, qty, note, cost) {
+  await API.from('stock_movements').insert({
+    business_id: U.business_id, product_id: pid, type: type,
+    qty: qty, cost: cost || 0, note: note, user_id: U.id,
+  }).select('id');
+}
+
+async function logEdit(pid, old, next) {
+  var changes = [];
+  var cat = function (cid) { return catName(cid) || 'Tanpa kategori'; };
+  if (old.name !== next.name)           changes.push('nama "' + old.name + '" → "' + next.name + '"');
+  if (Number(old.price) !== Number(next.price)) changes.push('harga jual ' + UI.rp(old.price) + ' → ' + UI.rp(next.price));
+  if (Number(old.cost) !== Number(next.cost))   changes.push('harga beli ' + UI.rp(old.cost) + ' → ' + UI.rp(next.cost));
+  if ((old.category_id || null) !== (next.category_id || null)) changes.push('kategori ' + cat(old.category_id) + ' → ' + cat(next.category_id));
+  if ((old.unit || 'pcs') !== next.unit) changes.push('satuan ' + (old.unit || 'pcs') + ' → ' + next.unit);
+  if (Number(old.min_stock) !== Number(next.min_stock)) changes.push('stok minimum ' + UI.num(old.min_stock) + ' → ' + UI.num(next.min_stock));
+  if ((old.image_url || null) !== (next.image_url || null)) changes.push(next.image_url ? 'foto diganti' : 'foto dihapus');
+
+  var oldStock = Number(old.stock) || 0, newStock = Number(next.stock) || 0;
+  if (oldStock !== newStock) {
+    await logMove(pid, 'adjust', Math.abs(newStock - oldStock),
+      'Edit produk "' + next.name + '": stok ' + UI.num(oldStock) + ' → ' + UI.num(newStock) +
+      ' (' + (newStock > oldStock ? '+' : '−') + UI.num(Math.abs(newStock - oldStock)) + ')');
+  }
+  if (changes.length) {
+    await logMove(pid, 'edit', 0, 'Edit produk "' + next.name + '": ' + changes.join('; '));
+  }
 }
 
 function del(id) {

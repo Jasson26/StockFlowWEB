@@ -211,6 +211,24 @@ const Demo = (function () {
     const d = db();
     const u = me();
 
+    if (fn === 'record_damage') {
+      const pr = d.products.find((x) => x.id === a.p_product_id);
+      const q = Number(a.p_qty) || 0;
+      if (!pr) return { data: null, error: { message: 'Produk tidak ditemukan di toko ini' } };
+      if (q <= 0) return { data: null, error: { message: 'Jumlah harus lebih dari 0' } };
+      if (u.role !== 'owner' && !String(a.p_evidence || '').trim()) {
+        return { data: null, error: { message: 'Foto bukti wajib dilampirkan' } };
+      }
+      if (pr.stock < q) return { data: null, error: { message: 'Stok ' + pr.name + ' tidak cukup' } };
+      pr.stock -= q;
+      const id = uid();
+      d.stock_movements.push({ id: id, business_id: BIZ, product_id: pr.id, type: 'damaged', qty: q,
+        note: a.p_note || null, evidence_url: a.p_evidence || null, user_id: u.id,
+        created_at: new Date().toISOString() });
+      save(d);
+      return { data: { id: id, stock: pr.stock }, error: null };
+    }
+
     if (fn === 'checkout_cash') {
       const t = totals(a.p_items, a.p_discount, a.p_tax);
       const paid = a.p_paid == null ? t.total : a.p_paid;
@@ -466,20 +484,23 @@ const Demo = (function () {
       }
 
       if (b.action === 'create') {
-        const email = String(b.email || '').trim().toLowerCase();
-        if (d.profiles.some((p) => p._email === email)) {
-          return { data: null, error: { message: 'Email sudah terdaftar' } };
+        const username = String(b.username || '').trim().toLowerCase();
+        if (!/^[a-z0-9._-]{3,24}$/.test(username)) {
+          return { data: null, error: { message: 'Username 3–24 karakter' } };
         }
-        if (String(b.password || '').length < 8) {
-          return { data: null, error: { message: 'Password minimal 8 karakter' } };
+        d.staff_codes = d.staff_codes || [];
+        if (d.staff_codes.some((c) => c.username === username)) {
+          return { data: null, error: { message: 'Username sudah dipakai di toko ini' } };
         }
         const id = uid();
+        const code = Math.random().toString(36).slice(2, 10).toUpperCase();
         d.profiles.push({
-          id: id, business_id: BIZ, name: b.name, role: b.role === 'owner' ? 'owner' : 'staff',
-          active: true, _email: email, _pw: b.password, created_at: new Date().toISOString(),
+          id: id, business_id: BIZ, name: b.name, username: username, role: 'staff',
+          active: true, created_at: new Date().toISOString(),
         });
+        d.staff_codes.push({ id: id, profile_id: id, business_id: BIZ, username: username, code: code });
         save(d);
-        return { data: { ok: true, user_id: id }, error: null };
+        return { data: { ok: true, user_id: id, username: username, code: code }, error: null };
       }
 
       if (b.action === 'update') {
@@ -495,6 +516,13 @@ const Demo = (function () {
         if (b.name) t.name = b.name;
         if (b.role === 'owner' || b.role === 'staff') t.role = b.role;
         if (typeof b.active === 'boolean') t.active = b.active;
+        if (b.regen_code) {
+          const sc = (d.staff_codes || []).find((c) => c.profile_id === t.id);
+          const code = Math.random().toString(36).slice(2, 10).toUpperCase();
+          if (sc) sc.code = code;
+          save(d);
+          return { data: { ok: true, code: code }, error: null };
+        }
         if (b.password) {
           if (String(b.password).length < 8) {
             return { data: null, error: { message: 'Password minimal 8 karakter' } };
@@ -513,6 +541,7 @@ const Demo = (function () {
           return { data: null, error: { message: 'Toko harus punya minimal satu owner aktif' } };
         }
         d.profiles = d.profiles.filter((p) => p.id !== b.user_id);
+        d.staff_codes = (d.staff_codes || []).filter((c) => c.profile_id !== b.user_id);
         save(d);
         return { data: { ok: true }, error: null };
       }

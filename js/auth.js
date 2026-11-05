@@ -179,6 +179,30 @@ const Auth = (function () {
       return { ok: true };
     },
 
+    /* ---------- Masuk sebagai karyawan: username + kode unik ---------- */
+    async staffLogin(username, code) {
+      if (typeof Demo !== 'undefined' && Demo.on()) {
+        return { ok: false, msg: 'Tidak tersedia di mode demo' };
+      }
+      let res;
+      try {
+        res = await fetch(FUNCTIONS_URL + '/staff-login', {
+          method: 'POST', headers: H(),
+          body: JSON.stringify({ username: String(username || '').trim(), code: String(code || '').trim() }),
+        });
+      } catch (e) {
+        return { ok: false, msg: 'Tidak bisa menghubungi server. Cek koneksi internet.' };
+      }
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok || !d.access_token) return { ok: false, msg: d.error || 'Username atau kode salah' };
+
+      writeTok(d);
+      writeProf({ email: '' });
+      const p = await loadProfile();
+      if (!p.ok) { wipe(); return p; }
+      return { ok: true };
+    },
+
     /* ---------- Daftar toko baru (owner) ---------- */
     async signup({ bizName, name, email, password }) {
       if (typeof Demo !== 'undefined' && Demo.on()) {
@@ -272,6 +296,14 @@ const Auth = (function () {
     reload: loadProfile,
 
     async logout() {
+      /* Karyawan butuh izin owner (password akun owner) untuk keluar */
+      const me = readProf();
+      if (me && me.role === 'staff' && typeof UI !== 'undefined' && UI.ownerUnlock &&
+          !(typeof Demo !== 'undefined' && Demo.on())) {
+        const ok = await UI.ownerUnlock();
+        if (!ok) return;
+      }
+
       const tk = readTok();
       if (tk && typeof Demo !== 'undefined' && !Demo.on()) {
         /* Cabut refresh token di server; abaikan kalau gagal */

@@ -377,3 +377,16 @@ yang sudah dibayar tidak pernah ditolak.
 
 **Void tidak mengembalikan dana.** Void hanya memulihkan stok dan menandai
 transaksi. Refund QRIS harus diproses terpisah di dashboard Midtrans.
+
+## Pembaruan v5.3 — karyawan pakai kode, hak owner, bukti barang rusak
+
+1. Supabase → SQL Editor → jalankan `migrasi-03-owner-staff-log.sql` (aman, data tidak hilang).
+2. Deploy fungsi baru/terbaru dari folder proyek:
+
+   ```
+   supabase functions deploy create-staff
+   supabase functions deploy owner-verify
+   supabase functions deploy staff-login --no-verify-jwt
+   ```
+3. Owner buka **Pengguna → + Tambah Karyawan**, isi nama dan username, lalu berikan kode unik yang muncul.
+4. Karyawan masuk di halaman Masuk → tab **Karyawan** → username + kode.
