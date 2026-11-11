@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1F2937">
 <title>StockFlow: Kasir &amp; Stok untuk Warung Indonesia</title>
-<meta name="description" content="Aplikasi kasir dan inventori untuk warung, kafe dan toko kecil, mulai Rp 100rb per bulan. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Dibuka dari HP, tanpa install.">
+<meta name="description" content="Aplikasi kasir dan inventori untuk warung, kafe dan toko kecil, mulai Rp 39rb per bulan. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Dibuka dari HP, tanpa install.">
 <meta property="og:title" content="StockFlow: Kasir &amp; Stok untuk Warung Indonesia">
-<meta property="og:description" content="Catat penjualan, pantau stok, terima QRIS. Mulai Rp 100rb/bulan, dibuka dari HP.">
+<meta property="og:description" content="Catat penjualan, pantau stok, terima QRIS. Mulai Rp 39rb/bulan, dibuka dari HP.">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="css/landing.css?v=20261106b">
+<link rel="stylesheet" href="css/landing.css?v=20261111a">
 </head>
 <body>
 
@@ -18,7 +18,7 @@
 <!-- ============ NAVIGASI ============ -->
 <nav class="nav">
   <div class="nav-in">
-    <a href="index.html" class="brand"><span id="navLogo"></span><span>StockFlow</span></a>
+    <a href="index.html" class="brand" aria-label="StockFlow"><span id="navLogo" class="brand-mark"></span><span class="brand-word">StockFlow</span></a>
     <div class="spacer"></div>
     <div class="nav-links">
       <a href="#cara">Cara kerja</a>
@@ -26,8 +26,7 @@
       <a href="#harga">Harga</a>
       <a href="#tanya">Tanya jawab</a>
     </div>
-    <a href="masuk.html" class="btn">Masuk</a>
-    <a href="masuk.html?daftar=1" class="btn btn-primary">Daftar</a>
+    <a href="masuk.html" class="btn btn-primary">Masuk</a>
   </div>
 </nav>
 
@@ -35,6 +34,7 @@
 
 <!-- ============ HERO ============ -->
 <header class="wrap hero">
+  <div class="hero-bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
   <div class="mascot-stage" aria-hidden="true">
     <div class="bubble" id="bubble">Struk siap!</div>
     <div class="mascot" id="mascotHero"></div>
@@ -42,16 +42,11 @@
     <span class="float f2">QRIS</span>
     <span class="float f3">+1</span>
   </div>
-  <h1>Kasir dan stok warung Anda, rapi di satu tempat</h1>
+  <h1>Kasir dan stok warung Anda, <span class="hl">rapi</span> di satu tempat</h1>
   <p>
     Catat penjualan, pantau stok, dan terima pembayaran QRIS yang terkonfirmasi
     sendiri. Dibuka dari HP yang sudah Anda punya, tanpa install apa pun.
   </p>
-  <div class="hero-acts">
-    <a href="masuk.html?daftar=1" class="btn btn-primary btn-lg btn-block-m">Daftarkan toko</a>
-    <a href="masuk.html?demo=1&amp;autologin=1" class="btn btn-lg btn-block-m">Lihat demo</a>
-  </div>
-  <p class="hero-note">Mulai Rp 100rb/bulan &middot; Coba demo dulu &middot; Siap dipakai dalam 5 menit</p>
 </header>
 
 <!-- ============ PRATINJAU ============ -->
@@ -130,12 +125,17 @@
         aplikasi apa pun, dan nominalnya sudah terisi sehingga pembeli tidak bisa salah ketik.
       </p>
     </div>
-    <div class="wallets">
+    <div class="wallets marquee"><div class="track">
       <span class="wallet">GoPay</span><span class="wallet">OVO</span>
       <span class="wallet">DANA</span><span class="wallet">ShopeePay</span>
       <span class="wallet">LinkAja</span><span class="wallet">BCA mobile</span>
       <span class="wallet">Livin&rsquo;</span><span class="wallet">BRImo</span>
-    </div>
+    
+      <span class="wallet" aria-hidden="true">GoPay</span><span class="wallet" aria-hidden="true">OVO</span>
+      <span class="wallet" aria-hidden="true">DANA</span><span class="wallet" aria-hidden="true">ShopeePay</span>
+      <span class="wallet" aria-hidden="true">LinkAja</span><span class="wallet" aria-hidden="true">BCA mobile</span>
+      <span class="wallet" aria-hidden="true">Livin&rsquo;</span><span class="wallet" aria-hidden="true">BRImo</span>
+    </div></div>
     <p style="text-align:center;margin-top:30px;font-size:15px;color:var(--text-mid);max-width:52ch;margin-inline:auto">
       Dana masuk langsung ke rekening Anda. Setiap toko memakai akun pembayarannya
       sendiri, jadi uang tidak pernah singgah di kami.
@@ -154,13 +154,14 @@
     <div class="price rise">
       <div class="price-peek" id="mascotPeek" aria-hidden="true"></div>
       <div class="price-from">mulai dari</div>
-      <div class="price-big">Rp 100rb</div>
+      <div class="price-big">Rp 39rb</div>
       <div class="price-sub">per bulan, per toko</div>
 
       <div class="price-list" id="priceList"></div>
 
-      <a href="masuk.html?daftar=1" class="btn btn-primary btn-lg" style="width:100%">
-        Daftarkan toko
+      <a href="https://wa.me/6285609339578?text=Halo%2C%20saya%20tertarik%20berlangganan%20StockFlow%20untuk%20toko%20saya." target="_blank" rel="noopener" class="btn btn-wa btn-lg" style="width:100%">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.66 15l-1.3 4.76 4.88-1.28A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-2.9.76.78-2.83-.2-.31A8.2 8.2 0 1 1 12 20.2zm4.5-6.14c-.25-.12-1.46-.72-1.69-.8-.23-.08-.39-.12-.56.12-.16.25-.64.8-.79.97-.14.16-.29.18-.54.06a6.7 6.7 0 0 1-3.32-2.9c-.25-.43.25-.4.71-1.33.08-.16.04-.3-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.4-.42-.56-.42h-.48a.92.92 0 0 0-.66.31 2.78 2.78 0 0 0-.87 2.07 4.83 4.83 0 0 0 1 2.56 11 11 0 0 0 4.24 3.75c1.58.68 2.2.74 2.99.62.48-.07 1.46-.6 1.67-1.18.2-.58.2-1.07.14-1.18-.06-.1-.22-.16-.47-.28z"/></svg>
+        Langganan via WhatsApp
       </a>
 
       <p class="price-fine">
@@ -219,21 +220,13 @@
   </div>
 </section>
 
-<!-- ============ PENUTUP ============ -->
-<section class="sec">
-  <div class="wrap">
-    <div class="cta rise">
-      <h2>Siap mulai hari ini?</h2>
-      <p>Daftar, isi beberapa produk, lalu jalankan transaksi pertama. Lima menit cukup.</p>
-      <div class="hero-acts">
-        <a href="masuk.html?daftar=1" class="btn btn-lg btn-block-m">Daftarkan toko</a>
-        <a href="masuk.html?demo=1&amp;autologin=1" class="btn btn-lg ghost btn-block-m">Lihat demo dulu</a>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 </main>
+
+<a href="https://wa.me/6285609339578?text=Halo%2C%20saya%20tertarik%20berlangganan%20StockFlow%20untuk%20toko%20saya." target="_blank" rel="noopener" class="wa-float" aria-label="Chat WhatsApp">
+  <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.66 15l-1.3 4.76 4.88-1.28A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-2.9.76.78-2.83-.2-.31A8.2 8.2 0 1 1 12 20.2zm4.5-6.14c-.25-.12-1.46-.72-1.69-.8-.23-.08-.39-.12-.56.12-.16.25-.64.8-.79.97-.14.16-.29.18-.54.06a6.7 6.7 0 0 1-3.32-2.9c-.25-.43.25-.4.71-1.33.08-.16.04-.3-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.4-.42-.56-.42h-.48a.92.92 0 0 0-.66.31 2.78 2.78 0 0 0-.87 2.07 4.83 4.83 0 0 0 1 2.56 11 11 0 0 0 4.24 3.75c1.58.68 2.2.74 2.99.62.48-.07 1.46-.6 1.67-1.18.2-.58.2-1.07.14-1.18-.06-.1-.22-.16-.47-.28z"/></svg>
+</a>
 
 <!-- ============ KAKI ============ -->
 <footer class="foot">
@@ -251,7 +244,7 @@
     <div class="foot-col">
       <b>Akun</b>
       <a href="masuk.html">Masuk</a>
-      <a href="masuk.html?daftar=1">Daftar</a>
+      <a href="https://wa.me/6285609339578" target="_blank" rel="noopener">WhatsApp</a>
       <a href="masuk.html?demo=1&amp;autologin=1">Demo</a>
     </div>
     <div class="foot-col">
@@ -263,9 +256,9 @@
   <div class="foot-last">&copy; <span id="yr"></span> StockFlow</div>
 </footer>
 
-<script src="js/icons.js?v=20261106b"></script>
+<script src="js/icons.js?v=20261111a"></script>
 <script>
-document.getElementById('navLogo').innerHTML  = Icons.logo(28);
+document.getElementById('navLogo').innerHTML  = Icons.logo(40);
 
 /* ============================================================
    Maskot "Struki": kertas struk kecil yang hidup.

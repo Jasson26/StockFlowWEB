@@ -453,3 +453,95 @@ h1, h2, h3 { letter-spacing: -0.025em; line-height: 1.15; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) {
   .st-body, .st-shadow, .st-eyes, .st-wave, .float { animation: none; }
 }
+
+/* ============================================================
+   v5.4 — tampilan lebih hidup
+   ============================================================ */
+
+/* ---------- Logo menonjol + animasi ---------- */
+.nav-in { height: 72px; }
+.brand { gap: 10px; }
+.brand-mark { display: inline-grid; place-items: center; animation: logo-in .9s cubic-bezier(.2,.9,.3,1.4) both; }
+.brand-mark .sf-logo { animation: logo-float 4s ease-in-out 1s infinite; filter: drop-shadow(0 4px 10px rgba(124,58,237,.35)); }
+.brand-word {
+  font-size: 26px !important; font-weight: 700; letter-spacing: -0.02em;
+  font-style: italic; font-family: Georgia, 'Times New Roman', serif;
+  background: linear-gradient(90deg, #7C3AED 0%, #A855F7 30%, #C084FC 50%, #A855F7 70%, #7C3AED 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent !important;
+  animation: logo-in .9s .1s cubic-bezier(.2,.9,.3,1.4) both, shine 5s linear 1.2s infinite;
+}
+.brand:hover .sf-logo { animation: logo-spin .7s ease; }
+@keyframes logo-in    { from { opacity: 0; transform: translateY(-8px) scale(.8); } to { opacity: 1; transform: none; } }
+@keyframes logo-float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-6deg); } }
+@keyframes logo-spin  { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(-14deg) scale(1.15); } 100% { transform: rotate(0) scale(1); } }
+@keyframes shine      { to { background-position: -220% 0; } }
+@media (max-width: 560px) { .brand-word { font-size: 22px !important; } }
+
+/* ---------- Latar hero ---------- */
+.hero { position: relative; isolation: isolate; padding-bottom: 56px; }
+.hero-bg { position: absolute; inset: -40px -10vw 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; animation: drift 14s ease-in-out infinite; }
+.blob.b1 { width: 380px; height: 380px; left: 8%;  top: 0;    background: #DDD6FE; }
+.blob.b2 { width: 320px; height: 320px; right: 6%; top: 40px; background: #BFDBFE; animation-delay: -5s; }
+.blob.b3 { width: 260px; height: 260px; left: 42%; top: 220px; background: #FBCFE8; opacity: .4; animation-delay: -9s; }
+@keyframes drift { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.08); } 66% { transform: translate(-24px,18px) scale(.95); } }
+
+.hero h1 .hl {
+  background: linear-gradient(90deg, #7C3AED, #2563EB);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  position: relative;
+}
+.hero h1 .hl::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: .02em; height: .14em;
+  background: linear-gradient(90deg, #C4B5FD, #93C5FD); border-radius: 99px; z-index: -1;
+  transform-origin: left; animation: underline 1s .6s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes underline { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- Kartu fitur & langkah ---------- */
+#feats .card { transition: transform .2s, box-shadow .2s, border-color .2s; }
+#feats .card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,23,42,.09); border-color: #DDD6FE; }
+#feats .card:nth-child(6n+1) .card-ico { background: #EDE9FE; color: #6D28D9; }
+#feats .card:nth-child(6n+2) .card-ico { background: #DBEAFE; color: #1D4ED8; }
+#feats .card:nth-child(6n+3) .card-ico { background: #DCFCE7; color: #15803D; }
+#feats .card:nth-child(6n+4) .card-ico { background: #FEF3C7; color: #B45309; }
+#feats .card:nth-child(6n+5) .card-ico { background: #FCE7F3; color: #BE185D; }
+#feats .card:nth-child(6n+6) .card-ico { background: #E0F2FE; color: #0369A1; }
+.step::before { background: linear-gradient(135deg, #7C3AED, #2563EB); box-shadow: 0 6px 14px rgba(124,58,237,.3); }
+
+/* ---------- Dompet digital berjalan ---------- */
+.wallets.marquee { display: block; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.wallets.marquee .track { display: flex; gap: 10px; width: max-content; animation: marquee 22s linear infinite; }
+.wallets.marquee:hover .track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ---------- Harga ---------- */
+.price { box-shadow: 0 20px 50px rgba(124,58,237,.12); border-color: #DDD6FE; }
+.price-big {
+  background: linear-gradient(90deg, #7C3AED, #2563EB);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.btn-wa { background: #25D366; border-color: #25D366; color: #fff; font-weight: 650; }
+.btn-wa:hover { background: #1EBE5A; border-color: #1EBE5A; }
+
+/* ---------- Tombol WhatsApp melayang ---------- */
+.wa-float {
+  position: fixed; right: 20px; bottom: 20px; z-index: 60;
+  width: 58px; height: 58px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #25D366; color: #fff;
+  box-shadow: 0 10px 24px rgba(37,211,102,.45);
+  animation: wa-pop .5s 1.2s both, wa-pulse 2.6s 2s infinite;
+}
+.wa-float:hover { transform: scale(1.07); }
+@keyframes wa-pop   { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes wa-pulse { 0% { box-shadow: 0 0 0 0 rgba(37,211,102,.5), 0 10px 24px rgba(37,211,102,.45); } 70% { box-shadow: 0 0 0 16px rgba(37,211,102,0), 0 10px 24px rgba(37,211,102,.45); } 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 10px 24px rgba(37,211,102,.45); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark, .brand-mark .sf-logo, .brand-word, .blob, .hero h1 .hl::after,
+  .wallets.marquee .track, .wa-float { animation: none !important; }
+}
+html, body { overflow-x: clip; }
+.hero-bg { inset: -40px 0 0; }

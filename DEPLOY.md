@@ -390,3 +390,9 @@ transaksi. Refund QRIS harus diproses terpisah di dashboard Midtrans.
    ```
 3. Owner buka **Pengguna → + Tambah Karyawan**, isi nama dan username, lalu berikan kode unik yang muncul.
 4. Karyawan masuk di halaman Masuk → tab **Karyawan** → username + kode.
+
+## Pembaruan v5.4 — add-on produk, laporan baru, harga 39rb
+
+1. Supabase → SQL Editor → jalankan `migrasi-04-addon.sql` (aman, hanya menambah kolom).
+   Tanpa ini, menyimpan produk akan gagal karena kolom `addons` belum ada.
+2. Upload ulang semua file ke GitHub, lalu Ctrl+Shift+R.

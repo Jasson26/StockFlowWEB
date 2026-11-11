@@ -960,3 +960,12 @@ $$;
 
 revoke execute on function record_damage(uuid, numeric, text, text) from public, anon;
 grant  execute on function record_damage(uuid, numeric, text, text) to authenticated;
+
+-- ============================================================
+-- TAMBAHAN v5.4 (sama dengan migrasi-04-addon.sql)
+-- ============================================================
+alter table products add column if not exists addons jsonb not null default '[]'::jsonb;
+
+alter table products drop constraint if exists products_addons_is_array;
+alter table products add constraint products_addons_is_array
+  check (jsonb_typeof(addons) = 'array' and jsonb_array_length(addons) <= 20);

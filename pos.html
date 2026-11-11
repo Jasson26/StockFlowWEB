@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#6C4CF1">
 <meta name="robots" content="noindex">
 <title>Kasir — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261106b">
+<link rel="stylesheet" href="css/app.css?v=20261111a">
 </head>
 <body>
 
@@ -157,6 +157,33 @@
 </div>
 
 <!-- ============ MODAL STRUK ============ -->
+<div class="modal" id="mAddon">
+  <div class="modal-box narrow">
+    <div class="modal-hd">
+      <h3 id="aoTitle">Produk</h3>
+      <button class="modal-x" onclick="UI.closeModal('mAddon')">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <div class="row mb12"><span class="c-mid fs13">Harga dasar</span><div class="spacer"></div><strong class="mono" id="aoBase">Rp 0</strong></div>
+      <div class="label mb8">PILIH ADD-ON</div>
+      <div id="aoList" class="ao-list"></div>
+      <div class="row mt16" style="align-items:center">
+        <div class="qty">
+          <button onclick="aoBump(-1)">&minus;</button>
+          <span id="aoQty" class="ao-qty">1</span>
+          <button onclick="aoBump(1)">+</button>
+        </div>
+        <div class="spacer"></div>
+        <div class="fs20 fw7 mono" id="aoTotal">Rp 0</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mAddon')">Batal</button>
+      <button class="btn btn-primary" onclick="aoAdd()">Tambah ke keranjang</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="mRcpt">
   <div class="modal-box narrow">
     <div class="modal-hd">
@@ -178,13 +205,13 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261106b"></script>
-<script src="js/printer.js?v=20261106b"></script>
-<script src="js/config.js?v=20261106b"></script>
-<script src="js/demo.js?v=20261106b"></script>
-<script src="js/api.js?v=20261106b"></script>
-<script src="js/auth.js?v=20261106b"></script>
-<script src="js/ui.js?v=20261106b"></script>
+<script src="js/icons.js?v=20261111a"></script>
+<script src="js/printer.js?v=20261111a"></script>
+<script src="js/config.js?v=20261111a"></script>
+<script src="js/demo.js?v=20261111a"></script>
+<script src="js/api.js?v=20261111a"></script>
+<script src="js/auth.js?v=20261111a"></script>
+<script src="js/ui.js?v=20261111a"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 
@@ -269,7 +296,8 @@ function renderGrid() {
         '<div class="pcard-stock ' + cls + '">' +
           (st <= 0 ? 'Stok habis' : 'Stok ' + UI.num(st) + ' ' + UI.esc(p.unit || 'pcs')) +
         '</div>' +
-        '<div class="pcard-price">' + UI.rp(p.price) + '</div>' +
+        '<div class="pcard-price">' + UI.rp(p.price) +
+          (addonsOf(p).length ? ' <span class="pcard-ao">+ add-on</span>' : '') + '</div>' +
       '</div></button>';
   }).join('');
 }
@@ -277,39 +305,109 @@ function renderGrid() {
 /* ============================================================
    KERANJANG
    ============================================================ */
+/* Satu produk bisa muncul di beberapa baris keranjang dengan add-on
+   berbeda (mis. "Kopi" polos dan "Kopi +Extra shot"). Tiap baris
+   punya key sendiri; stok dihitung dari total semua baris produk itu. */
+function addonsOf(p) {
+  return Array.isArray(p && p.addons) ? p.addons.filter(function (a) { return a && a.name; }) : [];
+}
+
+function usedQty(pid, exceptKey) {
+  return cart.reduce(function (s, i) {
+    return s + (i.id === pid && i.key !== exceptKey ? i.qty : 0);
+  }, 0);
+}
+
 function add(id) {
   var p = products.find(function (x) { return x.id === id; });
   if (!p) return;
+  if ((Number(p.stock) || 0) <= 0) return UI.toast('Stok habis', 'warn');
+  if (addonsOf(p).length) return openAddon(p);
+  addLine(p, [], 1);
+}
 
+function addLine(p, chosen, qty) {
   var st = Number(p.stock) || 0;
-  if (st <= 0) return UI.toast('Stok habis', 'warn');
+  var left = st - usedQty(p.id);
+  if (qty > left) return UI.toast(left > 0 ? 'Stok tersisa ' + UI.num(left) : 'Stok habis', 'warn'), false;
 
-  var it = cart.find(function (x) { return x.id === id; });
+  var names = chosen.map(function (a) { return a.name; });
+  var key = p.id + (names.length ? '|' + names.slice().sort().join('|') : '');
+  var extra = chosen.reduce(function (s, a) { return s + (Number(a.price) || 0); }, 0);
+
+  var it = cart.find(function (x) { return x.key === key; });
   if (it) {
-    if (it.qty + 1 > st) return UI.toast('Stok hanya ' + UI.num(st), 'warn');
-    it.qty++;
+    it.qty += qty;
   } else {
     cart.push({
-      id: p.id, name: p.name, price: Number(p.price) || 0,
-      cost: Number(p.cost) || 0, qty: 1, stock: st,
+      key: key, id: p.id, base: p.name, addons: chosen,
+      name: p.name + (names.length ? ' (+' + names.join(', +') + ')' : ''),
+      price: (Number(p.price) || 0) + extra,
+      cost: Number(p.cost) || 0, qty: qty, stock: st,
     });
   }
   renderCart();
+  return true;
 }
 
-function setQty(id, v) {
-  var it = cart.find(function (x) { return x.id === id; });
+/* ---------- Pilih add-on ---------- */
+var aoProd = null, aoQty = 1;
+
+function openAddon(p) {
+  aoProd = p; aoQty = 1;
+  document.getElementById('aoTitle').textContent = p.name;
+  document.getElementById('aoBase').textContent = UI.rp(p.price);
+  document.getElementById('aoList').innerHTML = addonsOf(p).map(function (a, i) {
+    return '<label class="ao-row">' +
+      '<input type="checkbox" data-i="' + i + '" onchange="aoCalc()">' +
+      '<span class="ao-name">' + UI.esc(a.name) + '</span>' +
+      '<span class="ao-price mono">' + (Number(a.price) ? '+' + UI.rp(a.price) : 'Gratis') + '</span>' +
+    '</label>';
+  }).join('');
+  aoCalc();
+  UI.openModal('mAddon');
+}
+
+function aoChosen() {
+  var list = addonsOf(aoProd);
+  return Array.prototype.slice.call(document.querySelectorAll('#aoList input:checked'))
+    .map(function (c) { return list[Number(c.dataset.i)]; });
+}
+
+function aoBump(d) { aoQty = Math.max(1, aoQty + d); aoCalc(); }
+
+function aoCalc() {
+  if (!aoProd) return;
+  var each = (Number(aoProd.price) || 0) +
+    aoChosen().reduce(function (s, a) { return s + (Number(a.price) || 0); }, 0);
+  document.getElementById('aoQty').textContent = aoQty;
+  document.getElementById('aoTotal').textContent = UI.rp(each * aoQty);
+}
+
+function aoAdd() {
+  if (!aoProd) return;
+  if (addLine(aoProd, aoChosen(), aoQty) !== false) UI.closeModal('mAddon');
+}
+
+function setQty(key, v) {
+  var it = cart.find(function (x) { return x.key === key; });
   if (!it) return;
   v = Math.floor(Number(v) || 0);
-  if (v <= 0)            cart = cart.filter(function (x) { return x.id !== id; });
-  else if (v > it.stock) { it.qty = it.stock; UI.toast('Stok hanya ' + UI.num(it.stock), 'warn'); }
-  else                   it.qty = v;
+  var max = it.stock - usedQty(it.id, key);
+  if (v <= 0)       cart = cart.filter(function (x) { return x.key !== key; });
+  else if (v > max) { it.qty = Math.max(1, max); UI.toast('Stok hanya ' + UI.num(it.stock), 'warn'); }
+  else              it.qty = v;
   renderCart();
 }
 
-function bump(id, d) {
-  var it = cart.find(function (x) { return x.id === id; });
-  if (it) setQty(id, it.qty + d);
+/* Tombol keranjang memakai posisi baris, supaya nama add-on yang
+   mengandung tanda kutip tidak merusak atribut onclick */
+function bumpAt(idx, d)   { var it = cart[idx]; if (it) setQty(it.key, it.qty + d); }
+function setQtyAt(idx, v) { var it = cart[idx]; if (it) setQty(it.key, v); }
+
+function bump(key, d) {
+  var it = cart.find(function (x) { return x.key === key; });
+  if (it) setQty(key, it.qty + d);
 }
 
 function clearCart() {
@@ -334,18 +432,21 @@ function renderCart() {
   if (!cart.length) {
     host.innerHTML = UI.empty('pos', 'Keranjang kosong', 'Pilih produk untuk mulai transaksi');
   } else {
-    host.innerHTML = cart.map(function (i) {
+    host.innerHTML = cart.map(function (i, idx) {
       return '<div class="citem">' +
         '<div class="citem-info">' +
-          '<div class="citem-name">' + UI.esc(i.name) + '</div>' +
+          '<div class="citem-name">' + UI.esc(i.base || i.name) + '</div>' +
+          (i.addons && i.addons.length
+            ? '<div class="citem-addons">' + i.addons.map(function (a) { return '+ ' + UI.esc(a.name); }).join('<br>') + '</div>'
+            : '') +
           '<div class="citem-price">' + UI.rp(i.price) + ' / unit</div>' +
         '</div>' +
         '<div class="citem-right">' +
           '<div class="citem-sub mono">' + UI.rp(i.price * i.qty) + '</div>' +
           '<div class="qty">' +
-            '<button onclick="bump(\'' + i.id + '\',-1)">&minus;</button>' +
-            '<input type="number" value="' + i.qty + '" onchange="setQty(\'' + i.id + '\',this.value)">' +
-            '<button onclick="bump(\'' + i.id + '\',1)">+</button>' +
+            '<button onclick="bumpAt(' + idx + ',-1)">&minus;</button>' +
+            '<input type="number" value="' + i.qty + '" onchange="setQtyAt(' + idx + ',this.value)">' +
+            '<button onclick="bumpAt(' + idx + ',1)">+</button>' +
           '</div>' +
         '</div></div>';
     }).join('');

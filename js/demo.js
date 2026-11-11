@@ -68,7 +68,9 @@ const Demo = (function () {
         p('p8', 'c3', 'Kentang Goreng',      15000,  6500, 22, 8),
         p('p9', 'c3', 'Roti Bakar',          12000,  5000,  0, 5),
         p('p10','c3', 'Pisang Goreng',       10000,  4000, 14, 6),
-      ],
+      ].map((x) => (x.id === 'p1' ? Object.assign(x, { addons: [
+        { name: 'Extra shot', price: 5000 }, { name: 'Oat milk', price: 6000 }, { name: 'Less sugar', price: 0 },
+      ] }) : x)),
       stock_movements: [], orders: [], order_items: [], expenses: [], payments: [],
       payment_credentials: [],
       _session: null,

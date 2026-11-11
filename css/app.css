@@ -988,3 +988,19 @@ html[data-theme='dark'] .feat-ico { color: var(--text); }
 .seg-btn { border: 0; background: none; padding: 9px; border-radius: 7px; font: inherit;
            font-size: 14px; font-weight: 600; color: var(--text-mid); cursor: pointer; }
 .seg-btn.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+/* ---------- Add-on ---------- */
+.pcard-ao { font-size: 10.5px; font-weight: 600; color: var(--brand); background: rgba(124,58,237,.12);
+            padding: 1px 6px; border-radius: 99px; margin-left: 4px; vertical-align: 2px; }
+.citem-addons { font-size: 11.5px; color: var(--text-mid); line-height: 1.45; margin-bottom: 2px; }
+.ao-list { display: flex; flex-direction: column; gap: 6px; }
+.ao-row { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--border);
+          border-radius: var(--r); cursor: pointer; transition: border-color .12s, background .12s; }
+.ao-row:hover { background: var(--surface-2); }
+.ao-row:has(input:checked) { border-color: var(--accent); background: rgba(37,99,235,.10); }
+.ao-row input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.ao-name { flex: 1; font-size: 14px; font-weight: 550; }
+.ao-price { font-size: 13px; color: var(--text-mid); }
+.ao-qty { min-width: 34px; text-align: center; font-weight: 700; }
+.addon-ed { display: flex; flex-direction: column; gap: 8px; }
+.addon-ed .ae-row { display: grid; grid-template-columns: 1fr 120px 36px; gap: 8px; }

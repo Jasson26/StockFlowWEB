@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6C4CF1">
 <title>Produk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261106b">
+<link rel="stylesheet" href="css/app.css?v=20261111a">
 </head>
 <body>
 
@@ -100,6 +100,12 @@
         </div>
       </div>
 
+      <div class="field mb0">
+        <div class="row mb8"><label class="label mb0">ADD-ON</label><div class="spacer"></div>
+          <button type="button" class="btn btn-sm" onclick="aeAdd()">+ Tambah add-on</button></div>
+        <div id="aeList" class="addon-ed"></div>
+        <div class="hint">Misal: Extra shot Rp 5.000, Keju Rp 3.000, Less sugar Rp 0. Dipilih kasir saat produk diketuk.</div>
+      </div>
     </div>
     <div class="modal-ft">
       <button class="btn" onclick="UI.closeModal('mEdit')">Batal</button>
@@ -125,13 +131,13 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261106b"></script>
-<script src="js/config.js?v=20261106b"></script>
-<script src="js/demo.js?v=20261106b"></script>
-<script src="js/demo.js?v=20261106b"></script>
-<script src="js/api.js?v=20261106b"></script>
-<script src="js/auth.js?v=20261106b"></script>
-<script src="js/ui.js?v=20261106b"></script>
+<script src="js/icons.js?v=20261111a"></script>
+<script src="js/config.js?v=20261111a"></script>
+<script src="js/demo.js?v=20261111a"></script>
+<script src="js/demo.js?v=20261111a"></script>
+<script src="js/api.js?v=20261111a"></script>
+<script src="js/auth.js?v=20261111a"></script>
+<script src="js/ui.js?v=20261111a"></script>
 <script>
 if (!Auth.guard(true)) throw 'redirect';
 var U = Auth.user();
@@ -235,6 +241,7 @@ function openEdit(id) {
 
   imgUrl = p ? p.image_url : null;
   showPrev();
+  aeRender(p && Array.isArray(p.addons) ? p.addons : []);
   document.getElementById('eStock').disabled = false;
   document.getElementById('eStockLbl').textContent = p ? 'STOK' : 'STOK AWAL';
   UI.openModal('mEdit');
@@ -255,6 +262,31 @@ function pickImg(inp) {
   var r = new FileReader();
   r.onload = function (e) { imgUrl = e.target.result; showPrev(); };
   r.readAsDataURL(f);
+}
+
+/* ---------- Editor add-on ---------- */
+function aeRow(a) {
+  return '<div class="ae-row">' +
+    '<input type="text" class="input ae-n" placeholder="Nama add-on" value="' + UI.esc(a.name || '') + '">' +
+    '<input type="number" class="input ae-p" placeholder="Harga" min="0" value="' + (a.price != null ? Number(a.price) : '') + '">' +
+    '<button type="button" class="btn btn-sm btn-ghost" title="Hapus" onclick="this.parentNode.remove()">&times;</button>' +
+  '</div>';
+}
+function aeRender(list) { document.getElementById('aeList').innerHTML = list.map(aeRow).join(''); }
+function aeAdd() {
+  document.getElementById('aeList').insertAdjacentHTML('beforeend', aeRow({}));
+  var rows = document.querySelectorAll('#aeList .ae-n');
+  rows[rows.length - 1].focus();
+}
+function aeRead() {
+  var seen = {};
+  return Array.prototype.slice.call(document.querySelectorAll('#aeList .ae-row')).map(function (r) {
+    return { name: r.querySelector('.ae-n').value.trim().slice(0, 40),
+             price: Math.max(0, Number(r.querySelector('.ae-p').value) || 0) };
+  }).filter(function (a) {
+    if (!a.name || seen[a.name.toLowerCase()]) return false;
+    seen[a.name.toLowerCase()] = 1; return true;
+  }).slice(0, 20);
 }
 
 function delImg() { imgUrl = null; imgFile = null; document.getElementById('eImg').value = ''; showPrev(); }
@@ -284,6 +316,7 @@ async function save() {
     cost: Number(document.getElementById('eCost').value) || 0,
     min_stock: Number(document.getElementById('eMin').value) || 0,
     image_url: url,
+    addons: aeRead(),
   };
 
   var newStock = Math.max(0, Number(document.getElementById('eStock').value) || 0);
@@ -332,6 +365,8 @@ async function logEdit(pid, old, next) {
   if ((old.unit || 'pcs') !== next.unit) changes.push('satuan ' + (old.unit || 'pcs') + ' → ' + next.unit);
   if (Number(old.min_stock) !== Number(next.min_stock)) changes.push('stok minimum ' + UI.num(old.min_stock) + ' → ' + UI.num(next.min_stock));
   if ((old.image_url || null) !== (next.image_url || null)) changes.push(next.image_url ? 'foto diganti' : 'foto dihapus');
+  var aoTxt = function (l) { return (l || []).map(function (a) { return a.name + ' ' + UI.rp(a.price); }).join(', ') || 'tidak ada'; };
+  if (JSON.stringify(old.addons || []) !== JSON.stringify(next.addons || [])) changes.push('add-on ' + aoTxt(old.addons) + ' → ' + aoTxt(next.addons));
 
   var oldStock = Number(old.stock) || 0, newStock = Number(next.stock) || 0;
   if (oldStock !== newStock) {

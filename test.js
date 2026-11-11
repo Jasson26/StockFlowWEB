@@ -1245,10 +1245,43 @@ section('[34] Owner vs staff, kode karyawan, log produk, bukti rusak, harga');
 
   /* Halaman depan */
   const ix9 = R('index.html');
-  ok('harga mulai Rp 100rb', /Rp 100rb/.test(ix9));
+  ok('harga mulai tercantum', /Rp 39rb/.test(ix9));
   ok('tidak ada lagi "gratis"', !/gratis/i.test(ix9));
   ok('ada maskot animasi', /function struki\(/.test(ix9) && /@keyframes st-bob/.test(R('css/landing.css')));
   ok('animasi menghormati reduced-motion', /prefers-reduced-motion: reduce\)\s*\{\s*\.st-body/.test(R('css/landing.css')));
+}
+
+/* ============================================================ */
+section('[35] Add-on, halaman depan 39rb + WhatsApp, laporan baru');
+{
+  const R = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
+  const pos = R('pos.html'), prd = R('products.html'), ix = R('index.html'), rp = R('reports.html');
+  const mg4 = R('migrasi-04-addon.sql');
+
+  ok('kolom add-on di produk (migrasi aman)', /add column if not exists addons jsonb/.test(mg4) && !/drop table/i.test(mg4));
+  ok('schema penuh memuat add-on', /products_addons_is_array/.test(R('schema.sql')));
+  ok('editor add-on di form produk', /id="aeList"/.test(prd) && /addons: aeRead\(\)/.test(prd));
+  ok('perubahan add-on tercatat di log', /'add-on ' \+ aoTxt\(old\.addons\)/.test(prd));
+  ok('kasir membuka pilihan add-on', /if \(addonsOf\(p\)\.length\) return openAddon\(p\)/.test(pos) && /id="mAddon"/.test(pos));
+  ok('baris keranjang dibedakan per kombinasi add-on', /var key = p\.id \+ \(names\.length/.test(pos));
+  ok('stok dihitung dari semua baris produk', /function usedQty\(pid, exceptKey\)/.test(pos));
+  ok('tombol keranjang tidak menyisipkan nama ke onclick', /bumpAt\(' \+ idx/.test(pos) && !/bump\(\\'' \+ k/.test(pos));
+  ok('harga add-on masuk ke harga baris', /price: \(Number\(p\.price\) \|\| 0\) \+ extra/.test(pos));
+
+  ok('tombol Daftar di navigasi dihapus', !/class="btn btn-primary">Daftar</.test(ix));
+  ok('tombol Daftarkan toko & Lihat demo di hero dihapus', !/hero-acts/.test(ix.split('id="cara"')[0]));
+  ok('bagian "Siap mulai hari ini?" dihapus', !/Siap mulai hari ini/.test(ix));
+  ok('harga Rp 39rb', /price-big">Rp 39rb/.test(ix) && !/100rb/.test(ix));
+  ok('tombol harga ke WhatsApp 6285609339578', /btn btn-wa[\s\S]{0,40}|wa\.me\/6285609339578/.test(ix) && /href="https:\/\/wa\.me\/6285609339578[^"]*"[^>]*class="btn btn-wa/.test(ix));
+  ok('logo dianimasikan', /\.brand-word[\s\S]{0,400}animation/.test(R('css/landing.css')));
+  ok('ketentuan ikut 39.000', /Rp 39\.000/.test(R('ketentuan.html')));
+
+  ok('laporan: ringkasan dalam kalimat', /var say = S\.n/.test(rp));
+  ok('laporan: dibanding periode sebelumnya', /function prevRange\(\)/.test(rp));
+  ok('laporan: untung dijelaskan bertahap', /Modal barang/.test(rp) && /Untung bersih/.test(rp));
+  ok('laporan: produk laku digabung per produk (varian add-on tidak terpecah)', /var k = i\.product_id \|\| i\.name/.test(rp));
+  ok('laporan: porsi cara bayar', /id="pay"/.test(rp));
+  ok('laporan: grafik punya label sumbu', /class="rp-x"/.test(rp));
 }
 
 /* ============================================================ */

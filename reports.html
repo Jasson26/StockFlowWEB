@@ -3,16 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#6C4CF1">
+<meta name="theme-color" content="#1F2937">
 <title>Laporan — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261106b">
+<link rel="stylesheet" href="css/app.css?v=20261111a">
+<style>
+.rp-top .chips { flex-wrap: wrap; }
+.rp-hero {
+  border-radius: 16px; padding: 22px 24px; color: #fff;
+  background: linear-gradient(135deg, #1F2937 0%, #312E81 60%, #6D28D9 100%);
+  display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center;
+}
+.rp-hero .lbl { font-size: 13px; opacity: .75; font-weight: 600; letter-spacing: .02em; }
+.rp-hero .big { font-size: clamp(30px, 5vw, 42px); font-weight: 750; letter-spacing: -.03em; line-height: 1.1; margin: 4px 0 8px; }
+.rp-hero .say { font-size: 14.5px; opacity: .9; line-height: 1.55; max-width: 60ch; }
+.rp-hero .say b { color: #fff; }
+.rp-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700;
+            padding: 3px 9px; border-radius: 99px; background: rgba(255,255,255,.14); }
+.rp-delta.up { color: #86EFAC; } .rp-delta.down { color: #FCA5A5; }
+.rp-ring { width: 104px; height: 104px; }
+@media (max-width: 620px) { .rp-hero { grid-template-columns: 1fr; } .rp-ring { display: none; } }
+
+.rp-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 900px) { .rp-kpis { grid-template-columns: repeat(2, 1fr); } }
+.rp-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.rp-kpi .k-l { font-size: 12.5px; color: var(--text-mid); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.rp-kpi .k-v { font-size: 21px; font-weight: 750; letter-spacing: -.02em; margin-top: 4px; }
+.rp-kpi .k-s { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.rp-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+.rp-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .rp-grid { grid-template-columns: 1fr; } }
+.rp-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.rp-h h3 { font-size: 15.5px; font-weight: 700; flex: 1; }
+
+.rp-chart { height: 230px; display: flex; flex-direction: column; }
+.rp-bars { flex: 1; display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--border); position: relative; }
+.rp-bar { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+.rp-bar i { display: block; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, #8B5CF6, #6D28D9); min-height: 2px; transition: height .5s cubic-bezier(.2,.8,.2,1); }
+.rp-bar.zero i { background: var(--border); }
+.rp-bar.peak i { background: linear-gradient(180deg, #A78BFA, #7C3AED); box-shadow: 0 6px 14px rgba(124,58,237,.35); }
+.rp-bar .tip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap;
+               background: var(--ink); color: #fff; font-size: 11.5px; font-weight: 600; padding: 4px 8px; border-radius: 6px;
+               opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 2; }
+.rp-bar:hover .tip { opacity: 1; }
+.rp-bars { padding-top: 28px; }
+.k-s.up { color: var(--ok); } .k-s.down { color: var(--danger); }
+.rp-bar:hover i { filter: brightness(1.12); }
+.rp-x { display: flex; gap: 4px; margin-top: 6px; }
+.rp-x span { flex: 1; min-width: 0; text-align: center; font-size: 10.5px; color: var(--text-dim); overflow: hidden; white-space: nowrap; }
+
+.rp-pl { display: flex; flex-direction: column; gap: 2px; }
+.rp-pl .r { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px dashed var(--border); }
+.rp-pl .r:last-child { border-bottom: 0; }
+.rp-pl .op { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+.rp-pl .op.plus { background: rgba(4,120,87,.12); color: var(--ok); }
+.rp-pl .op.min  { background: rgba(185,28,28,.10); color: var(--danger); }
+.rp-pl .op.eq   { background: rgba(124,58,237,.14); color: #7C3AED; }
+.rp-pl .t b { display: block; font-size: 14px; font-weight: 650; }
+.rp-pl .t small { font-size: 12px; color: var(--text-dim); }
+.rp-pl .v { font-weight: 700; font-family: var(--ff-num); font-size: 14px; }
+.rp-pl .r.final { border-top: 2px solid var(--border); border-bottom: 0; margin-top: 4px; padding-top: 12px; }
+.rp-pl .r.final .v { font-size: 18px; }
+
+.rp-rank { display: flex; flex-direction: column; gap: 10px; }
+.rp-rank .it { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; }
+.rp-rank .no { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 750; font-size: 12.5px;
+               background: var(--surface-2); color: var(--text-mid); }
+.rp-rank .it:nth-child(1) .no { background: #FEF3C7; color: #B45309; }
+.rp-rank .it:nth-child(2) .no { background: #E5E7EB; color: #374151; }
+.rp-rank .it:nth-child(3) .no { background: #FFEDD5; color: #C2410C; }
+.rp-rank .nm { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-rank .meter { height: 6px; border-radius: 99px; background: var(--surface-2); margin-top: 5px; overflow: hidden; }
+.rp-rank .meter i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #7C3AED, #2563EB); }
+.rp-rank .val { text-align: right; font-size: 13px; }
+.rp-rank .val b { display: block; font-family: var(--ff-num); }
+.rp-rank .val small { color: var(--text-dim); }
+
+.rp-split { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: var(--surface-2); margin-bottom: 10px; }
+.rp-split i { display: block; height: 100%; }
+.rp-legend { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+.rp-legend .l { display: flex; align-items: center; gap: 8px; }
+.rp-legend .l b { margin-left: auto; font-family: var(--ff-num); }
+
+.rp-low { display: flex; flex-direction: column; gap: 8px; }
+.rp-low .it { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.rp-low .it span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
+</style>
 </head>
 <body>
 
 <div id="app">
 <div class="content">
 
-  <div class="row wrap mb16">
+  <div class="row wrap mb16 rp-top">
     <div class="chips">
       <button class="chip on" data-r="today"     onclick="setRange('today')">Hari ini</button>
       <button class="chip"    data-r="yesterday" onclick="setRange('yesterday')">Kemarin</button>
@@ -21,50 +104,37 @@
       <button class="chip"    data-r="year"      onclick="setRange('year')">Tahun ini</button>
     </div>
     <div class="spacer"></div>
-    <button class="btn" onclick="exportCsv()"><span data-ico="download" data-ico-size="16"></span>Export CSV</button>
+    <button class="btn btn-sm" onclick="openExp()">+ Pengeluaran</button>
+    <button class="btn btn-sm" onclick="exportCsv()"><span data-ico="download" data-ico-size="15"></span>CSV</button>
   </div>
 
-  <!-- RINGKASAN KEUANGAN -->
-  <div class="grid g4 keep mb16" id="kpi"></div>
+  <!-- RINGKASAN UTAMA -->
+  <div class="rp-hero mb16" id="hero"></div>
 
-  <div class="grid g2 mb16">
-    <!-- GRAFIK PENJUALAN -->
+  <!-- 4 ANGKA PENTING -->
+  <div class="rp-kpis mb16" id="kpi"></div>
+
+  <div class="rp-grid mb16">
     <div class="card">
-      <div class="row mb16"><h3 style="font-size:15.5px;font-weight:700">Tren Penjualan</h3></div>
-      <div id="chart" style="height:220px"></div>
+      <div class="rp-h"><h3>Penjualan</h3><span class="c-dim fs12" id="chartHint"></span></div>
+      <div id="chart" class="rp-chart"></div>
     </div>
-
-    <!-- LABA RUGI -->
     <div class="card">
-      <div class="row mb16"><h3 style="font-size:15.5px;font-weight:700">Laba Rugi</h3>
-        <div class="spacer"></div>
-        <button class="btn btn-sm" onclick="openExp()">+ Pengeluaran</button>
-      </div>
+      <div class="rp-h"><h3>Dari mana untungnya?</h3></div>
       <div id="pl"></div>
     </div>
   </div>
 
-  <div class="grid g2">
-    <!-- PRODUK TERLARIS -->
-    <div class="card p0">
-      <div class="card-hd"><h3>Produk Terlaris</h3></div>
-      <div class="table-wrap">
-        <table class="tbl">
-          <thead><tr><th>Produk</th><th class="num">Terjual</th><th class="num">Omzet</th></tr></thead>
-          <tbody id="topRows"></tbody>
-        </table>
-      </div>
+  <div class="rp-grid">
+    <div class="card">
+      <div class="rp-h"><h3>Produk paling laku</h3></div>
+      <div id="top"></div>
     </div>
-
-    <!-- STOK PERLU PERHATIAN -->
-    <div class="card p0">
-      <div class="card-hd"><h3>Stok Perlu Perhatian</h3></div>
-      <div class="table-wrap">
-        <table class="tbl">
-          <thead><tr><th>Produk</th><th class="num">Stok</th><th class="num">Min</th></tr></thead>
-          <tbody id="lowRows"></tbody>
-        </table>
-      </div>
+    <div class="card">
+      <div class="rp-h"><h3>Cara bayar</h3></div>
+      <div id="pay" class="mb16"></div>
+      <div class="rp-h" style="margin-top:6px"><h3>Stok hampir habis</h3></div>
+      <div id="low"></div>
     </div>
   </div>
 
@@ -104,13 +174,12 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261106b"></script>
-<script src="js/config.js?v=20261106b"></script>
-<script src="js/demo.js?v=20261106b"></script>
-<script src="js/demo.js?v=20261106b"></script>
-<script src="js/api.js?v=20261106b"></script>
-<script src="js/auth.js?v=20261106b"></script>
-<script src="js/ui.js?v=20261106b"></script>
+<script src="js/icons.js?v=20261111a"></script>
+<script src="js/config.js?v=20261111a"></script>
+<script src="js/demo.js?v=20261111a"></script>
+<script src="js/api.js?v=20261111a"></script>
+<script src="js/auth.js?v=20261111a"></script>
+<script src="js/ui.js?v=20261111a"></script>
 <script>
 if (!Auth.guard(true)) throw 'redirect';
 var U = Auth.user();
@@ -155,135 +224,235 @@ function inRange(s) {
   return d >= r[0] && d < r[1];
 }
 
-function render() {
-  var os = orders.filter(function (o) { return inRange(o.created_at); });
-  var oid = {}; os.forEach(function (o) { oid[o.id] = true; });
-  var its = items.filter(function (i) { return oid[i.order_id]; });
-  var exp = expenses.filter(function (e) { return inRange(e.created_at); });
-  var dmg = moves.filter(function (m) { return inRange(m.created_at); });
+var LABEL = { today: 'hari ini', yesterday: 'kemarin', week: '7 hari terakhir', month: 'bulan ini', year: 'tahun ini' };
+var PREV  = { today: 'kemarin', yesterday: 'hari sebelumnya', week: '7 hari sebelumnya', month: 'bulan lalu', year: 'tahun lalu' };
 
-  var rev   = os.reduce(function (s, o) { return s + Number(o.total || 0); }, 0);
-  var hpp   = os.reduce(function (s, o) { return s + Number(o.cost_total || 0); }, 0);
-  var disc  = os.reduce(function (s, o) { return s + Number(o.discount || 0); }, 0);
-  var gross = rev - hpp;
-  var opex  = exp.reduce(function (s, e) { return s + Number(e.amount || 0); }, 0);
-  var loss  = dmg.reduce(function (s, m) {
+/* Periode pembanding dengan panjang yang sama, tepat sebelum periode ini */
+function prevRange() {
+  var r = UI.range(curRange);
+  if (curRange === 'month') {
+    var s = new Date(r[0]); s.setMonth(s.getMonth() - 1);
+    var e = new Date(s); e.setDate(e.getDate() + Math.round((r[1] - r[0]) / 86400000));
+    return [s, e];
+  }
+  if (curRange === 'year') {
+    var ys = new Date(r[0]); ys.setFullYear(ys.getFullYear() - 1);
+    var ye = new Date(r[1]); ye.setFullYear(ye.getFullYear() - 1);
+    return [ys, ye];
+  }
+  var len = r[1] - r[0];
+  return [new Date(r[0] - len), new Date(r[0])];
+}
+
+function between(s, r) { var d = new Date(s); return d >= r[0] && d < r[1]; }
+
+function summarize(os, its, exp, dmg) {
+  var rev  = os.reduce(function (s, o) { return s + Number(o.total || 0); }, 0);
+  var hpp  = os.reduce(function (s, o) { return s + Number(o.cost_total || 0); }, 0);
+  var disc = os.reduce(function (s, o) { return s + Number(o.discount || 0); }, 0);
+  var opex = exp.reduce(function (s, e) { return s + Number(e.amount || 0); }, 0);
+  var loss = dmg.reduce(function (s, m) {
     var p = products.find(function (x) { return x.id === m.product_id; });
     return s + (p ? Number(p.cost || 0) : 0) * Number(m.qty || 0);
   }, 0);
-  var net   = gross - opex - loss;
-  var qty   = its.reduce(function (s, i) { return s + Number(i.qty || 0); }, 0);
+  var qty = its.reduce(function (s, i) { return s + Number(i.qty || 0); }, 0);
+  return { rev: rev, hpp: hpp, disc: disc, opex: opex, loss: loss, qty: qty,
+           gross: rev - hpp, net: rev - hpp - opex - loss, n: os.length };
+}
 
-  /* ---------- KPI ---------- */
-  document.getElementById('kpi').innerHTML =
-    '<div class="stat accent"><div class="stat-lbl">OMZET</div><div class="stat-val" style="font-size:20px">' + UI.rp(rev) + '</div>' +
-      '<div class="stat-sub">' + os.length + ' transaksi</div></div>' +
-    '<div class="stat"><div class="stat-lbl">Laba Kotor</div><div class="stat-val c-ok" style="font-size:20px">' + UI.rp(gross) + '</div>' +
-      '<div class="stat-sub">Margin ' + (rev ? Math.round(gross / rev * 100) : 0) + '%</div></div>' +
-    '<div class="stat"><div class="stat-lbl">Laba Bersih</div><div class="stat-val ' + (net >= 0 ? 'c-ok' : 'c-danger') + '" style="font-size:20px">' + UI.rp(net) + '</div>' +
-      '<div class="stat-sub">Setelah biaya</div></div>' +
-    '<div class="stat"><div class="stat-lbl">Unit Terjual</div><div class="stat-val">' + UI.num(qty) + '</div>' +
-      '<div class="stat-sub">Rata-rata ' + UI.rp(os.length ? rev / os.length : 0) + '/transaksi</div></div>';
+function delta(now, before) {
+  if (!before) return now ? { pct: null, up: true } : null;
+  var p = Math.round((now - before) / Math.abs(before) * 100);
+  return { pct: p, up: p >= 0 };
+}
 
-  /* ---------- LABA RUGI ---------- */
-  var plRow = function (label, val, opt) {
-    opt = opt || {};
-    return '<div class="sumrow' + (opt.total ? ' total' : '') + '"' +
-      (opt.indent ? ' style="padding-left:14px"' : '') + '>' +
-      '<span>' + label + '</span><span class="mono' + (opt.cls ? ' ' + opt.cls : '') + '">' +
-      (opt.neg ? '-' : '') + UI.rp(Math.abs(val)) + '</span></div>';
+function deltaHtml(d) {
+  if (!d) return '';
+  if (d.pct === null) return '<span class="rp-delta up">baru</span>';
+  return '<span class="rp-delta ' + (d.up ? 'up' : 'down') + '">' + (d.up ? '▲' : '▼') + ' ' + Math.abs(d.pct) + '%</span>';
+}
+
+function render() {
+  var r = UI.range(curRange), pr = prevRange();
+  var os  = orders.filter(function (o) { return between(o.created_at, r); });
+  var pos = orders.filter(function (o) { return between(o.created_at, pr); });
+  var oid = {}; os.forEach(function (o) { oid[o.id] = true; });
+  var its = items.filter(function (i) { return oid[i.order_id]; });
+
+  var S = summarize(os, its,
+    expenses.filter(function (e) { return between(e.created_at, r); }),
+    moves.filter(function (m) { return between(m.created_at, r); }));
+  var P = summarize(pos, [],
+    expenses.filter(function (e) { return between(e.created_at, pr); }),
+    moves.filter(function (m) { return between(m.created_at, pr); }));
+
+  var margin = S.rev ? Math.round(S.net / S.rev * 100) : 0;
+  var dRev = delta(S.rev, P.rev);
+
+  /* ---------- Ringkasan dalam kalimat ---------- */
+  var say = S.n
+    ? 'Ada <b>' + S.n + ' transaksi</b> ' + LABEL[curRange] + ', ' + UI.num(S.qty) + ' barang terjual. ' +
+      'Setelah dikurangi modal dan biaya, <b>untung bersih ' + UI.rp(S.net) + '</b>' +
+      (S.rev ? ' (' + margin + '% dari uang masuk)' : '') + '.' +
+      (dRev && dRev.pct !== null ? ' Uang masuk ' + (dRev.up ? 'naik' : 'turun') + ' ' + Math.abs(dRev.pct) + '% dibanding ' + PREV[curRange] + '.' : '')
+    : 'Belum ada transaksi ' + LABEL[curRange] + '.';
+
+  var ringPct = Math.max(0, Math.min(100, margin));
+  var C = 2 * Math.PI * 42;
+  document.getElementById('hero').innerHTML =
+    '<div>' +
+      '<div class="lbl">UANG MASUK ' + LABEL[curRange].toUpperCase() + '</div>' +
+      '<div class="big">' + UI.rp(S.rev) + '</div>' +
+      '<div class="mb8">' + deltaHtml(dRev) + (dRev ? ' <span style="opacity:.7;font-size:12.5px">vs ' + PREV[curRange] + '</span>' : '') + '</div>' +
+      '<div class="say">' + say + '</div>' +
+    '</div>' +
+    '<svg class="rp-ring" viewBox="0 0 100 100" aria-label="Margin untung ' + margin + '%">' +
+      '<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="10"/>' +
+      '<circle cx="50" cy="50" r="42" fill="none" stroke="' + (S.net >= 0 ? '#86EFAC' : '#FCA5A5') + '" stroke-width="10" stroke-linecap="round" ' +
+        'stroke-dasharray="' + (C * ringPct / 100).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 50 50)"/>' +
+      '<text x="50" y="48" text-anchor="middle" fill="#fff" font-size="20" font-weight="800">' + margin + '%</text>' +
+      '<text x="50" y="64" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9.5" font-weight="600">untung</text>' +
+    '</svg>';
+
+  /* ---------- 4 angka penting ---------- */
+  var kpi = function (dot, label, val, sub, cls) {
+    return '<div class="rp-kpi"><div class="k-l"><span class="rp-dot" style="background:' + dot + '"></span>' + label + '</div>' +
+      '<div class="k-v ' + (cls || '') + '">' + val + '</div><div class="k-s' + (/^▲/.test(sub) ? ' up' : /^▼/.test(sub) ? ' down' : '') + '">' + sub + '</div></div>';
   };
+  var dNet = delta(S.net, P.net), dN = delta(S.n, P.n);
+  document.getElementById('kpi').innerHTML =
+    kpi('#7C3AED', 'Untung bersih', UI.rp(S.net), dNet && dNet.pct !== null ? (dNet.up ? '▲ ' : '▼ ') + Math.abs(dNet.pct) + '% vs ' + PREV[curRange] : 'setelah semua biaya', S.net >= 0 ? 'c-ok' : 'c-danger') +
+    kpi('#2563EB', 'Transaksi', UI.num(S.n), dN && dN.pct !== null ? (dN.up ? '▲ ' : '▼ ') + Math.abs(dN.pct) + '% vs ' + PREV[curRange] : 'jumlah pembeli') +
+    kpi('#0EA5E9', 'Rata-rata belanja', UI.rp(S.n ? S.rev / S.n : 0), 'per transaksi') +
+    kpi('#F59E0B', 'Barang terjual', UI.num(S.qty), 'unit');
 
-  document.getElementById('pl').innerHTML =
-    plRow('Penjualan', rev) +
-    plRow('Harga Pokok Penjualan', hpp, { neg: true, indent: true, cls: 'c-mid' }) +
-    '<div class="sumrow fw7" style="border-top:1px solid var(--border);padding-top:8px;color:var(--text)">' +
-      '<span>Laba Kotor</span><span class="mono c-ok">' + UI.rp(gross) + '</span></div>' +
-    plRow('Biaya Operasional', opex, { neg: true, indent: true, cls: 'c-mid' }) +
-    plRow('Kerugian Barang Rusak', loss, { neg: true, indent: true, cls: 'c-mid' }) +
-    '<div class="sumrow total"><span>Laba Bersih</span>' +
-      '<span class="mono ' + (net >= 0 ? 'c-ok' : 'c-danger') + '">' + UI.rp(net) + '</span></div>' +
-    (disc ? '<div class="fs12 c-dim tc">Total diskon diberikan: ' + UI.rp(disc) + '</div>' : '');
+  /* ---------- Untung dalam bahasa sehari-hari ---------- */
+  var row = function (op, title, hint, val, cls, final) {
+    return '<div class="r' + (final ? ' final' : '') + '"><span class="op ' + op + '">' + (op === 'plus' ? '+' : op === 'min' ? '−' : '=') + '</span>' +
+      '<span class="t"><b>' + title + '</b><small>' + hint + '</small></span>' +
+      '<span class="v ' + (cls || '') + '">' + UI.rp(val) + '</span></div>';
+  };
+  document.getElementById('pl').innerHTML = '<div class="rp-pl">' +
+    row('plus', 'Uang masuk', 'total semua penjualan' + (S.disc ? ', sudah dipotong diskon ' + UI.rp(S.disc) : ''), S.rev) +
+    row('min',  'Modal barang', 'harga beli barang yang terjual', S.hpp, 'c-mid') +
+    row('min',  'Pengeluaran', 'sewa, gaji, listrik, dll', S.opex, 'c-mid') +
+    row('min',  'Barang rusak', 'nilai modal barang yang rusak', S.loss, 'c-mid') +
+    row('eq',   'Untung bersih', S.net >= 0 ? 'yang benar-benar Anda dapat' : 'periode ini masih rugi', S.net, S.net >= 0 ? 'c-ok' : 'c-danger', true) +
+  '</div>';
 
-  /* ---------- GRAFIK ---------- */
+  /* ---------- Grafik ---------- */
   drawChart(os);
 
-  /* ---------- TERLARIS ---------- */
+  /* ---------- Produk paling laku (digabung per produk, termasuk varian add-on) ---------- */
   var agg = {};
   its.forEach(function (i) {
-    var k = i.name;
-    if (!agg[k]) agg[k] = { qty: 0, rev: 0 };
+    var k = i.product_id || i.name;
+    if (!agg[k]) {
+      var p = products.find(function (x) { return x.id === i.product_id; });
+      agg[k] = { name: p ? p.name : String(i.name || '').replace(/\s*\(\+.*\)$/, ''), qty: 0, rev: 0 };
+    }
     agg[k].qty += Number(i.qty || 0);
     agg[k].rev += Number(i.subtotal || 0);
   });
-  var top = Object.keys(agg).map(function (k) { return { name: k, qty: agg[k].qty, rev: agg[k].rev }; })
-    .sort(function (a, b) { return b.qty - a.qty; }).slice(0, 8);
+  var top = Object.keys(agg).map(function (k) { return agg[k]; })
+    .sort(function (a, b) { return b.qty - a.qty || b.rev - a.rev; }).slice(0, 6);
+  var maxQ = top.length ? top[0].qty : 1;
+  document.getElementById('top').innerHTML = top.length
+    ? '<div class="rp-rank">' + top.map(function (t, idx) {
+        return '<div class="it"><span class="no">' + (idx + 1) + '</span>' +
+          '<div style="min-width:0"><div class="nm">' + UI.esc(t.name) + '</div>' +
+          '<div class="meter"><i style="width:' + Math.max(4, t.qty / maxQ * 100).toFixed(1) + '%"></i></div></div>' +
+          '<div class="val"><b>' + UI.num(t.qty) + ' terjual</b><small>' + UI.rp(t.rev) + '</small></div></div>';
+      }).join('') + '</div>'
+    : UI.empty('chart', 'Belum ada penjualan', 'Belum ada transaksi pada periode ini.');
 
-  document.getElementById('topRows').innerHTML = top.length
-    ? top.map(function (t, idx) {
-        return '<tr><td><span class="badge' + (idx < 3 ? ' brand' : '') + '" style="margin-right:7px">' + (idx + 1) + '</span>' +
-          '<span class="fw7">' + UI.esc(t.name) + '</span></td>' +
-          '<td class="num fw7 mono">' + UI.num(t.qty) + '</td>' +
-          '<td class="num mono">' + UI.rp(t.rev) + '</td></tr>';
-      }).join('')
-    : '<tr><td colspan="3">' + UI.empty('chart', 'Belum ada penjualan', 'Belum ada transaksi pada periode ini.') + '</td></tr>';
+  /* ---------- Cara bayar ---------- */
+  var by = { cash: 0, qris: 0, transfer: 0 };
+  os.forEach(function (o) { by[o.payment_method] = (by[o.payment_method] || 0) + Number(o.total || 0); });
+  var PM = [['cash', 'Tunai', '#10B981'], ['qris', 'QRIS', '#7C3AED'], ['transfer', 'Transfer', '#0EA5E9']]
+    .filter(function (m) { return m[0] !== 'transfer' || by.transfer; });
+  var tot = S.rev || 1;
+  document.getElementById('pay').innerHTML = S.rev
+    ? '<div class="rp-split">' + PM.map(function (m) { return '<i style="width:' + (by[m[0]] / tot * 100) + '%;background:' + m[2] + '"></i>'; }).join('') + '</div>' +
+      '<div class="rp-legend">' + PM.map(function (m) {
+        return '<div class="l"><span class="rp-dot" style="background:' + m[2] + '"></span>' + m[1] +
+          ' <span class="c-dim fs12">' + Math.round(by[m[0]] / tot * 100) + '%</span><b>' + UI.rp(by[m[0]]) + '</b></div>';
+      }).join('') + '</div>'
+    : '<div class="c-dim fs13">Belum ada pembayaran.</div>';
 
-  /* ---------- STOK RENDAH ---------- */
-  var low = products.filter(function (p) {
-    return Number(p.stock) <= Number(p.min_stock || 0);
-  }).sort(function (a, b) { return Number(a.stock) - Number(b.stock); }).slice(0, 8);
-
-  document.getElementById('lowRows').innerHTML = low.length
-    ? low.map(function (p) {
+  /* ---------- Stok hampir habis ---------- */
+  var low = products.filter(function (p) { return Number(p.stock) <= Number(p.min_stock || 0); })
+    .sort(function (a, b) { return Number(a.stock) - Number(b.stock); }).slice(0, 6);
+  document.getElementById('low').innerHTML = low.length
+    ? '<div class="rp-low">' + low.map(function (p) {
         var st = Number(p.stock) || 0;
-        return '<tr><td class="fw7">' + UI.esc(p.name) + '</td>' +
-          '<td class="num"><span class="badge ' + (st <= 0 ? 'danger' : 'warn') + '">' + UI.num(st) + '</span></td>' +
-          '<td class="num c-dim mono">' + UI.num(p.min_stock) + '</td></tr>';
-      }).join('')
-    : '<tr><td colspan="3">' + UI.empty('check', 'Semua stok aman', 'Tidak ada produk di bawah batas minimum') + '</td></tr>';
+        return '<div class="it"><span>' + UI.esc(p.name) + '</span>' +
+          '<span class="badge ' + (st <= 0 ? 'danger' : 'warn') + '">' + (st <= 0 ? 'Habis' : 'Sisa ' + UI.num(st)) + '</span></div>';
+      }).join('') + '</div>'
+    : '<div class="c-dim fs13">Semua stok aman.</div>';
 }
 
-/* ---------- Grafik batang sederhana (SVG, tanpa library) ---------- */
+/* ---------- Grafik batang dengan label sumbu ---------- */
 function drawChart(os) {
-  var days = curRange === 'today' || curRange === 'yesterday' ? 24 : (curRange === 'week' ? 7 : (curRange === 'year' ? 12 : 30));
-  var byHour = curRange === 'today' || curRange === 'yesterday';
-  var byMonth = curRange === 'year';
-
-  var buckets = new Array(days).fill(0);
   var r = UI.range(curRange);
+  var byHour  = curRange === 'today' || curRange === 'yesterday';
+  var byMonth = curRange === 'year';
+  var n = byHour ? 24 : byMonth ? 12 : Math.max(1, Math.round((r[1] - r[0]) / 86400000));
+  var MON = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
+  var buckets = new Array(n).fill(0);
   os.forEach(function (o) {
-    var d = new Date(o.created_at);
-    var idx;
-    if (byHour)       idx = d.getHours();
+    var d = new Date(o.created_at), idx;
+    if (byHour) idx = d.getHours();
     else if (byMonth) idx = d.getMonth();
-    else              idx = Math.floor((d - r[0]) / 86400000);
-    if (idx >= 0 && idx < days) buckets[idx] += Number(o.total || 0);
+    else idx = Math.floor((d - r[0]) / 86400000);
+    if (idx >= 0 && idx < n) buckets[idx] += Number(o.total || 0);
   });
 
-  var max = Math.max.apply(null, buckets.concat([1]));
-  var W = 100, H = 100, gap = days > 20 ? 0.6 : 1.4;
-  var bw = (W - gap * (days - 1)) / days;
+  /* Untuk jam: tampilkan jam buka saja (06–23) supaya batang tidak terlalu tipis */
+  var from = 0, to = n;
+  if (byHour) {
+    var first = buckets.findIndex(function (v) { return v > 0; });
+    var last = n - 1 - buckets.slice().reverse().findIndex(function (v) { return v > 0; });
+    from = Math.min(first < 0 ? 7 : first, 7); to = Math.max(last < 0 ? 21 : last, 21) + 1;
+  }
 
-  var bars = buckets.map(function (v, i) {
-    var h = max ? (v / max) * (H - 14) : 0;
-    var x = i * (bw + gap);
-    return '<rect x="' + x.toFixed(2) + '" y="' + (H - h).toFixed(2) + '" width="' + bw.toFixed(2) +
-      '" height="' + Math.max(h, v > 0 ? 0.8 : 0).toFixed(2) + '" rx="' + Math.min(bw / 3, 1).toFixed(2) +
-      '" fill="' + (v > 0 ? 'var(--brand)' : 'var(--border)') + '"><title>' +
-      (byHour ? i + ':00' : byMonth ? ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][i]
-        : new Date(r[0].getTime() + i * 86400000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })) +
-      ' — ' + UI.rp(v) + '</title></rect>';
-  }).join('');
+  var label = function (i) {
+    if (byHour) return String(i).padStart(2, '0');
+    if (byMonth) return MON[i];
+    var d = new Date(r[0].getTime() + i * 86400000);
+    return n > 7 ? String(d.getDate()) : d.toLocaleDateString('id-ID', { weekday: 'short' });
+  };
+  var full = function (i) {
+    if (byHour) return String(i).padStart(2, '0') + ':00';
+    if (byMonth) return MON[i];
+    return new Date(r[0].getTime() + i * 86400000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  };
 
-  var total = buckets.reduce(function (s, v) { return s + v; }, 0);
+  var vis = buckets.slice(from, to);
+  var max = Math.max.apply(null, vis.concat([0]));
+  var peak = max > 0 ? vis.indexOf(max) : -1;
+  var step = vis.length > 16 ? Math.ceil(vis.length / 8) : 1;
 
-  document.getElementById('chart').innerHTML = total
-    ? '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">' + bars + '</svg>' +
-      '<div class="row fs12 c-dim mt8"><span>' +
-      (byHour ? '00:00' : byMonth ? 'Jan' : UI.dateOnly(r[0].toISOString())) + '</span><div class="spacer"></div><span>' +
-      (byHour ? '23:00' : byMonth ? 'Des' : 'Sekarang') + '</span></div>'
-    : UI.empty('chart', 'Belum ada data', 'Grafik muncul setelah ada transaksi');
+  document.getElementById('chartHint').textContent = max > 0
+    ? (byHour ? 'Paling ramai jam ' : 'Paling ramai: ') + full(from + peak)
+    : '';
+
+  if (!max) {
+    document.getElementById('chart').innerHTML = UI.empty('chart', 'Belum ada data', 'Grafik muncul setelah ada transaksi');
+    return;
+  }
+
+  document.getElementById('chart').innerHTML =
+    '<div class="rp-bars">' + vis.map(function (v, i) {
+      var h = v / max * 100;
+      return '<div class="rp-bar' + (v ? '' : ' zero') + (i === peak ? ' peak' : '') + '">' +
+        '<span class="tip">' + full(from + i) + ' · ' + UI.rp(v) + '</span>' +
+        '<i style="height:' + (v ? Math.max(h, 3) : 1.5).toFixed(1) + '%"></i></div>';
+    }).join('') + '</div>' +
+    '<div class="rp-x">' + vis.map(function (v, i) {
+      return '<span>' + (i % step === 0 ? label(from + i) : '') + '</span>';
+    }).join('') + '</div>';
 }
 
 /* ---------- Pengeluaran ---------- */
