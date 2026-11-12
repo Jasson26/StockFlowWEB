@@ -3,10 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.midtrans.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<script src="js/boot.js?v=20261113a"></script>
 <meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Masuk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261111a">
+<link rel="stylesheet" href="css/app.css?v=20261113a">
 </head>
 <body>
 
@@ -79,6 +85,21 @@
         </div>
       </div>
 
+      <!-- ============ KODE 6 ANGKA (2FA) ============ -->
+      <div id="vMfa" class="hide">
+        <h1>Verifikasi 2 langkah</h1>
+        <p class="sub">Buka aplikasi autentikator (mis. Google Authenticator) dan masukkan kode 6 angka untuk StockFlow.</p>
+        <form onsubmit="doMfa();return false">
+          <div class="field">
+            <label class="label" for="mfaCode">KODE</label>
+            <input type="text" id="mfaCode" class="input mono" inputmode="numeric" autocomplete="one-time-code"
+                   maxlength="6" placeholder="123456" style="font-size:24px;letter-spacing:.3em;text-align:center" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg mt8" id="mfaBtn">Verifikasi</button>
+        </form>
+        <p class="tc mt16 fs13"><a href="#" onclick="show('vLogin');return false" class="c-mid">Kembali</a></p>
+      </div>
+
       <!-- ============ MASUK KARYAWAN ============ -->
       <div id="vStaff" class="hide">
         <h1>Masuk</h1>
@@ -106,9 +127,15 @@
       <!-- ============ DAFTAR ============ -->
       <div id="vSignup" class="hide">
         <h1>Daftar Toko</h1>
-        <p class="sub">Buat akun owner untuk toko Anda.</p>
+        <p class="sub">Buat akun owner dengan kode aktivasi dari StockFlow.</p>
 
         <form onsubmit="doSignup();return false">
+          <div class="field">
+            <label class="label" for="sCode">KODE AKTIVASI</label>
+            <input type="text" id="sCode" class="input mono" placeholder="SF-XXXX-XXXX" autocomplete="off"
+                   autocapitalize="characters" spellcheck="false" style="letter-spacing:.1em;text-transform:uppercase" required>
+            <div class="hint">Belum punya kode? <a href="https://wa.me/6285609339578?text=Halo%2C%20saya%20ingin%20mendapatkan%20kode%20aktivasi%20StockFlow." target="_blank" rel="noopener" class="fw7">Minta lewat WhatsApp</a></div>
+          </div>
           <div class="field">
             <label class="label" for="sBiz">NAMA TOKO</label>
             <input type="text" id="sBiz" class="input" placeholder="Toko Maju Jaya" required>
@@ -125,7 +152,7 @@
           </div>
           <div class="field">
             <label class="label" for="sPass">PASSWORD</label>
-            <input type="password" id="sPass" class="input" placeholder="Minimal 8 karakter"
+            <input type="password" id="sPass" class="input" placeholder="Min. 8 karakter, huruf + angka"
                    autocomplete="new-password" required>
             <div class="hint">Gunakan password yang belum Anda pakai di layanan lain.</div>
           </div>
@@ -147,6 +174,12 @@
         <div class="notice ok mb20"><div>Masuk sebagai <strong id="setupEmail">&mdash;</strong></div></div>
 
         <form onsubmit="doSetup();return false">
+          <div class="field">
+            <label class="label" for="cCode">KODE AKTIVASI</label>
+            <input type="text" id="cCode" class="input mono" placeholder="SF-XXXX-XXXX" autocomplete="off"
+                   autocapitalize="characters" spellcheck="false" style="letter-spacing:.1em;text-transform:uppercase" required>
+            <div class="hint">Belum punya kode? <a href="https://wa.me/6285609339578?text=Halo%2C%20saya%20ingin%20mendapatkan%20kode%20aktivasi%20StockFlow." target="_blank" rel="noopener" class="fw7">Minta lewat WhatsApp</a></div>
+          </div>
           <div class="field">
             <label class="label" for="cBiz">NAMA TOKO</label>
             <input type="text" id="cBiz" class="input" placeholder="Toko Maju Jaya" required>
@@ -188,12 +221,12 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261111a"></script>
-<script src="js/config.js?v=20261111a"></script>
-<script src="js/demo.js?v=20261111a"></script>
-<script src="js/api.js?v=20261111a"></script>
-<script src="js/auth.js?v=20261111a"></script>
-<script src="js/ui.js?v=20261111a"></script>
+<script src="js/icons.js?v=20261113a"></script>
+<script src="js/config.js?v=20261113a"></script>
+<script src="js/demo.js?v=20261113a"></script>
+<script src="js/api.js?v=20261113a"></script>
+<script src="js/auth.js?v=20261113a"></script>
+<script src="js/ui.js?v=20261113a"></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 document.getElementById('artLogo').innerHTML  = Icons.logo(26);
@@ -219,12 +252,19 @@ if (SF_CONFIG_PROBLEM && !Demo.on()) {
   document.getElementById('cfgProblem').classList.remove('hide');
 }
 if (new URLSearchParams(location.search).get('daftar')) show('vSignup');
+/* Tautan dari admin bisa membawa kode: masuk.html?kode=SF-XXXX-XXXX */
+(function () {
+  var k = new URLSearchParams(location.search).get('kode');
+  if (!k) return;
+  document.getElementById('sCode').value = k.toUpperCase();
+  show('vSignup');
+})();
 if (new URLSearchParams(location.search).get('expired')) {
   document.getElementById('expiredWarn').classList.remove('hide');
 }
 
 function show(id) {
-  ['vLogin', 'vStaff', 'vSignup', 'vForgot', 'vSetup'].forEach(function (v) {
+  ['vLogin', 'vStaff', 'vMfa', 'vSignup', 'vForgot', 'vSetup'].forEach(function (v) {
     document.getElementById(v).classList.toggle('hide', v !== id);
   });
 }
@@ -234,19 +274,25 @@ function showSetup(prefillName) {
   var u = Auth.user() || {};
   document.getElementById('setupEmail').textContent = u.email || '';
   if (prefillName) document.getElementById('cName').value = prefillName;
+  try {
+    var pc = localStorage.getItem('sf5_pending_code');
+    if (pc) document.getElementById('cCode').value = pc;
+  } catch (e) {}
   show('vSetup');
 }
 
 async function doSetup() {
   var bizName = document.getElementById('cBiz').value.trim();
   var name    = document.getElementById('cName').value.trim();
-  if (!bizName || !name) return UI.toast('Lengkapi kedua kolom', 'error');
+  var code    = document.getElementById('cCode').value.trim();
+  if (!code) return UI.toast('Masukkan kode aktivasi', 'error');
+  if (!bizName || !name) return UI.toast('Lengkapi semua kolom', 'error');
 
   var btn = document.getElementById('setupBtn');
   btn.disabled = true;
   UI.loading(true);
 
-  var r = await Auth.completeSetup({ bizName: bizName, name: name });
+  var r = await Auth.completeSetup({ bizName: bizName, name: name, code: code });
 
   UI.loading(false);
   btn.disabled = false;
@@ -276,12 +322,32 @@ async function doLogin() {
   if (r.ok) {
     UI.toast('Selamat datang!', 'ok');
     setTimeout(function () { location.href = 'pos.html'; }, 350);
+  } else if (r.needMfa) {
+    show('vMfa');
+    setTimeout(function () { document.getElementById('mfaCode').focus(); }, 60);
   } else if (r.needSetup) {
     /* Akun aktif tapi tokonya belum dibuat — selesaikan di sini */
     UI.toast(r.msg, 'warn');
     showSetup();
   } else {
     UI.toast(r.msg, 'error');
+  }
+}
+
+async function doMfa() {
+  var code = document.getElementById('mfaCode').value.replace(/\D/g, '');
+  var btn = document.getElementById('mfaBtn');
+  btn.disabled = true; UI.loading(true);
+  var r = await Auth.verifyLoginMfa(code);
+  UI.loading(false); btn.disabled = false;
+  if (r.ok) {
+    UI.toast('Selamat datang!', 'ok');
+    setTimeout(function () { location.href = 'pos.html'; }, 350);
+  } else if (r.needSetup) {
+    showSetup();
+  } else {
+    UI.toast(r.msg, 'error');
+    document.getElementById('mfaCode').select();
   }
 }
 
@@ -310,16 +376,19 @@ async function doSignup() {
   var name    = document.getElementById('sName').value.trim();
   var email   = document.getElementById('sEmail').value.trim();
   var pass    = document.getElementById('sPass').value;
+  var code    = document.getElementById('sCode').value.trim();
 
+  if (!code) return UI.toast('Masukkan kode aktivasi', 'error');
   if (!bizName || !name || !email) return UI.toast('Lengkapi semua kolom', 'error');
-  if (pass.length < 8) return UI.toast('Password minimal 8 karakter', 'error');
+  var pwi = Auth.passwordIssue(pass);
+  if (pwi) return UI.toast(pwi, 'error');
   if (!/^\S+@\S+\.\S+$/.test(email)) return UI.toast('Format email tidak valid', 'error');
 
   var btn = document.getElementById('signupBtn');
   btn.disabled = true;
   UI.loading(true);
 
-  var r = await Auth.signup({ bizName: bizName, name: name, email: email, password: pass });
+  var r = await Auth.signup({ bizName: bizName, name: name, email: email, password: pass, code: code });
 
   UI.loading(false);
   btn.disabled = false;

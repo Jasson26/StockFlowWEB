@@ -396,3 +396,27 @@ transaksi. Refund QRIS harus diproses terpisah di dashboard Midtrans.
 1. Supabase → SQL Editor → jalankan `migrasi-04-addon.sql` (aman, hanya menambah kolom).
    Tanpa ini, menyimpan produk akan gagal karena kolom `addons` belum ada.
 2. Upload ulang semua file ke GitHub, lalu Ctrl+Shift+R.
+
+## Pembaruan v5.5 — kode aktivasi & masa aktif
+
+1. Supabase → SQL Editor → jalankan `migrasi-05-langganan.sql`.
+   - Toko yang sudah ada otomatis **permanen**.
+   - Akun yang paling pertama terdaftar otomatis jadi **admin platform**.
+2. Upload semua file ke GitHub (termasuk `admin.html` yang baru).
+3. Keluar lalu masuk lagi sebagai admin → menu **Admin** muncul di bawah.
+4. Buat kode → kirim via WhatsApp. Pelanggan daftar lewat link yang sudah berisi kode.
+
+## Pembaruan v5.6 — keamanan, shift, refund, offline
+
+1. Supabase → SQL Editor → jalankan **berurutan** (lewati yang sudah):
+   `migrasi-04-addon.sql` → `migrasi-05-langganan.sql` → `migrasi-06-keamanan-shift-refund.sql`
+2. Deploy ulang fungsi:
+   ```
+   supabase functions deploy staff-login --no-verify-jwt
+   supabase functions deploy owner-verify
+   ```
+3. Batasi asal permintaan:
+   `supabase secrets set ALLOWED_ORIGINS=https://jasson26.github.io`
+4. Upload semua file ke GitHub (ada file baru: `audit.html`, `sw.js`,
+   `manifest.webmanifest`, folder `img/`, `js/boot.js`).
+5. Admin: Pengaturan → **Verifikasi 2 langkah** → Aktifkan, lalu keluar-masuk lagi.

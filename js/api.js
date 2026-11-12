@@ -97,7 +97,7 @@ const API = (function () {
       return { data: arr, error: null };
 
     } catch (e) {
-      return { data: null, error: { message: 'Koneksi gagal. Cek internet Anda.' } };
+      return { data: null, error: { message: 'Koneksi gagal. Cek internet Anda.', network: true } };
     }
   };
 
@@ -137,7 +137,7 @@ const API = (function () {
         return { data: json, error: null };
 
       } catch (e) {
-        return { data: null, error: { message: 'Koneksi gagal. Cek internet Anda.' } };
+        return { data: null, error: { message: 'Koneksi gagal. Cek internet Anda.', network: true } };
       }
     },
 

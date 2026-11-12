@@ -6,7 +6,10 @@
 // pernah dikirim ke browser; pencocokan dilakukan di server.
 // ============================================================
 
-import { corsHeaders, json, fail, sbAdmin, authAdmin, env, publicKey, getCaller } from '../_shared/lib.ts';
+import {
+  corsHeaders, json, fail, sbAdmin, authAdmin, env, publicKey, getCaller,
+  tooManyAttempts, recordAttempt, clearAttempts,
+} from '../_shared/lib.ts';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -22,6 +25,12 @@ Deno.serve(async (req) => {
     const b = await req.json().catch(() => ({}));
     const password = String(b.password || '');
     if (!password) return fail('Password owner wajib diisi', 400, origin);
+
+    /* Maks. 5 percobaan salah per 15 menit untuk setiap toko */
+    const keys = ['owner-verify:' + caller.businessId];
+    if (await tooManyAttempts(keys, 5)) {
+      return fail('Terlalu banyak percobaan. Tunggu 15 menit.', 429, origin);
+    }
 
     const oRes = await sbAdmin(
       `/rest/v1/profiles?business_id=eq.${caller.businessId}&role=eq.owner&active=is.true&select=id`,
@@ -39,18 +48,20 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ email: user.email, password }),
       });
       if (t.ok) {
-        /* Sesi uji ini tidak dipakai — langsung dicabut */
+        /* Sesi uji ini tidak dipakai — dicabut (hanya sesi ini; sesi owner di perangkat lain tetap) */
         const tok = await t.json().catch(() => ({}));
         if (tok.access_token) {
-          await fetch(`${env('SUPABASE_URL')}/auth/v1/logout`, {
+          await fetch(`${env('SUPABASE_URL')}/auth/v1/logout?scope=local`, {
             method: 'POST',
             headers: { apikey: publicKey(), Authorization: `Bearer ${tok.access_token}` },
           }).catch(() => {});
         }
+        await clearAttempts(keys);
         return json({ ok: true }, 200, origin);
       }
     }
 
+    await recordAttempt(keys);
     await sleep(600);
     return fail('Password owner salah', 403, origin); // bukan 401: 401 membuat aplikasi menganggap sesi habis
   } catch (e) {

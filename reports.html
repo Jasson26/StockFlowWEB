@@ -3,9 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.midtrans.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<script src="js/boot.js?v=20261113a"></script>
 <meta name="theme-color" content="#1F2937">
 <title>Laporan — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261111a">
+<link rel="stylesheet" href="css/app.css?v=20261113a">
 <style>
 .rp-top .chips { flex-wrap: wrap; }
 .rp-hero {
@@ -138,6 +144,14 @@
     </div>
   </div>
 
+  <div class="card p0 mt16" id="shiftCard">
+    <div class="card-hd"><h3>Riwayat buka / tutup kasir</h3></div>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th>Kasir</th><th>Waktu</th><th class="num">Tunai</th><th class="num">QRIS</th><th class="num">Seharusnya</th><th class="num">Di laci</th><th class="num">Selisih</th></tr></thead>
+      <tbody id="shiftRows"></tbody>
+    </table></div>
+  </div>
+
 </div>
 </div>
 
@@ -174,16 +188,16 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261111a"></script>
-<script src="js/config.js?v=20261111a"></script>
-<script src="js/demo.js?v=20261111a"></script>
-<script src="js/api.js?v=20261111a"></script>
-<script src="js/auth.js?v=20261111a"></script>
-<script src="js/ui.js?v=20261111a"></script>
+<script src="js/icons.js?v=20261113a"></script>
+<script src="js/config.js?v=20261113a"></script>
+<script src="js/demo.js?v=20261113a"></script>
+<script src="js/api.js?v=20261113a"></script>
+<script src="js/auth.js?v=20261113a"></script>
+<script src="js/ui.js?v=20261113a"></script>
 <script>
 if (!Auth.guard(true)) throw 'redirect';
 var U = Auth.user();
-var orders = [], items = [], products = [], expenses = [], moves = [];
+var orders = [], items = [], products = [], expenses = [], moves = [], refunds = [];
 var curRange = 'today';
 
 UI.shell('reports', 'Laporan');
@@ -194,6 +208,10 @@ async function load() {
   var b = await API.from('products').select('*');
   var c = await API.from('expenses').select('*').order('created_at', false).limit(500);
   var d = await API.from('stock_movements').select('*').eq('type', 'damaged').limit(1000);
+  var f = await API.from('refunds').select('*').order('created_at', false).limit(1000);
+  refunds  = f.error ? [] : (f.data || []);
+  var g = await API.from('shifts').select('*').order('opened_at', false).limit(30);
+  renderShifts(g.error ? null : (g.data || []));
   UI.loading(false);
 
   orders   = a.data || [];
@@ -246,9 +264,12 @@ function prevRange() {
 
 function between(s, r) { var d = new Date(s); return d >= r[0] && d < r[1]; }
 
-function summarize(os, its, exp, dmg) {
-  var rev  = os.reduce(function (s, o) { return s + Number(o.total || 0); }, 0);
-  var hpp  = os.reduce(function (s, o) { return s + Number(o.cost_total || 0); }, 0);
+function summarize(os, its, exp, dmg, rfs) {
+  rfs = rfs || [];
+  var refund  = rfs.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+  var refCost = rfs.reduce(function (s, r) { return s + Number(r.cost || 0); }, 0);
+  var rev  = os.reduce(function (s, o) { return s + Number(o.total || 0); }, 0) - refund;
+  var hpp  = os.reduce(function (s, o) { return s + Number(o.cost_total || 0); }, 0) - refCost;
   var disc = os.reduce(function (s, o) { return s + Number(o.discount || 0); }, 0);
   var opex = exp.reduce(function (s, e) { return s + Number(e.amount || 0); }, 0);
   var loss = dmg.reduce(function (s, m) {
@@ -256,7 +277,7 @@ function summarize(os, its, exp, dmg) {
     return s + (p ? Number(p.cost || 0) : 0) * Number(m.qty || 0);
   }, 0);
   var qty = its.reduce(function (s, i) { return s + Number(i.qty || 0); }, 0);
-  return { rev: rev, hpp: hpp, disc: disc, opex: opex, loss: loss, qty: qty,
+  return { rev: rev, hpp: hpp, disc: disc, opex: opex, loss: loss, qty: qty, refund: refund,
            gross: rev - hpp, net: rev - hpp - opex - loss, n: os.length };
 }
 
@@ -281,10 +302,12 @@ function render() {
 
   var S = summarize(os, its,
     expenses.filter(function (e) { return between(e.created_at, r); }),
-    moves.filter(function (m) { return between(m.created_at, r); }));
+    moves.filter(function (m) { return between(m.created_at, r); }),
+    refunds.filter(function (x) { return between(x.created_at, r); }));
   var P = summarize(pos, [],
     expenses.filter(function (e) { return between(e.created_at, pr); }),
-    moves.filter(function (m) { return between(m.created_at, pr); }));
+    moves.filter(function (m) { return between(m.created_at, pr); }),
+    refunds.filter(function (x) { return between(x.created_at, pr); }));
 
   var margin = S.rev ? Math.round(S.net / S.rev * 100) : 0;
   var dRev = delta(S.rev, P.rev);
@@ -333,7 +356,8 @@ function render() {
       '<span class="v ' + (cls || '') + '">' + UI.rp(val) + '</span></div>';
   };
   document.getElementById('pl').innerHTML = '<div class="rp-pl">' +
-    row('plus', 'Uang masuk', 'total semua penjualan' + (S.disc ? ', sudah dipotong diskon ' + UI.rp(S.disc) : ''), S.rev) +
+    row('plus', 'Uang masuk', 'total penjualan' + (S.disc ? ', sudah dipotong diskon ' + UI.rp(S.disc) : '') +
+      (S.refund ? ', dikurangi refund ' + UI.rp(S.refund) : ''), S.rev) +
     row('min',  'Modal barang', 'harga beli barang yang terjual', S.hpp, 'c-mid') +
     row('min',  'Pengeluaran', 'sewa, gaji, listrik, dll', S.opex, 'c-mid') +
     row('min',  'Barang rusak', 'nilai modal barang yang rusak', S.loss, 'c-mid') +
@@ -453,6 +477,24 @@ function drawChart(os) {
     '<div class="rp-x">' + vis.map(function (v, i) {
       return '<span>' + (i % step === 0 ? label(from + i) : '') + '</span>';
     }).join('') + '</div>';
+}
+
+/* ---------- Riwayat shift ---------- */
+function renderShifts(list) {
+  var card = document.getElementById('shiftCard');
+  if (list === null) { card.classList.add('hide'); return; }
+  document.getElementById('shiftRows').innerHTML = list.length ? list.map(function (x) {
+    var open = !x.closed_at;
+    var d = open ? null : Number(x.closing_cash) - Number(x.expected_cash);
+    return '<tr><td class="fw6">' + UI.esc(x.user_name || '—') + '</td>' +
+      '<td class="fs13 c-mid">' + UI.dt(x.opened_at) + (open ? ' · <span class="badge ok">masih buka</span>' : ' – ' + UI.dt(x.closed_at)) + '</td>' +
+      '<td class="num mono">' + (open ? '—' : UI.rp(x.cash_sales)) + '</td>' +
+      '<td class="num mono">' + (open ? '—' : UI.rp(x.qris_sales)) + '</td>' +
+      '<td class="num mono">' + (open ? '—' : UI.rp(x.expected_cash)) + '</td>' +
+      '<td class="num mono">' + (open ? '—' : UI.rp(x.closing_cash)) + '</td>' +
+      '<td class="num mono fw7 ' + (d === null ? '' : d === 0 ? 'c-ok' : d > 0 ? 'c-warn' : 'c-danger') + '">' +
+        (d === null ? '—' : (d > 0 ? '+' : d < 0 ? '−' : '') + UI.rp(Math.abs(d))) + '</td></tr>';
+  }).join('') : '<tr><td colspan="7">' + UI.empty('clock', 'Belum ada shift') + '</td></tr>';
 }
 
 /* ---------- Pengeluaran ---------- */

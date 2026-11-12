@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.midtrans.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<script src="js/boot.js?v=20261113a"></script>
+<meta name="theme-color" content="#1F2937">
+<meta name="robots" content="noindex">
+<title>Log Aktivitas — StockFlow</title>
+<link rel="stylesheet" href="css/app.css?v=20261113a">
+<style>
+.al-item { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; padding: 13px 18px; border-top: 1px solid var(--border); }
+.al-item:first-child { border-top: 0; }
+.al-ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--text-mid); }
+.al-ico.insert { background: rgba(4,120,87,.12); color: var(--ok); }
+.al-ico.delete { background: rgba(185,28,28,.10); color: var(--danger); }
+.al-ico.update { background: rgba(37,99,235,.10); color: var(--accent); }
+.al-what { font-size: 14px; }
+.al-what b { font-weight: 650; }
+.al-diff { font-size: 12.5px; color: var(--text-mid); margin-top: 3px; line-height: 1.5; }
+.al-diff s { color: var(--text-dim); }
+.al-when { font-size: 12px; color: var(--text-dim); text-align: right; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="app">
+<div class="content">
+  <div class="card p0">
+    <div class="card-hd">
+      <select id="fEnt" class="select" style="width:auto" onchange="render()">
+        <option value="">Semua</option>
+        <option value="products">Produk</option>
+        <option value="orders">Transaksi</option>
+        <option value="refunds">Refund</option>
+        <option value="shifts">Buka/tutup kasir</option>
+        <option value="profiles">Pengguna</option>
+        <option value="businesses">Pengaturan toko</option>
+        <option value="categories">Kategori</option>
+        <option value="expenses">Pengeluaran</option>
+      </select>
+      <div class="spacer"></div>
+      <input type="search" id="q" class="input" placeholder="Cari nama / isi…" style="max-width:220px" oninput="render()">
+    </div>
+    <div id="list"></div>
+  </div>
+  <p class="fs12 c-dim tc mt12">Log ini dicatat otomatis oleh database dan tidak bisa diubah atau dihapus dari aplikasi.</p>
+</div>
+</div>
+
+<script src="js/icons.js?v=20261113a"></script>
+<script src="js/config.js?v=20261113a"></script>
+<script src="js/demo.js?v=20261113a"></script>
+<script src="js/api.js?v=20261113a"></script>
+<script src="js/auth.js?v=20261113a"></script>
+<script src="js/ui.js?v=20261113a"></script>
+<script>
+if (!Auth.guard(true)) throw 'redirect';
+UI.shell('audit', 'Log Aktivitas');
+
+var rows = [];
+var ENT = { products: 'produk', categories: 'kategori', businesses: 'pengaturan toko', profiles: 'pengguna',
+            orders: 'transaksi', refunds: 'refund', shifts: 'kasir', expenses: 'pengeluaran' };
+var COL = { name: 'nama', price: 'harga jual', cost: 'harga beli', min_stock: 'stok minimum', unit: 'satuan',
+            category_id: 'kategori', image_url: 'foto', addons: 'add-on', active: 'aktif', role: 'peran',
+            tax_percent: 'pajak %', address: 'alamat', phone: 'telepon', receipt_note: 'catatan struk',
+            qris_static_url: 'gambar QRIS', qris_enabled: 'QRIS otomatis', status: 'status', amount: 'jumlah',
+            category: 'kategori', note: 'catatan', closing_cash: 'uang di laci', username: 'username' };
+var MONEY = { price: 1, cost: 1, amount: 1, closing_cash: 1, total: 1, opening_cash: 1 };
+
+function val(k, v) {
+  if (v === null || v === undefined || v === '') return '—';
+  if (MONEY[k]) return UI.rp(v);
+  if (k === 'image_url' || k === 'qris_static_url') return v ? 'ada' : '—';
+  if (k === 'addons') return (v || []).map(function (a) { return a.name; }).join(', ') || '—';
+  if (typeof v === 'boolean') return v ? 'ya' : 'tidak';
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
+function describe(r) {
+  var d = r.detail || {};
+  var e = r.entity, a = r.action;
+  var title = d.name || d.order_no || d.user_name || d.category || '';
+
+  if (e === 'shifts' && a === 'insert') return { t: 'Membuka kasir', s: 'Kas awal ' + UI.rp(d.opening_cash) };
+  if (e === 'shifts' && a === 'update' && d.closed_at) {
+    var diff = d.closing_cash ? Number(d.closing_cash[1]) - Number((d.expected_cash || [])[1] || 0) : 0;
+    return { t: 'Menutup kasir', s: 'Di laci ' + UI.rp(d.closing_cash ? d.closing_cash[1] : 0) +
+      (diff ? ' · selisih ' + (diff > 0 ? '+' : '−') + UI.rp(Math.abs(diff)) : ' · pas') };
+  }
+  if (e === 'orders' && d.status) return { t: (d.status[1] === 'void' ? 'Void transaksi' : 'Status transaksi ' + d.status[0] + ' → ' + d.status[1]), s: '' };
+  if (e === 'refunds') return { t: 'Refund ' + UI.rp(d.amount), s: (d.reason || '') + ' · ' + (d.items || []).map(function (i) { return i.qty + '× ' + i.name; }).join(', ') };
+
+  var verb = a === 'insert' ? 'Menambah' : a === 'delete' ? 'Menghapus' : 'Mengubah';
+  var s = '';
+  if (a === 'update') {
+    s = Object.keys(d).map(function (k) {
+      return (COL[k] || k) + ': <s>' + UI.esc(val(k, d[k][0])) + '</s> → ' + UI.esc(val(k, d[k][1]));
+    }).join(' · ');
+  } else if (e === 'products') {
+    s = 'harga ' + UI.rp(d.price) + ' · stok ' + UI.num(d.stock);
+  } else if (e === 'expenses') {
+    s = UI.rp(d.amount) + (d.note ? ' · ' + UI.esc(d.note) : '');
+  }
+  return { t: verb + ' ' + ENT[e] + (title && a !== 'update' ? ' "' + title + '"' : ''), s: s, raw: true };
+}
+
+async function load() {
+  UI.loading(true);
+  var r = await API.from('audit_log').select('*').order('created_at', false).limit(400);
+  UI.loading(false);
+  if (r.error) {
+    document.getElementById('list').innerHTML = UI.empty('info', 'Log belum tersedia', 'Jalankan migrasi-06 di Supabase untuk mengaktifkan log aktivitas.');
+    return;
+  }
+  rows = r.data || [];
+  render();
+}
+
+function render() {
+  var fe = document.getElementById('fEnt').value;
+  var q = document.getElementById('q').value.toLowerCase().trim();
+  var list = rows.filter(function (r) {
+    if (fe && r.entity !== fe) return false;
+    if (!q) return true;
+    return ((r.user_name || '') + ' ' + JSON.stringify(r.detail || {})).toLowerCase().includes(q);
+  });
+  document.getElementById('list').innerHTML = list.length ? list.map(function (r) {
+    var x = describe(r);
+    var ico = r.action === 'insert' ? 'plus' : r.action === 'delete' ? 'trash' : 'edit';
+    return '<div class="al-item"><div class="al-ico ' + r.action + '">' + UI.ic(ico, 16) + '</div>' +
+      '<div style="min-width:0"><div class="al-what"><b>' + UI.esc(r.user_name || 'Sistem') + '</b> ' + UI.esc(x.t) + '</div>' +
+      (x.s ? '<div class="al-diff">' + (x.raw ? x.s : UI.esc(x.s)) + '</div>' : '') + '</div>' +
+      '<div class="al-when">' + UI.dt(r.created_at) + '</div></div>';
+  }).join('') : UI.empty('info', 'Belum ada aktivitas');
+}
+
+load();
+</script>
+</body>
+</html>

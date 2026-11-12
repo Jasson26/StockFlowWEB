@@ -137,6 +137,8 @@ const UI = (function () {
     { id: 'inventory', icon: 'refresh',  label: 'Stok',         href: 'inventory.html', owner: true },
     { id: 'damaged',   icon: 'alert',    label: 'Barang Rusak', href: 'damaged.html',   tab: 'staff' },
     { id: 'reports',   icon: 'chart',    label: 'Laporan',      href: 'reports.html',   tab: true, owner: true },
+    { id: 'audit',     icon: 'eye',      label: 'Log Aktivitas', href: 'audit.html',    owner: true },
+    { id: 'admin',     icon: 'shield',   label: 'Admin',        href: 'admin.html',     admin: true, bottom: true },
     { id: 'users',     icon: 'users',    label: 'Pengguna',     href: 'users.html',     owner: true, bottom: true },
     { id: 'settings',  icon: 'settings', label: 'Pengaturan',   href: 'settings.html',  owner: true, bottom: true },
   ];
@@ -145,7 +147,8 @@ const UI = (function () {
   function shell(active, title, topbarExtra) {
     const u = Auth.user() || {};
     const isOwner = u.role === 'owner';
-    const visible = MENU.filter((m) => !m.owner || isOwner);
+    const isAdmin = !!u.is_admin;
+    const visible = MENU.filter((m) => (!m.owner || isOwner) && (!m.admin || isAdmin));
 
     const link = (m) =>
       '<a href="' + m.href + '" class="sb-item' + (m.id === active ? ' on' : '') + '">' +
@@ -159,7 +162,7 @@ const UI = (function () {
       .concat([{ id: 'more', icon: 'menu', label: 'Lainnya', href: '#', more: true }])
       .map((m) => {
         const on = m.id === active ||
-          (m.more && ['inventory', 'damaged', 'users', 'settings'].includes(active));
+          (m.more && ['inventory', 'damaged', 'users', 'settings', 'audit', 'admin'].includes(active));
         return '<a href="' + (m.more ? 'javascript:UI.openMore()' : m.href) +
           '" class="tb-item' + (on ? ' on' : '') + '">' +
           ic(m.icon, 20) + '<span>' + m.label + '</span></a>';
@@ -187,7 +190,7 @@ const UI = (function () {
       '<div class="main">' +
         '<header class="topbar"><h1>' + esc(title) + '</h1><div class="spacer"></div>' +
           (topbarExtra || '') +
-        '</header>' + inner +
+        '</header>' + subBanner() + inner +
       '</div>' +
       '<nav class="tabbar">' + tabs + '</nav>';
 
@@ -195,10 +198,31 @@ const UI = (function () {
     hydrateIcons(document);
   }
 
+  /* ---------- Pengingat langganan ---------- */
+  const WA = 'https://wa.me/6285609339578?text=';
+  function subBanner() {
+    if (typeof Auth === 'undefined' || !Auth.subscription) return '';
+    const s = Auth.subscription(), u = Auth.user() || {};
+    if (s.permanent && s.active) return '';
+    const msg = encodeURIComponent('Halo, saya ingin memperpanjang langganan StockFlow untuk toko "' + (u.business_name || '') + '".');
+    const btn = '<a class="btn btn-sm" href="' + WA + msg + '" target="_blank" rel="noopener">Perpanjang via WhatsApp</a>';
+    if (!s.active) {
+      return '<div class="sub-banner off">' + ic('lock', 17) + '<div><b>' +
+        (s.suspended ? 'Toko dinonaktifkan.' : 'Langganan sudah habis.') +
+        '</b> Data tetap bisa dilihat dan diunduh, tapi transaksi dan perubahan data dikunci.</div>' + btn + '</div>';
+    }
+    if (s.daysLeft <= 7) {
+      return '<div class="sub-banner warn">' + ic('clock', 17) + '<div>Langganan habis dalam <b>' + s.daysLeft +
+        ' hari</b> (' + new Date(s.until).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) +
+        ').</div>' + btn + '</div>';
+    }
+    return '';
+  }
+
   function openMore() {
     const u = Auth.user() || {};
     const own = u.role === 'owner';
-    const items = MENU.filter((m) => !m.sec && !(m.tab === true || (m.tab === 'staff' && !own)) && (!m.owner || own));
+    const items = MENU.filter((m) => !m.sec && !(m.tab === true || (m.tab === 'staff' && !own)) && (!m.owner || own) && (!m.admin || u.is_admin));
     const wrap = document.createElement('div');
     wrap.className = 'modal open';
     wrap.innerHTML =

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.midtrans.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<script src="js/boot.js?v=20261113a"></script>
+<meta name="theme-color" content="#1F2937">
+<meta name="robots" content="noindex">
+<title>Admin — StockFlow</title>
+<link rel="stylesheet" href="css/app.css?v=20261113a">
+<style>
+.ad-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 760px) { .ad-stats { grid-template-columns: repeat(2, 1fr); } }
+.ad-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.ad-stat .l { font-size: 12.5px; color: var(--text-mid); font-weight: 600; }
+.ad-stat .v { font-size: 24px; font-weight: 750; margin-top: 2px; }
+
+.ad-new { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; align-items: end; }
+@media (max-width: 620px) { .ad-new { grid-template-columns: 1fr; } }
+
+.ad-code { font-family: var(--ff-num); font-weight: 750; letter-spacing: .1em; }
+.ad-made { margin-top: 14px; padding: 16px; border-radius: 12px; border: 1px dashed var(--border-mid);
+           background: var(--surface-2); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.ad-made .ad-code { font-size: 24px; flex: 1; min-width: 200px; user-select: all; }
+
+.ad-tabs { display: flex; gap: 6px; }
+.ad-shop .nm { font-weight: 650; }
+.ad-shop .sub { font-size: 12px; color: var(--text-dim); }
+.ad-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.wa-btn { background: #25D366; border-color: #25D366; color: #fff; }
+.wa-btn:hover { background: #1EBE5A; border-color: #1EBE5A; }
+</style>
+</head>
+<body>
+<div id="app">
+<div class="content">
+
+  <div class="ad-stats mb16" id="stats"></div>
+
+  <!-- BUAT KODE -->
+  <div class="card mb16">
+    <div class="row mb12"><h3 style="font-size:15.5px;font-weight:700">Buat kode aktivasi</h3></div>
+    <div class="ad-new">
+      <div>
+        <label class="label" for="nDays">MASA AKTIF</label>
+        <select id="nDays" class="select">
+          <option value="">Permanen</option>
+          <option value="7">Trial 7 hari</option>
+          <option value="30">1 bulan</option>
+          <option value="90">3 bulan</option>
+          <option value="180">6 bulan</option>
+          <option value="365">1 tahun</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="nNote">CATATAN (nama pelanggan / no. WA)</label>
+        <input type="text" id="nNote" class="input" placeholder="Misal: Warung Bu Siti 0812…">
+      </div>
+      <button class="btn btn-primary" onclick="makeCode()">Buat kode</button>
+    </div>
+    <div id="made" class="hide"></div>
+  </div>
+
+  <!-- DAFTAR -->
+  <div class="card p0">
+    <div class="card-hd">
+      <div class="ad-tabs">
+        <button class="chip on" data-t="shops" onclick="setTab('shops')">Toko</button>
+        <button class="chip" data-t="codes" onclick="setTab('codes')">Kode</button>
+      </div>
+      <div class="spacer"></div>
+      <input type="search" id="q" class="input" placeholder="Cari…" style="max-width:220px" oninput="render()">
+    </div>
+    <div class="table-wrap"><table class="tbl"><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+  </div>
+
+</div>
+</div>
+
+<script src="js/icons.js?v=20261113a"></script>
+<script src="js/config.js?v=20261113a"></script>
+<script src="js/demo.js?v=20261113a"></script>
+<script src="js/api.js?v=20261113a"></script>
+<script src="js/auth.js?v=20261113a"></script>
+<script src="js/ui.js?v=20261113a"></script>
+<script>
+if (!Auth.guard()) throw 'redirect';
+/* Tampilan dijaga di sini; datanya dijaga fungsi database (is_platform_admin) */
+if (!Auth.isAdmin()) { location.replace('pos.html'); throw 'redirect'; }
+
+UI.shell('admin', 'Admin');
+
+/* Panel admin hanya terbuka dengan sesi yang sudah lolos kode 6 angka.
+   Database juga menolak semua fungsi admin tanpa itu. */
+if (Auth.aal() !== 'aal2') {
+  document.querySelector('.content').innerHTML =
+    '<div class="card" style="max-width:520px;margin:40px auto;text-align:center;padding:32px">' +
+      '<div style="width:52px;height:52px;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;margin:0 auto 14px">' + UI.ic('shield', 24) + '</div>' +
+      '<h3 style="font-size:18px;margin-bottom:8px">Butuh verifikasi 2 langkah</h3>' +
+      '<p class="c-mid fs13 mb16">Panel admin mengatur langganan semua toko, jadi hanya bisa dibuka setelah masuk dengan kode 6 angka dari aplikasi autentikator.</p>' +
+      '<a class="btn btn-primary" href="settings.html">Aktifkan di Pengaturan</a>' +
+      '<div class="fs12 c-dim mt12">Sudah aktif? Keluar lalu masuk lagi untuk memasukkan kode.</div>' +
+    '</div>';
+  throw 'need-aal2';
+}
+
+var shops = [], codes = [], tab = 'shops';
+var SIGNUP = location.origin + location.pathname.replace(/[^/]*$/, '') + 'masuk.html?kode=';
+
+function dur(d) {
+  if (d == null) return 'Permanen';
+  if (d % 365 === 0) return (d / 365) + ' tahun';
+  if (d % 30 === 0) return (d / 30) + ' bulan';
+  return d + ' hari';
+}
+
+function status(s) {
+  if (s.suspended) return { k: 'off', t: 'Dimatikan', b: 'danger' };
+  if (!s.active_until) return { k: 'perm', t: 'Permanen', b: 'ok' };
+  var left = Math.ceil((new Date(s.active_until) - Date.now()) / 86400000);
+  if (left <= 0) return { k: 'exp', t: 'Habis', b: 'danger' };
+  if (left <= 7) return { k: 'soon', t: left + ' hari lagi', b: 'warn' };
+  return { k: 'on', t: 's/d ' + UI.dateOnly(s.active_until), b: 'ok' };
+}
+
+async function load() {
+  UI.loading(true);
+  var a = await API.rpc('admin_list_businesses', {});
+  var b = await API.rpc('admin_list_codes', {});
+  UI.loading(false);
+  if (a.error) return UI.toast(a.error.message, 'error');
+  shops = a.data || [];
+  codes = b.data || [];
+  renderStats();
+  render();
+}
+
+function renderStats() {
+  var c = { all: shops.length, on: 0, soon: 0, off: 0 };
+  shops.forEach(function (s) {
+    var k = status(s).k;
+    if (k === 'soon') c.soon++; else if (k === 'exp' || k === 'off') c.off++; else c.on++;
+  });
+  var unused = codes.filter(function (x) { return !x.used_at; }).length;
+  document.getElementById('stats').innerHTML =
+    '<div class="ad-stat"><div class="l">Total toko</div><div class="v">' + c.all + '</div></div>' +
+    '<div class="ad-stat"><div class="l">Aktif</div><div class="v c-ok">' + c.on + '</div></div>' +
+    '<div class="ad-stat"><div class="l">Hampir habis / mati</div><div class="v ' + (c.soon + c.off ? 'c-danger' : '') + '">' + c.soon + ' / ' + c.off + '</div></div>' +
+    '<div class="ad-stat"><div class="l">Kode belum dipakai</div><div class="v">' + unused + '</div></div>';
+}
+
+function setTab(t) {
+  tab = t;
+  document.querySelectorAll('.ad-tabs .chip').forEach(function (b) { b.classList.toggle('on', b.dataset.t === t); });
+  render();
+}
+
+function render() {
+  var q = document.getElementById('q').value.toLowerCase().trim();
+  var host = document.getElementById('rows');
+
+  if (tab === 'shops') {
+    document.getElementById('thead').innerHTML =
+      '<tr><th>Toko</th><th class="hide-mobile">Pemilik</th><th>Status</th><th class="num hide-mobile">Transaksi 30 hr</th><th></th></tr>';
+    var list = shops.filter(function (s) {
+      return !q || [s.name, s.owner_name, s.owner_email, s.phone].join(' ').toLowerCase().includes(q);
+    });
+    host.innerHTML = list.length ? list.map(function (s) {
+      var st = status(s);
+      return '<tr>' +
+        '<td class="ad-shop"><div class="nm">' + UI.esc(s.name) + '</div>' +
+          '<div class="sub">Daftar ' + UI.dateOnly(s.created_at) + ' · ' + s.products + ' produk · ' + s.staff + ' staff</div></td>' +
+        '<td class="hide-mobile ad-shop"><div>' + UI.esc(s.owner_name || '—') + '</div><div class="sub">' + UI.esc(s.owner_email || '') + '</div></td>' +
+        '<td><span class="badge ' + st.b + '">' + st.t + '</span></td>' +
+        '<td class="num hide-mobile mono">' + s.orders_30d + '</td>' +
+        '<td><div class="ad-acts">' +
+          '<button class="btn btn-sm" onclick="upd(\'' + s.id + '\',{p_add_days:30})">+1 bln</button>' +
+          '<button class="btn btn-sm" onclick="upd(\'' + s.id + '\',{p_add_days:365})">+1 thn</button>' +
+          (s.active_until ? '<button class="btn btn-sm" onclick="upd(\'' + s.id + '\',{p_permanent:true})">Permanen</button>' : '') +
+          (s.suspended
+            ? '<button class="btn btn-sm" onclick="upd(\'' + s.id + '\',{p_suspended:false})">Aktifkan</button>'
+            : '<button class="btn btn-sm btn-danger" onclick="suspend(\'' + s.id + '\')">Matikan</button>') +
+        '</div></td></tr>';
+    }).join('') : '<tr><td colspan="5">' + UI.empty('store', 'Belum ada toko') + '</td></tr>';
+    return;
+  }
+
+  document.getElementById('thead').innerHTML =
+    '<tr><th>Kode</th><th>Masa aktif</th><th class="hide-mobile">Catatan</th><th>Status</th><th></th></tr>';
+  var cl = codes.filter(function (c) {
+    return !q || [c.code, c.note, c.used_by_name].join(' ').toLowerCase().includes(q);
+  });
+  host.innerHTML = cl.length ? cl.map(function (c) {
+    return '<tr>' +
+      '<td class="ad-code">' + UI.esc(c.code) + '</td>' +
+      '<td>' + dur(c.days) + '</td>' +
+      '<td class="hide-mobile c-mid fs13">' + UI.esc(c.note || '—') + '</td>' +
+      '<td>' + (c.used_at
+        ? '<span class="badge">Dipakai</span><div class="fs12 c-dim">' + UI.esc(c.used_by_name || 'toko dihapus') + ' · ' + UI.dateOnly(c.used_at) + '</div>'
+        : '<span class="badge ok">Belum dipakai</span>') + '</td>' +
+      '<td><div class="ad-acts">' + (c.used_at ? '' :
+        '<button class="btn btn-sm wa-btn" onclick="sendWa(\'' + c.code + '\',' + (c.days == null ? 'null' : c.days) + ')">WA</button>' +
+        '<button class="btn btn-sm" onclick="copy(\'' + c.code + '\')">Salin</button>' +
+        '<button class="btn btn-sm btn-ghost c-danger" title="Hapus" onclick="delCode(\'' + c.code + '\')">' + UI.ic('trash', 15) + '</button>') +
+      '</div></td></tr>';
+  }).join('') : '<tr><td colspan="5">' + UI.empty('tag', 'Belum ada kode') + '</td></tr>';
+}
+
+async function makeCode() {
+  var v = document.getElementById('nDays').value;
+  var days = v ? Number(v) : null;
+  var note = document.getElementById('nNote').value.trim();
+  UI.loading(true);
+  var r = await API.rpc('admin_create_code', { p_days: days, p_note: note || null });
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  var code = r.data;
+  var box = document.getElementById('made');
+  box.className = 'ad-made';
+  box.innerHTML = '<div class="ad-code">' + UI.esc(code) + '</div>' +
+    '<span class="badge ok">' + dur(days) + '</span>' +
+    '<button class="btn btn-sm" onclick="copy(\'' + code + '\')">Salin</button>' +
+    '<button class="btn btn-sm wa-btn" onclick="sendWa(\'' + code + '\',' + (days == null ? 'null' : days) + ')">Kirim via WhatsApp</button>';
+  document.getElementById('nNote').value = '';
+  setTab('codes');
+  load();
+}
+
+function msgFor(code, days) {
+  return 'Halo! Terima kasih sudah berlangganan StockFlow.\n\n' +
+    'Kode aktivasi Anda: *' + code + '*\nMasa aktif: ' + dur(days) + '\n\n' +
+    'Daftar di sini (kode sudah terisi):\n' + SIGNUP + encodeURIComponent(code);
+}
+
+function sendWa(code, days) {
+  window.open('https://wa.me/?text=' + encodeURIComponent(msgFor(code, days)), '_blank', 'noopener');
+}
+
+function copy(code) {
+  if (navigator.clipboard) navigator.clipboard.writeText(code).then(function () { UI.toast('Kode disalin', 'ok'); });
+}
+
+function delCode(code) {
+  UI.confirm({ title: 'Hapus kode?', text: code + ' tidak bisa dipakai lagi.', ok: 'Hapus', danger: true })
+    .then(async function (ok) {
+      if (!ok) return;
+      var r = await API.rpc('admin_delete_code', { p_code: code });
+      if (r.error) return UI.toast(r.error.message, 'error');
+      load();
+    });
+}
+
+async function upd(id, args) {
+  UI.loading(true);
+  var r = await API.rpc('admin_update_business', Object.assign({ p_id: id }, args));
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  UI.toast('Tersimpan', 'ok');
+  load();
+}
+
+function suspend(id) {
+  var s = shops.find(function (x) { return x.id === id; });
+  UI.confirm({ title: 'Matikan toko?', text: '"' + s.name + '" tidak bisa bertransaksi sampai diaktifkan lagi. Datanya tetap aman.', ok: 'Matikan', danger: true })
+    .then(function (ok) { if (ok) upd(id, { p_suspended: true }); });
+}
+
+load();
+</script>
+</body>
+</html>

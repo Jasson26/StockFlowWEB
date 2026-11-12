@@ -3,10 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#6C4CF1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.midtrans.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<script src="js/boot.js?v=20261113a"></script>
+<meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Riwayat Transaksi — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261111a">
+<link rel="stylesheet" href="css/app.css?v=20261113a">
 </head>
 <body>
 
@@ -91,18 +97,35 @@
         <span data-ico="print" data-ico-size="16"></span>Print / PDF
       </button>
       <button class="btn btn-primary hide" id="checkBtn" onclick="recheck()">Periksa Status</button>
+      <button class="btn hide" id="refundBtn" onclick="openRefund()">Refund</button>
       <button class="btn btn-danger hide"  id="voidBtn"  onclick="doVoid()">Void Transaksi</button>
     </div>
   </div>
 </div>
 
-<script src="js/icons.js?v=20261111a"></script>
-<script src="js/printer.js?v=20261111a"></script>
-<script src="js/config.js?v=20261111a"></script>
-<script src="js/demo.js?v=20261111a"></script>
-<script src="js/api.js?v=20261111a"></script>
-<script src="js/auth.js?v=20261111a"></script>
-<script src="js/ui.js?v=20261111a"></script>
+<div class="modal" id="mRefund">
+  <div class="modal-box narrow">
+    <div class="modal-hd"><h3>Refund barang</h3><button class="modal-x" onclick="UI.closeModal('mRefund')">&times;</button></div>
+    <div class="modal-bd">
+      <div id="rfList" class="mb16"></div>
+      <label class="label" for="rfReason">ALASAN *</label>
+      <input type="text" id="rfReason" class="input" placeholder="Misal: salah pesan / barang cacat" maxlength="120">
+      <div class="hint">Uang dikembalikan sesuai harga yang dibayar (termasuk diskon & pajak). Stok otomatis kembali.</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mRefund')">Batal</button>
+      <button class="btn btn-danger" onclick="doRefund()">Refund</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/icons.js?v=20261113a"></script>
+<script src="js/printer.js?v=20261113a"></script>
+<script src="js/config.js?v=20261113a"></script>
+<script src="js/demo.js?v=20261113a"></script>
+<script src="js/api.js?v=20261113a"></script>
+<script src="js/auth.js?v=20261113a"></script>
+<script src="js/ui.js?v=20261113a"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 var U = Auth.user();
@@ -231,7 +254,10 @@ async function detail(id) {
       items.map(function (i) {
         return '<div class="r-item"><div class="r-item-n">' + UI.esc(i.name) + '</div>' +
           '<div class="r-row"><span>' + UI.num(i.qty) + ' x ' + UI.rp(i.price) + '</span>' +
-          '<span>' + UI.rp(i.subtotal) + '</span></div></div>';
+          '<span>' + UI.rp(Number(i.price) * Number(i.qty)) + '</span></div>' +
+          (Number(i.discount) ? '<div class="r-row"><span>&nbsp;&nbsp;Diskon</span><span>-' + UI.rp(i.discount) + '</span></div>' : '') +
+          (Number(i.refunded_qty) ? '<div class="r-row" style="color:#B91C1C"><span>&nbsp;&nbsp;Direfund ' + UI.num(i.refunded_qty) + '</span><span></span></div>' : '') +
+          '</div>';
       }).join('') +
       '<hr>' +
       '<div class="r-row"><span>Subtotal</span><span>' + UI.rp(o.subtotal) + '</span></div>' +
@@ -257,9 +283,43 @@ async function detail(id) {
 
   document.getElementById('checkBtn').classList.toggle('hide', !canCheck);
   document.getElementById('voidBtn').classList.toggle('hide', !canVoid);
+  var canRefund = o.status === 'paid' && U.role === 'owner' &&
+    items.some(function (i) { return Number(i.qty) > Number(i.refunded_qty || 0); });
+  document.getElementById('refundBtn').classList.toggle('hide', !canRefund);
 
   syncPrintBtn();
   UI.openModal('mDet');
+}
+
+/* ---------- Refund sebagian (owner) ---------- */
+function openRefund() {
+  if (!curOrder) return;
+  document.getElementById('rfList').innerHTML = curItems.map(function (i) {
+    var left = Number(i.qty) - Number(i.refunded_qty || 0);
+    if (left <= 0) return '';
+    return '<div class="rf-row"><div style="flex:1;min-width:0"><div class="fw6">' + UI.esc(i.name) + '</div>' +
+      '<div class="fs12 c-dim">Bisa direfund ' + UI.num(left) + '</div></div>' +
+      '<input type="number" class="input rf-q" data-id="' + i.id + '" min="0" max="' + left + '" value="0" style="width:80px;text-align:right"></div>';
+  }).join('');
+  document.getElementById('rfReason').value = '';
+  UI.openModal('mRefund');
+}
+
+async function doRefund() {
+  var items = Array.prototype.slice.call(document.querySelectorAll('.rf-q'))
+    .map(function (el) { return { order_item_id: el.dataset.id, qty: Number(el.value) || 0 }; })
+    .filter(function (x) { return x.qty > 0; });
+  var reason = document.getElementById('rfReason').value.trim();
+  if (!items.length) return UI.toast('Isi jumlah barang yang direfund', 'error');
+  if (!reason) return UI.toast('Isi alasan refund', 'error');
+  UI.loading(true);
+  var r = await API.rpc('refund_items', { p_order_id: curOrder.id, p_items: items, p_reason: reason });
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  UI.closeModal('mRefund');
+  UI.closeModal('mDet');
+  UI.toast('Refund ' + UI.rp(r.data.amount) + ' dicatat, stok dikembalikan', 'ok');
+  load();
 }
 
 /* Periksa status pembayaran langsung ke penyedia */
@@ -305,7 +365,7 @@ async function btReprint() {
     await Printer.ensure();
     UI.loading(true);
     await Printer.printReceipt(curOrder, curItems.map(function (i) {
-      return { name: i.name, price: i.price, qty: i.qty };
+      return { name: i.name, price: i.price, qty: i.qty, disc: Number(i.discount) || 0 };
     }), {
       name: U.business_name,
       address: U.business_address || null,

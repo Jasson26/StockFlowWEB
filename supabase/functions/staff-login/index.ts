@@ -7,7 +7,10 @@
 // untuk login. Kode tidak pernah dipakai sebagai password.
 // ============================================================
 
-import { corsHeaders, json, fail, sbAdmin, authAdmin, env, publicKey } from '../_shared/lib.ts';
+import {
+  corsHeaders, json, fail, sbAdmin, authAdmin, env, publicKey,
+  clientIp, tooManyAttempts, recordAttempt, clearAttempts,
+} from '../_shared/lib.ts';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -24,12 +27,23 @@ Deno.serve(async (req) => {
 
   /* Pesan sama untuk semua kegagalan supaya tidak membocorkan
      username mana yang ada; jeda memperlambat tebak-tebakan. */
-  const denied = async () => { await sleep(600); return fail('Username atau kode salah', 401, origin); };
+  let keys: string[] = [];
+  const denied = async () => {
+    await recordAttempt(keys);
+    await sleep(600);
+    return fail('Username atau kode salah', 401, origin);
+  };
 
   try {
     const b = await req.json().catch(() => ({}));
-    const username = String(b.username || '').trim().toLowerCase();
+    const username = String(b.username || '').trim().toLowerCase().slice(0, 40);
     const code     = String(b.code || '').trim().toUpperCase().replace(/[\s-]/g, '');
+
+    /* Maks. 8 percobaan gagal per 15 menit, per alamat IP dan per username */
+    keys = ['staff-ip:' + clientIp(req), 'staff-user:' + username];
+    if (await tooManyAttempts(keys)) {
+      return fail('Terlalu banyak percobaan. Tunggu 15 menit lalu coba lagi.', 429, origin);
+    }
     if (!username || code.length < 6 || code.length > 16 || !/^[A-Z0-9]+$/.test(code)) return denied();
 
     const cRes = await sbAdmin(`/rest/v1/staff_codes?code=eq.${code}&select=profile_id,username`);
@@ -62,6 +76,7 @@ Deno.serve(async (req) => {
       return fail('Gagal masuk, coba lagi', 500, origin);
     }
 
+    await clearAttempts(['staff-user:' + username]);
     return json({
       access_token: tok.access_token,
       refresh_token: tok.refresh_token,

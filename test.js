@@ -1285,6 +1285,97 @@ section('[35] Add-on, halaman depan 39rb + WhatsApp, laporan baru');
 }
 
 /* ============================================================ */
+section('[36] Langganan: kode aktivasi, masa aktif, panel admin');
+{
+  const R = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
+  const m5 = R('migrasi-05-langganan.sql'), au = R('js/auth.js'), ms = R('masuk.html'), ui = R('js/ui.js'), ad = R('admin.html');
+
+  ok('migrasi 05 tidak membuang tabel', !/drop table/i.test(m5));
+  ok('setup_owner lama (tanpa kode) dihapus', /drop function if exists setup_owner\(text, text\)/.test(m5));
+  ok('buat toko wajib kode yang belum dipakai', /setup_owner\(p_business_name text, p_name text, p_code text\)[\s\S]*used_at is null[\s\S]*for update/.test(m5));
+  ok('kode tandai terpakai lewat used_at (hapus toko tidak membuka kode lagi)', /set used_by = v_biz, used_at = now\(\)/.test(m5));
+  ok('kode dari gen_random_uuid tanpa huruf mirip', /ABCDEFGHJKMNPQRSTUVWXYZ23456789/.test(m5) && /gen_random_uuid/.test(m5));
+  ok('NULL = permanen', /active_until timestamptz;\s*-- NULL = permanen/.test(m5));
+  ok('toko lama otomatis permanen (kolom baru tanpa default)', !/active_until timestamptz\s+default/i.test(m5));
+  ok('kunci dipasang di database lewat trigger', /create trigger trg_subscription before insert or update/.test(m5) &&
+     /'orders','products','categories','stock_movements','expenses'/.test(m5));
+  ok('webhook/server tidak terblokir', /auth\.uid\(\) is null or is_platform_admin\(\)/.test(m5));
+  ok('semua fungsi admin cek is_platform_admin', (m5.match(/if not is_platform_admin\(\) then raise exception 'Khusus admin'/g) || []).length === 5);
+  ok('tabel admin & kode tanpa policy (tidak terbaca dari aplikasi)', !/create policy[^;]*(platform_admins|activation_codes)/.test(m5));
+  ok('email admin tidak tertulis di repo', !/@gmail\.com/.test(m5) && !/@gmail\.com/.test(R('schema.sql')));
+  ok('schema penuh memuat migrasi 05', /admin_update_business/.test(R('schema.sql')));
+
+  ok('daftar: kolom kode aktivasi', /id="sCode"/.test(ms) && /id="cCode"/.test(ms));
+  ok('daftar: kode dicek sebelum akun dibuat', /const cc = await Auth\.checkCode\(code\);\s*if \(!cc\.ok\) return cc;/.test(au));
+  ok('daftar: link ?kode= mengisi otomatis', /get\('kode'\)/.test(ms));
+  ok('daftar: minta kode via WhatsApp', /wa\.me\/6285609339578/.test(ms));
+  ok('pengingat langganan di semua halaman', /subBanner\(\) \+ inner/.test(ui));
+  ok('kasir: tombol bayar terkunci saat tidak aktif', /!Auth\.subscription\(\)\.active/.test(R('pos.html')));
+  ok('menu Admin hanya untuk admin', /id: 'admin'[^\n]*admin: true/.test(ui) && /!m\.admin \|\| isAdmin/.test(ui));
+  ok('halaman admin dijaga', /if \(!Auth\.isAdmin\(\)\)/.test(ad));
+  ok('admin bisa +1 bln/+1 thn/permanen/matikan', /p_add_days:30/.test(ad) && /p_add_days:365/.test(ad) && /p_permanent:true/.test(ad) && /p_suspended: ?true/.test(ad));
+  ok('admin kirim kode via WhatsApp dengan link daftar', /masuk\.html\?kode=/.test(ad) && /wa\.me\/\?text=/.test(ad));
+  ok('pilihan permanen & trial 7 hari', /<option value="">Permanen<\/option>/.test(ad) && /value="7">Trial 7 hari/.test(ad));
+}
+
+/* ============================================================ */
+section('[37] Keamanan v5.6 + shift, open bill, diskon baris, refund, offline/PWA');
+{
+  const R = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
+  const m6 = R('migrasi-06-keamanan-shift-refund.sql');
+
+  /* Celah yang ditutup */
+  ok('profil: pengguna hanya boleh ubah nama (bukan peran/toko)', /revoke update on profiles from authenticated, anon;\s*grant\s+update \(name\) on profiles/.test(m6));
+  ok('toko: owner tidak bisa ubah masa aktif sendiri', /grant\s+update \(name, address, phone, qris_static_url, tax_percent, receipt_note, qris_enabled\)/.test(m6) && !/update \([^)]*active_until/.test(m6));
+  ok('tidak ada insert langsung ke orders/order_items', /drop policy if exists ord_insert/.test(m6) && /drop policy if exists oi_insert/.test(m6));
+  ok('harga dihitung server (price_cart dari tabel products)', /function price_cart/.test(m6) && /price    := p\.price \+ v_add/.test(m6));
+  ok('add-on dicocokkan dengan data produk', /jsonb_array_elements\(coalesce\(p\.addons/.test(m6) && /Add-on "%" tidak ada/.test(m6));
+  ok('pajak dihitung dari pengaturan toko', /v_tax   := round\(\(v_sub - v_disc\) \* coalesce\(v_tax_pct, 0\) \/ 100\)/.test(m6));
+  ok('stok dicek per total produk + dikunci', /function check_stock[\s\S]*group by 1[\s\S]*for update/.test(m6));
+  ok('storage dibatasi per folder toko', /\(storage\.foldername\(name\)\)\[2\] = app_business_id\(\)::text/.test(m6));
+  ok('storage: hanya gambar, maks 8MB', /allowed_mime_types = array\['image\/jpeg'/.test(m6) && /file_size_limit = 8 \* 1024 \* 1024/.test(m6));
+  ok('semua fungsi dicabut dari anon', /revoke execute on function %s from public, anon/.test(m6));
+  ok('fungsi internal tidak bisa dipanggil aplikasi', /revoke execute on function next_order_no\(uuid\)\s+from authenticated/.test(m6) && /revoke execute on function price_cart/.test(m6));
+  ok('admin wajib 2FA (aal2) di database', /auth\.jwt\(\)->>'aal', 'aal1'\) = 'aal2'/.test(m6));
+  ok('log aktivitas tidak bisa ditulis aplikasi', /create policy al_select on audit_log for select/.test(m6) && !/on audit_log for (insert|update|delete|all)/.test(m6));
+  ok('log aktivitas tidak menggagalkan hapus toko', /tidak perlu mencatat setiap baris yang ikut terhapus/.test(m6));
+  ok('batas percobaan login: tabel tanpa policy', /create table if not exists auth_attempts/.test(m6) && !/policy[^;]*auth_attempts/.test(m6));
+  ok('migrasi 06 tidak membuang tabel', !/drop table/i.test(m6));
+  ok('schema penuh memuat migrasi 06', /refund_items/.test(R('schema.sql')) && /audit_write/.test(R('schema.sql')));
+
+  /* Edge Functions */
+  ok('staff-login dibatasi percobaan', /tooManyAttempts\(keys\)/.test(R('supabase/functions/staff-login/index.ts')));
+  ok('owner-verify dibatasi percobaan', /tooManyAttempts\(keys, 5\)/.test(R('supabase/functions/owner-verify/index.ts')));
+
+  /* Browser */
+  const pages = fs.readdirSync(SRC).filter((f) => f.endsWith('.html'));
+  pages.forEach((f) => ok(f + ' punya CSP & anti-iframe', /Content-Security-Policy/.test(R(f)) && /js\/boot\.js/.test(R(f))));
+  ok('CSP melarang object/plugin & base lain', /object-src 'none'; base-uri 'self'/.test(R('pos.html')));
+  ok('anti-clickjacking', /window\.top !== window\.self/.test(R('js/boot.js')));
+  ok('aturan password huruf + angka', /Password harus berisi huruf dan angka/.test(R('js/auth.js')));
+  ok('login 2FA', /needMfa: true/.test(R('js/auth.js')) && /id="vMfa"/.test(R('masuk.html')));
+  ok('pengaturan 2FA', /Auth\.mfaEnroll\(\)/.test(R('settings.html')));
+  ok('panel admin minta 2FA', /Auth\.aal\(\) !== 'aal2'/.test(R('admin.html')));
+
+  /* Fitur kasir */
+  const pos = R('pos.html');
+  ok('buka/tutup kasir', /shift_open/.test(pos) && /shift_close/.test(pos) && /id="mShiftClose"/.test(pos));
+  ok('selisih kas ditampilkan', /function scDiff\(\)/.test(pos));
+  ok('simpan pesanan (open bill)', /function holdCart\(\)/.test(pos) && /function resumeHeld\(id\)/.test(pos));
+  ok('diskon per barang (Rp / %)', /function applyDisc\(clear\)/.test(pos) && /discMode === 'pct'/.test(pos));
+  ok('kasir hanya kirim id, qty, add-on, diskon', /product_id: i\.id, qty: i\.qty, discount: i\.disc \|\| 0/.test(pos));
+  ok('transaksi offline diantrekan + tidak dobel', /Offline\.push\(args, t\)/.test(pos) && /p_client_ref: newRef\(\)/.test(pos));
+  ok('produk tersimpan untuk offline', /function saveCache\(\)/.test(pos) && /Mode offline: memakai data produk terakhir/.test(pos));
+  ok('refund sebagian di riwayat', /refund_items/.test(R('orders.html')));
+  ok('laporan memperhitungkan refund', /refunds\.filter/.test(R('reports.html')));
+  ok('riwayat shift di laporan', /function renderShifts/.test(R('reports.html')));
+  ok('halaman log aktivitas', fs.existsSync(path.join(SRC, 'audit.html')) && /id: 'audit'/.test(R('js/ui.js')));
+  ok('PWA: manifest + service worker', fs.existsSync(path.join(SRC, 'manifest.webmanifest')) && fs.existsSync(path.join(SRC, 'sw.js')));
+  ok('service worker tidak menyimpan data Supabase', /url\.origin !== self\.location\.origin\) return/.test(R('sw.js')));
+  ok('ikon aplikasi tersedia', fs.existsSync(path.join(SRC, 'img/icon-512.png')));
+}
+
+/* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')
                   : ('SEMUA LULUS — ' + pass + ' tes');
 console.log('\n' + '='.repeat(56));

@@ -559,6 +559,7 @@ const Printer = (function () {
       if (idx) b.line('');
       b.wrap(i.name);
       b.pair('  ' + qty(i.qty) + ' x ' + rp(i.price), rp(Number(i.price) * Number(i.qty)));
+      if (Number(i.disc)) b.pair('    Diskon', '-' + rp(i.disc));
     });
     b.rule();
 
@@ -625,6 +626,7 @@ const Printer = (function () {
   return {
     COLS, support, connect, reconnect, ensure, disconnect, connected, info,
     forget, printReceipt, printTest, printPlain, buildReceipt, onChange,
+    printRaw: writeRaw,
     diag, prefs, setPrefs,
     Builder, toAscii,
   };

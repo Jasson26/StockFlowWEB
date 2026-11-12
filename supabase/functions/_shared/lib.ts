@@ -271,3 +271,40 @@ export function mapMidtransStatus(
       return 'pending';
   }
 }
+
+/* ---------- Batas percobaan (anti tebak-tebakan) ----------
+   Disimpan di tabel auth_attempts (tanpa policy, hanya service_role).
+   Kalau tabel belum ada (migrasi 06 belum dijalankan), pengecekan dilewati
+   supaya login tetap berfungsi. */
+export function clientIp(req: Request): string {
+  const xf = req.headers.get('x-forwarded-for') || '';
+  return (xf.split(',')[0] || req.headers.get('cf-connecting-ip') || 'unknown').trim();
+}
+
+export async function tooManyAttempts(keys: string[], max = 8, minutes = 15): Promise<boolean> {
+  const since = new Date(Date.now() - minutes * 60_000).toISOString();
+  for (const k of keys) {
+    const r = await sbAdmin(
+      `/rest/v1/auth_attempts?key=eq.${encodeURIComponent(k)}&at=gte.${since}&select=id`,
+      { headers: { Prefer: 'count=exact', Range: '0-0' } },
+    );
+    if (!r.ok) return false;
+    const range = r.headers.get('content-range') || '';
+    const total = Number(range.split('/')[1] || 0);
+    if (total >= max) return true;
+  }
+  return false;
+}
+
+export async function recordAttempt(keys: string[]): Promise<void> {
+  await sbAdmin('/rest/v1/auth_attempts', {
+    method: 'POST',
+    body: JSON.stringify(keys.map((key) => ({ key }))),
+  }).catch(() => {});
+}
+
+export async function clearAttempts(keys: string[]): Promise<void> {
+  for (const k of keys) {
+    await sbAdmin(`/rest/v1/auth_attempts?key=eq.${encodeURIComponent(k)}`, { method: 'DELETE' }).catch(() => {});
+  }
+}

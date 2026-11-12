@@ -3,10 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.midtrans.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<script src="js/boot.js?v=20261113a"></script>
 <meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Pengaturan — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261111a">
+<link rel="stylesheet" href="css/app.css?v=20261113a">
 <style>
 /* Satu kartu, isinya baris-baris. Label kiri, kontrol kanan. */
 .sheet { max-width: 640px; margin: 0 auto; }
@@ -102,9 +108,28 @@ details.adv[open] > summary { background: var(--surface-2); }
   <div class="srow">
     <div class="srow-lbl">Password baru</div>
     <div class="srow-ctl" style="flex:1;max-width:320px">
-      <input type="password" id="newPass" class="input" placeholder="Min. 8 karakter"
+      <input type="password" id="newPass" class="input" placeholder="Min. 8, huruf + angka"
              autocomplete="new-password" style="flex:1">
       <button class="btn btn-sm" onclick="savePass()">Simpan</button>
+    </div>
+  </div>
+
+  <div class="srow">
+    <div class="srow-lbl">Verifikasi 2 langkah<small id="mfaState">Memeriksa…</small></div>
+    <div class="srow-ctl"><button class="btn btn-sm" id="mfaBtn" onclick="mfaToggle()">&mdash;</button></div>
+  </div>
+  <div class="srow stack hide" id="mfaBox">
+    <div class="row" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
+      <div id="mfaQr" style="width:164px;height:164px;background:#fff;border-radius:10px;padding:6px;flex:none"></div>
+      <div style="flex:1;min-width:200px">
+        <div class="fs13 c-mid mb8">1. Pindai QR dengan Google Authenticator / Microsoft Authenticator.<br>
+          2. Masukkan kode 6 angka yang muncul.</div>
+        <div class="fs12 c-dim mb8">Tidak bisa memindai? Kode manual: <span class="mono" id="mfaSecret" style="user-select:all"></span></div>
+        <div class="row" style="gap:8px">
+          <input type="text" id="mfaCode" class="input mono" inputmode="numeric" maxlength="6" placeholder="123456" style="max-width:140px;letter-spacing:.2em">
+          <button class="btn btn-primary btn-sm" onclick="mfaVerify()">Aktifkan</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -313,13 +338,13 @@ details.adv[open] > summary { background: var(--surface-2); }
   </div>
 </div>
 
-<script src="js/icons.js?v=20261111a"></script>
-<script src="js/printer.js?v=20261111a"></script>
-<script src="js/config.js?v=20261111a"></script>
-<script src="js/demo.js?v=20261111a"></script>
-<script src="js/api.js?v=20261111a"></script>
-<script src="js/auth.js?v=20261111a"></script>
-<script src="js/ui.js?v=20261111a"></script>
+<script src="js/icons.js?v=20261113a"></script>
+<script src="js/printer.js?v=20261113a"></script>
+<script src="js/config.js?v=20261113a"></script>
+<script src="js/demo.js?v=20261113a"></script>
+<script src="js/api.js?v=20261113a"></script>
+<script src="js/auth.js?v=20261113a"></script>
+<script src="js/ui.js?v=20261113a"></script>
 <script>
 if (!Auth.guard(true)) throw 'redirect';
 var U = Auth.user();
@@ -561,9 +586,60 @@ async function saveName() {
   setTimeout(function () { location.reload(); }, 600);
 }
 
+/* ---------- Verifikasi 2 langkah ---------- */
+var mfaF = null, mfaNew = null;
+
+async function mfaLoad() {
+  if (typeof Demo !== 'undefined' && Demo.on()) {
+    document.getElementById('mfaState').textContent = 'Tidak tersedia di mode demo';
+    document.getElementById('mfaBtn').classList.add('hide');
+    return;
+  }
+  var list = await Auth.mfaFactors();
+  mfaF = list.find(function (f) { return f.status === 'verified'; }) || null;
+  document.getElementById('mfaState').textContent = mfaF
+    ? 'Aktif — setiap masuk perlu kode 6 angka'
+    : (U.is_admin ? 'Wajib untuk membuka panel Admin' : 'Lindungi akun dengan kode dari HP');
+  document.getElementById('mfaBtn').textContent = mfaF ? 'Matikan' : 'Aktifkan';
+}
+
+async function mfaToggle() {
+  if (mfaF) {
+    var ok = await UI.confirm({ title: 'Matikan verifikasi 2 langkah?', text: 'Akun hanya dilindungi password.', ok: 'Matikan', danger: true });
+    if (!ok) return;
+    var r = await Auth.mfaRemove(mfaF.id);
+    if (!r.ok) return UI.toast(r.msg, 'error');
+    UI.toast('Verifikasi 2 langkah dimatikan', 'ok');
+    return mfaLoad();
+  }
+  UI.loading(true);
+  var e = await Auth.mfaEnroll();
+  UI.loading(false);
+  if (!e.ok) return UI.toast(e.msg, 'error');
+  mfaNew = e.id;
+  /* qr_code dari Supabase berupa SVG (data URI) */
+  document.getElementById('mfaQr').innerHTML = '<img src="' + UI.esc(e.qr || '') + '" alt="QR verifikasi 2 langkah" style="width:100%;height:100%">';
+  document.getElementById('mfaSecret').textContent = e.secret || '';
+  document.getElementById('mfaBox').classList.remove('hide');
+  document.getElementById('mfaCode').focus();
+}
+
+async function mfaVerify() {
+  if (!mfaNew) return;
+  UI.loading(true);
+  var r = await Auth.mfaConfirm(mfaNew, document.getElementById('mfaCode').value.replace(/\D/g, ''));
+  UI.loading(false);
+  if (!r.ok) return UI.toast(r.msg, 'error');
+  document.getElementById('mfaBox').classList.add('hide');
+  UI.toast('Verifikasi 2 langkah aktif', 'ok');
+  mfaNew = null;
+  mfaLoad();
+}
+
 async function savePass() {
   var p = document.getElementById('newPass').value;
-  if (p.length < 8) return UI.toast('Minimal 8 karakter', 'error');
+  var pwi = Auth.passwordIssue(p);
+  if (pwi) return UI.toast(pwi, 'error');
   UI.loading(true);
   var r = await Auth.changePassword(p);
   UI.loading(false);
@@ -782,6 +858,7 @@ async function doDelete() {
 }
 
 load();
+mfaLoad();
 </script>
 </body>
 </html>

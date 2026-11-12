@@ -3,10 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#6C4CF1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.midtrans.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<script src="js/boot.js?v=20261113a"></script>
+<meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Kasir — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261111a">
+<link rel="stylesheet" href="css/app.css?v=20261113a">
 </head>
 <body>
 
@@ -36,6 +42,8 @@
       <div class="cart-hd">
         <h3>Keranjang</h3>
         <span class="badge brand" id="cartCount">0 item</span>
+        <button class="btn btn-ghost btn-sm" onclick="openHeld()" id="heldBtn" title="Pesanan tersimpan"><span data-ico="clock" data-ico-size="15"></span><span id="heldCount">0</span></button>
+        <button class="btn btn-ghost btn-icon" onclick="holdCart()" title="Simpan pesanan (open bill)"><span data-ico="download" data-ico-size="16"></span></button>
         <button class="btn btn-ghost btn-icon" onclick="clearCart()" title="Kosongkan"><span data-ico="trash" data-ico-size="16"></span></button>
         <button class="btn btn-ghost btn-icon only-mobile" onclick="closeCart()" title="Tutup">&times;</button>
       </div>
@@ -157,6 +165,85 @@
 </div>
 
 <!-- ============ MODAL STRUK ============ -->
+<!-- DISKON BARIS -->
+<div class="modal" id="mDisc">
+  <div class="modal-box narrow">
+    <div class="modal-hd"><h3 id="dTitle">Diskon</h3><button class="modal-x" onclick="UI.closeModal('mDisc')">&times;</button></div>
+    <div class="modal-bd">
+      <div class="seg mb12" style="grid-template-columns:1fr 1fr">
+        <button type="button" class="seg-btn on" data-u="rp" onclick="discUnit('rp')">Rupiah</button>
+        <button type="button" class="seg-btn" data-u="pct" onclick="discUnit('pct')">Persen</button>
+      </div>
+      <input type="number" id="dVal" class="input" min="0" placeholder="0" style="font-size:20px;font-weight:700;text-align:right">
+      <div class="hint" id="dHint"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="applyDisc(true)">Hapus diskon</button>
+      <button class="btn btn-primary" onclick="applyDisc()">Terapkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUKA KASIR -->
+<div class="modal" id="mShiftOpen">
+  <div class="modal-box narrow">
+    <div class="modal-hd"><h3>Buka kasir</h3></div>
+    <div class="modal-bd">
+      <p class="fs13 c-mid mb12">Hitung uang di laci sebelum mulai jualan.</p>
+      <label class="label" for="soCash">KAS AWAL</label>
+      <input type="number" id="soCash" class="input" min="0" placeholder="0" style="font-size:20px;font-weight:700;text-align:right">
+    </div>
+    <div class="modal-ft">
+      <a class="btn" href="orders.html">Nanti</a>
+      <button class="btn btn-primary" onclick="openShift()">Buka kasir</button>
+    </div>
+  </div>
+</div>
+
+<!-- TUTUP KASIR -->
+<div class="modal" id="mShiftClose">
+  <div class="modal-box narrow">
+    <div class="modal-hd"><h3>Tutup kasir</h3><button class="modal-x" onclick="UI.closeModal('mShiftClose')">&times;</button></div>
+    <div class="modal-bd">
+      <div id="scSum" class="mb16"></div>
+      <label class="label" for="scCash">UANG DI LACI SEKARANG</label>
+      <input type="number" id="scCash" class="input" min="0" placeholder="0" oninput="scDiff()"
+             style="font-size:20px;font-weight:700;text-align:right">
+      <div id="scDiff" class="mt8 fs13"></div>
+      <label class="label mt12" for="scNote">CATATAN</label>
+      <input type="text" id="scNote" class="input" placeholder="Opsional">
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mShiftClose')">Batal</button>
+      <button class="btn btn-primary" onclick="closeShift()">Tutup kasir</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIMPAN PESANAN -->
+<div class="modal" id="mHold">
+  <div class="modal-box narrow">
+    <div class="modal-hd"><h3>Simpan pesanan</h3><button class="modal-x" onclick="UI.closeModal('mHold')">&times;</button></div>
+    <div class="modal-bd">
+      <label class="label" for="hName">NAMA / NOMOR MEJA</label>
+      <input type="text" id="hName" class="input" maxlength="40" onkeydown="if(event.key==='Enter')confirmHold()">
+      <div class="hint">Pesanan disimpan di perangkat ini dan bisa dibayar nanti.</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="UI.closeModal('mHold')">Batal</button>
+      <button class="btn btn-primary" onclick="confirmHold()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- PESANAN TERSIMPAN -->
+<div class="modal" id="mHeld">
+  <div class="modal-box narrow">
+    <div class="modal-hd"><h3>Pesanan tersimpan</h3><button class="modal-x" onclick="UI.closeModal('mHeld')">&times;</button></div>
+    <div class="modal-bd" id="heldList"></div>
+  </div>
+</div>
+
 <div class="modal" id="mAddon">
   <div class="modal-box narrow">
     <div class="modal-hd">
@@ -205,13 +292,13 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261111a"></script>
-<script src="js/printer.js?v=20261111a"></script>
-<script src="js/config.js?v=20261111a"></script>
-<script src="js/demo.js?v=20261111a"></script>
-<script src="js/api.js?v=20261111a"></script>
-<script src="js/auth.js?v=20261111a"></script>
-<script src="js/ui.js?v=20261111a"></script>
+<script src="js/icons.js?v=20261113a"></script>
+<script src="js/printer.js?v=20261113a"></script>
+<script src="js/config.js?v=20261113a"></script>
+<script src="js/demo.js?v=20261113a"></script>
+<script src="js/api.js?v=20261113a"></script>
+<script src="js/auth.js?v=20261113a"></script>
+<script src="js/ui.js?v=20261113a"></script>
 <script>
 if (!Auth.guard()) throw 'redirect';
 
@@ -229,6 +316,8 @@ var lastCustomer = 'Umum';
 var qr = { orderId: null, gatewayId: null, expiresAt: 0, pollTimer: null, tickTimer: null, orderNo: null };
 
 UI.shell('pos', 'Kasir',
+  '<span class="net-pill hide" id="netPill" onclick="syncQueue(true)" title="Ketuk untuk kirim ulang"></span>' +
+  '<button class="btn btn-sm" id="shiftBtn" onclick="openCloseShift()" title="Tutup kasir">' + UI.ic('lock', 15) + '<span class="hide-mobile">Tutup kasir</span></button>' +
   '<span class="badge hide-mobile">' + UI.esc(U.business_name) + '</span>' +
   '<button class="btn btn-ghost btn-icon hide-mobile" onclick="UI.toggleTheme()" title="Mode gelap">' + UI.ic('moon',16) + '</button>'
 );
@@ -242,10 +331,20 @@ async function load() {
   var rp_ = await API.from('products').select('*').eq('active', true).order('name');
   UI.loading(false);
 
-  if (rp_.error) return UI.toast(rp_.error.message, 'error');
+  if (rp_.error) {
+    /* Offline: pakai daftar produk terakhir yang tersimpan di perangkat */
+    var c = readCache();
+    if (c) {
+      cats = c.cats; products = c.products;
+      renderCats(); renderGrid(); renderNet();
+      return UI.toast('Mode offline: memakai data produk terakhir', 'warn');
+    }
+    return UI.toast(rp_.error.message, 'error');
+  }
 
   cats     = rc.data || [];
   products = rp_.data || [];
+  saveCache();
   renderCats();
   renderGrid();
 }
@@ -419,7 +518,7 @@ function clearCart() {
 }
 
 function totals() {
-  var sub  = cart.reduce(function (s, i) { return s + i.price * i.qty; }, 0);
+  var sub  = cart.reduce(function (s, i) { return s + i.price * i.qty - (i.disc || 0); }, 0);
   var disc = Math.max(0, Number(document.getElementById('disc').value) || 0);
   if (disc > sub) disc = sub;
   var tax = Math.round((sub - disc) * (Number(U.tax_percent) || 0) / 100);
@@ -439,10 +538,12 @@ function renderCart() {
           (i.addons && i.addons.length
             ? '<div class="citem-addons">' + i.addons.map(function (a) { return '+ ' + UI.esc(a.name); }).join('<br>') + '</div>'
             : '') +
-          '<div class="citem-price">' + UI.rp(i.price) + ' / unit</div>' +
+          '<div class="citem-price">' + UI.rp(i.price) + ' / unit · ' +
+            '<button class="citem-disc" onclick="openDisc(' + idx + ')">' +
+              (i.disc ? 'Diskon −' + UI.rp(i.disc) : '+ Diskon') + '</button></div>' +
         '</div>' +
         '<div class="citem-right">' +
-          '<div class="citem-sub mono">' + UI.rp(i.price * i.qty) + '</div>' +
+          '<div class="citem-sub mono">' + UI.rp(i.price * i.qty - (i.disc || 0)) + '</div>' +
           '<div class="qty">' +
             '<button onclick="bumpAt(' + idx + ',-1)">&minus;</button>' +
             '<input type="number" value="' + i.qty + '" onchange="setQtyAt(' + idx + ',this.value)">' +
@@ -459,7 +560,8 @@ function renderCart() {
   document.getElementById('sTax').textContent      = UI.rp(t.tax);
   document.getElementById('sTotal').textContent    = UI.rp(t.total);
   document.getElementById('cartCount').textContent = n + ' item';
-  document.getElementById('payBtn').disabled       = !cart.length;
+  /* Toko tidak aktif: tombol bayar dikunci (database juga menolak) */
+  document.getElementById('payBtn').disabled       = !cart.length || !Auth.subscription().active;
   document.getElementById('taxRow').classList.toggle('hide', !Number(U.tax_percent));
 
   document.getElementById('fabCount').textContent = n;
@@ -590,26 +692,61 @@ async function submitPay() {
 }
 
 /* ---------- Tunai & QRIS unggahan: langsung lunas ---------- */
+/* Yang dikirim ke server hanya produk, jumlah, nama add-on, dan diskon baris.
+   Harga, modal, dan pajak dihitung ulang di database. */
+function cartPayload() {
+  return cart.map(function (i) {
+    return {
+      product_id: i.id, qty: i.qty, discount: i.disc || 0,
+      addons: (i.addons || []).map(function (a) { return a.name; }),
+      /* tiga kolom ini hanya dipakai mode demo */
+      name: i.name, price: i.price, cost: i.cost,
+    };
+  });
+}
+
+function itemsForReceipt() {
+  return cart.map(function (i) { return { name: i.name, price: i.price, qty: i.qty, disc: i.disc || 0 }; });
+}
+
+function newRef() {
+  return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+}
+
 async function finishManual(payMethod, ref) {
   busy = true;
   UI.loading(true);
 
   var t = totals();
-  lastItems = cart.map(function (i) { return { name: i.name, price: i.price, qty: i.qty }; });
-
-  var res = await API.rpc('checkout_cash', {
-    p_items: cart.map(function (i) {
-      return { product_id: i.id, name: i.name, price: i.price, cost: i.cost, qty: i.qty };
-    }),
+  lastItems = itemsForReceipt();
+  var args = {
+    p_items: cartPayload(),
     p_discount: t.disc,
     p_tax: t.tax,
     p_paid: payMethod === 'cash' ? (Number(document.getElementById('paid').value) || t.total) : t.total,
     p_customer: (lastCustomer = document.getElementById('cust').value.trim() || 'Umum'),
     p_method: payMethod,
-  });
+    p_client_ref: newRef(),
+  };
+
+  var res = await API.rpc('checkout_cash', args);
 
   UI.loading(false);
   busy = false;
+
+  /* Internet putus: simpan di perangkat, kirim otomatis saat online lagi */
+  if (res.error && res.error.network) {
+    var q = Offline.push(args, t);
+    var o0 = { order_no: 'OFFLINE-' + q.ref.slice(0, 6).toUpperCase(), subtotal: t.sub, discount: t.disc,
+               tax: t.tax, total: t.total, paid_amount: args.p_paid, change_amount: args.p_paid - t.total,
+               status: 'paid', payment_method: payMethod, customer_name: args.p_customer, offline: true };
+    UI.closeModal('mPay');
+    showReceipt(o0);
+    reserveStock();
+    resetCart();
+    renderNet();
+    return UI.toast('Offline: transaksi disimpan dan dikirim otomatis saat online', 'warn');
+  }
 
   if (res.error) return UI.toast(res.error.message, 'error');
 
@@ -623,6 +760,16 @@ async function finishManual(payMethod, ref) {
   load();
 }
 
+/* Kurangi stok di layar untuk transaksi offline supaya tidak menjual melebihi stok */
+function reserveStock() {
+  cart.forEach(function (i) {
+    var p = products.find(function (x) { return x.id === i.id; });
+    if (p) p.stock = Math.max(0, Number(p.stock) - i.qty);
+  });
+  saveCache();
+  renderGrid();
+}
+
 /* ============================================================
    PEMBAYARAN — alur QRIS
    ============================================================ */
@@ -631,13 +778,11 @@ async function startQris() {
   UI.loading(true);
 
   var t = totals();
-  lastItems = cart.map(function (i) { return { name: i.name, price: i.price, qty: i.qty }; });
+  lastItems = itemsForReceipt();
 
   /* 1. Buat order pending (stok belum dipotong) */
   var ord = await API.rpc('order_create_pending', {
-    p_items: cart.map(function (i) {
-      return { product_id: i.id, name: i.name, price: i.price, cost: i.cost, qty: i.qty };
-    }),
+    p_items: cartPayload(),
     p_discount: t.disc,
     p_tax: t.tax,
     p_customer: (lastCustomer = document.getElementById('cust').value.trim() || 'Umum'),
@@ -827,7 +972,9 @@ function showReceipt(o) {
   var itemsHtml = lastItems.map(function (i) {
     return '<div class="r-item"><div class="r-item-n">' + UI.esc(i.name) + '</div>' +
       '<div class="r-row"><span>' + UI.num(i.qty) + ' x ' + UI.rp(i.price) + '</span>' +
-      '<span>' + UI.rp(i.price * i.qty) + '</span></div></div>';
+      '<span>' + UI.rp(i.price * i.qty) + '</span></div>' +
+      (i.disc ? '<div class="r-row"><span>&nbsp;&nbsp;Diskon</span><span>-' + UI.rp(i.disc) + '</span></div>' : '') +
+      '</div>';
   }).join('');
 
   var queue = queueNo(o.order_no);
@@ -841,6 +988,7 @@ function showReceipt(o) {
       '<div class="r-sub">' + UI.dt(new Date().toISOString()) + '</div></div>' +
       '<hr>' +
       (queue ? '<div class="r-q"><small>NO. ANTRIAN</small><b>' + queue + '</b></div><hr>' : '') +
+      (o.offline ? '<div class="r-c" style="font-weight:700">** OFFLINE — belum terkirim **</div><hr>' : '') +
       '<div class="r-row"><span>No.</span><span>' + UI.esc(o.order_no) + '</span></div>' +
       '<div class="r-row"><span>Kasir</span><span>' + UI.esc(U.name) + '</span></div>' +
       '<div class="r-row"><span>Pembeli</span><span>' + UI.esc(cust) + '</span></div>' +
@@ -996,7 +1144,306 @@ window.addEventListener('beforeunload', function (e) {
 });
 
 renderCart();
-load();
+/* ============================================================
+   CACHE PRODUK & ANTRIAN OFFLINE
+   ============================================================ */
+var CACHE_KEY = 'sf5_cache_' + U.business_id;
+
+function saveCache() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ cats: cats, products: products, at: Date.now() })); } catch (e) {}
+}
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; }
+}
+
+var Offline = (function () {
+  var KEY = 'sf5_queue_' + U.business_id;
+  var syncing = false;
+  function list() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
+  function save(l) { try { localStorage.setItem(KEY, JSON.stringify(l)); } catch (e) {} }
+  return {
+    list: list,
+    push: function (args, t) {
+      var l = list();
+      var item = { ref: args.p_client_ref, args: args, total: t.total, at: new Date().toISOString(), err: null };
+      l.push(item); save(l);
+      return item;
+    },
+    remove: function (ref) { save(list().filter(function (x) { return x.ref !== ref; })); },
+    /* Kirim satu per satu. p_client_ref membuat pengiriman ulang tidak dobel. */
+    sync: async function () {
+      if (syncing || !navigator.onLine) return { sent: 0 };
+      syncing = true;
+      var sent = 0, l = list();
+      for (var i = 0; i < l.length; i++) {
+        var r = await API.rpc('checkout_cash', l[i].args);
+        if (r.error && r.error.network) break;
+        if (r.error) { l[i].err = r.error.message; continue; }
+        l[i].done = true; sent++;
+      }
+      save(l.filter(function (x) { return !x.done; }));
+      syncing = false;
+      return { sent: sent };
+    },
+  };
+})();
+
+function renderNet() {
+  var pill = document.getElementById('netPill');
+  if (!pill) return;
+  var q = Offline.list();
+  var failed = q.filter(function (x) { return x.err; }).length;
+  if (!navigator.onLine) {
+    pill.className = 'net-pill off';
+    pill.textContent = 'Offline' + (q.length ? ' · ' + q.length + ' antre' : '');
+  } else if (q.length) {
+    pill.className = 'net-pill ' + (failed ? 'bad' : 'wait');
+    pill.textContent = failed ? failed + ' gagal dikirim' : q.length + ' menunggu dikirim';
+  } else {
+    pill.className = 'net-pill hide';
+  }
+}
+
+async function syncQueue(manual) {
+  var q = Offline.list();
+  if (manual && q.some(function (x) { return x.err; })) return openQueue();
+  if (!q.length) return;
+  var r = await Offline.sync();
+  renderNet();
+  if (r.sent) { UI.toast(r.sent + ' transaksi offline terkirim', 'ok'); load(); }
+}
+
+function openQueue() {
+  var q = Offline.list();
+  document.getElementById('heldList').innerHTML = '<div class="label mb8">TRANSAKSI OFFLINE</div>' + q.map(function (x) {
+    return '<div class="held-row"><div style="flex:1;min-width:0"><b>' + UI.rp(x.total) + '</b>' +
+      '<div class="fs12 c-dim">' + UI.dt(x.at) + '</div>' +
+      (x.err ? '<div class="fs12 c-danger">' + UI.esc(x.err) + '</div>' : '') + '</div>' +
+      '<button class="btn btn-sm btn-ghost c-danger" onclick="dropQueued(\'' + x.ref + '\')">Hapus</button></div>';
+  }).join('') + '<button class="btn btn-primary btn-block mt12" onclick="UI.closeModal(\'mHeld\');Offline.sync().then(function(){renderNet();load();})">Kirim ulang</button>';
+  UI.openModal('mHeld');
+}
+
+function dropQueued(ref) {
+  UI.confirm({ title: 'Hapus transaksi offline?', text: 'Transaksi ini tidak akan tercatat.', ok: 'Hapus', danger: true })
+    .then(function (ok) { if (ok) { Offline.remove(ref); renderNet(); openQueue(); } });
+}
+
+window.addEventListener('online',  function () { renderNet(); syncQueue(); });
+window.addEventListener('offline', renderNet);
+setInterval(function () { if (Offline.list().length) syncQueue(); }, 30000);
+
+/* ============================================================
+   DISKON PER BARANG
+   ============================================================ */
+var discIdx = -1, discMode = 'rp';
+
+function openDisc(idx) {
+  var it = cart[idx]; if (!it) return;
+  discIdx = idx; discUnit('rp');
+  document.getElementById('dTitle').textContent = 'Diskon · ' + (it.base || it.name);
+  document.getElementById('dVal').value = it.disc || '';
+  document.getElementById('dHint').textContent = 'Total baris ' + UI.rp(it.price * it.qty);
+  UI.openModal('mDisc');
+  setTimeout(function () { document.getElementById('dVal').focus(); }, 60);
+}
+
+function discUnit(u) {
+  discMode = u;
+  document.querySelectorAll('#mDisc .seg-btn').forEach(function (b) { b.classList.toggle('on', b.dataset.u === u); });
+}
+
+function applyDisc(clear) {
+  var it = cart[discIdx]; if (!it) return;
+  var line = it.price * it.qty;
+  var v = clear ? 0 : Math.max(0, Number(document.getElementById('dVal').value) || 0);
+  var amt = discMode === 'pct' ? Math.round(line * Math.min(v, 100) / 100) : v;
+  if (amt > line) return UI.toast('Diskon melebihi harga', 'error');
+  it.disc = amt;
+  UI.closeModal('mDisc');
+  renderCart();
+}
+
+/* ============================================================
+   SIMPAN PESANAN (open bill) — disimpan di perangkat ini
+   ============================================================ */
+var HELD_KEY = 'sf5_held_' + U.business_id;
+function heldList() { try { return JSON.parse(localStorage.getItem(HELD_KEY) || '[]'); } catch (e) { return []; } }
+function heldSave(l) { try { localStorage.setItem(HELD_KEY, JSON.stringify(l)); } catch (e) {} renderHeldCount(); }
+function renderHeldCount() {
+  var n = heldList().length;
+  document.getElementById('heldCount').textContent = n;
+  document.getElementById('heldBtn').classList.toggle('hide', !n);
+}
+
+function holdCart() {
+  if (!cart.length) return UI.toast('Keranjang masih kosong', 'warn');
+  document.getElementById('hName').value = 'Pesanan ' + (heldList().length + 1);
+  UI.openModal('mHold');
+  setTimeout(function () { var el = document.getElementById('hName'); el.focus(); el.select(); }, 60);
+}
+
+function confirmHold() {
+  var l = heldList();
+  var label = document.getElementById('hName').value;
+  UI.closeModal('mHold');
+  l.push({ id: newRef(), name: (label.trim() || 'Pesanan ' + (l.length + 1)).slice(0, 40),
+           cart: cart, disc: Number(document.getElementById('disc').value) || 0, at: new Date().toISOString() });
+  heldSave(l);
+  cart = []; document.getElementById('disc').value = 0; renderCart();
+  UI.toast('Pesanan disimpan', 'ok');
+}
+
+function openHeld() {
+  var l = heldList();
+  document.getElementById('heldList').innerHTML = l.length ? l.map(function (h) {
+    var tot = h.cart.reduce(function (s, i) { return s + i.price * i.qty - (i.disc || 0); }, 0) - (h.disc || 0);
+    var n = h.cart.reduce(function (s, i) { return s + i.qty; }, 0);
+    return '<div class="held-row"><div style="flex:1;min-width:0"><b>' + UI.esc(h.name) + '</b>' +
+      '<div class="fs12 c-dim">' + n + ' item · ' + UI.rp(tot) + ' · ' + UI.dt(h.at) + '</div></div>' +
+      '<button class="btn btn-sm btn-primary" onclick="resumeHeld(\'' + h.id + '\')">Buka</button>' +
+      '<button class="btn btn-sm btn-ghost c-danger" onclick="dropHeld(\'' + h.id + '\')">' + UI.ic('trash', 15) + '</button></div>';
+  }).join('') : UI.empty('clock', 'Tidak ada pesanan tersimpan');
+  UI.openModal('mHeld');
+}
+
+function resumeHeld(id) {
+  var l = heldList(), h = l.find(function (x) { return x.id === id; });
+  if (!h) return;
+  var go = function () {
+    /* Sesuaikan dengan stok terbaru */
+    cart = h.cart.filter(function (i) {
+      var p = products.find(function (x) { return x.id === i.id; });
+      if (!p) return false;
+      i.stock = Number(p.stock) || 0;
+      return true;
+    });
+    document.getElementById('disc').value = h.disc || 0;
+    heldSave(l.filter(function (x) { return x.id !== id; }));
+    UI.closeModal('mHeld');
+    renderCart();
+    if (cart.length < h.cart.length) UI.toast('Sebagian produk sudah tidak tersedia', 'warn');
+  };
+  if (cart.length) {
+    UI.confirm({ title: 'Ganti keranjang?', text: 'Isi keranjang sekarang akan disimpan dulu sebagai pesanan.', ok: 'Lanjut' })
+      .then(function (ok) {
+        if (!ok) return;
+        l.push({ id: newRef(), name: 'Pesanan ' + (l.length + 1), cart: cart,
+                 disc: Number(document.getElementById('disc').value) || 0, at: new Date().toISOString() });
+        go();
+      });
+  } else go();
+}
+
+function dropHeld(id) {
+  UI.confirm({ title: 'Hapus pesanan tersimpan?', ok: 'Hapus', danger: true }).then(function (ok) {
+    if (!ok) return;
+    heldSave(heldList().filter(function (x) { return x.id !== id; }));
+    openHeld();
+  });
+}
+
+/* ============================================================
+   BUKA / TUTUP KASIR (shift)
+   ============================================================ */
+var shiftOn = null;   // null = belum dicek / fitur belum tersedia
+
+async function checkShift() {
+  if (typeof Demo !== 'undefined' && Demo.on()) { document.getElementById('shiftBtn').classList.add('hide'); return; }
+  var r = await API.rpc('shift_summary', {});
+  if (r.error) {
+    /* Migrasi belum dijalankan atau offline: jangan blokir kasir */
+    document.getElementById('shiftBtn').classList.add('hide');
+    return;
+  }
+  shiftOn = !!r.data;
+  document.getElementById('shiftBtn').classList.toggle('hide', !shiftOn);
+  if (!shiftOn) UI.openModal('mShiftOpen');
+}
+
+async function openShift() {
+  var v = Number(document.getElementById('soCash').value);
+  if (!(v >= 0)) return UI.toast('Isi kas awal (boleh 0)', 'error');
+  UI.loading(true);
+  var r = await API.rpc('shift_open', { p_cash: v });
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  UI.closeModal('mShiftOpen');
+  UI.toast('Kasir dibuka', 'ok');
+  checkShift();
+}
+
+var scData = null;
+async function openCloseShift() {
+  UI.loading(true);
+  var r = await API.rpc('shift_summary', {});
+  UI.loading(false);
+  if (r.error || !r.data) return UI.toast(r.error ? r.error.message : 'Kasir belum dibuka', 'error');
+  scData = r.data;
+  var row = function (l, v, cls) { return '<div class="sumrow"><span>' + l + '</span><span class="mono ' + (cls || '') + '">' + v + '</span></div>'; };
+  document.getElementById('scSum').innerHTML =
+    row('Dibuka', UI.dt(scData.opened_at)) +
+    row('Transaksi', scData.tx_count) +
+    row('Kas awal', UI.rp(scData.opening_cash)) +
+    row('Penjualan tunai', '+' + UI.rp(scData.cash_sales)) +
+    (Number(scData.cash_refunds) ? row('Refund tunai', '−' + UI.rp(scData.cash_refunds), 'c-danger') : '') +
+    '<div class="sumrow total"><span>Seharusnya di laci</span><span class="mono">' + UI.rp(scData.expected_cash) + '</span></div>' +
+    row('Penjualan QRIS (tidak di laci)', UI.rp(scData.qris_sales), 'c-mid');
+  document.getElementById('scCash').value = '';
+  document.getElementById('scNote').value = '';
+  document.getElementById('scDiff').innerHTML = '';
+  UI.openModal('mShiftClose');
+}
+
+function scDiff() {
+  var v = document.getElementById('scCash').value;
+  if (v === '' || !scData) { document.getElementById('scDiff').innerHTML = ''; return; }
+  var d = Number(v) - Number(scData.expected_cash);
+  document.getElementById('scDiff').innerHTML = d === 0
+    ? '<span class="c-ok fw7">Pas, tidak ada selisih</span>'
+    : '<span class="' + (d > 0 ? 'c-warn' : 'c-danger') + ' fw7">' + (d > 0 ? 'Lebih ' : 'Kurang ') + UI.rp(Math.abs(d)) + '</span>';
+}
+
+async function closeShift() {
+  var v = document.getElementById('scCash').value;
+  if (v === '') return UI.toast('Isi jumlah uang di laci', 'error');
+  if (Offline.list().length) return UI.toast('Masih ada transaksi offline. Tunggu sampai terkirim.', 'error');
+  UI.loading(true);
+  var r = await API.rpc('shift_close', { p_cash: Number(v), p_note: document.getElementById('scNote').value.trim() || null });
+  UI.loading(false);
+  if (r.error) return UI.toast(r.error.message, 'error');
+  UI.closeModal('mShiftClose');
+  var d = Number(r.data.difference) || 0;
+  UI.toast('Kasir ditutup. ' + (d === 0 ? 'Tidak ada selisih.' : (d > 0 ? 'Lebih ' : 'Kurang ') + UI.rp(Math.abs(d))), d === 0 ? 'ok' : 'warn');
+  printShift(r.data);
+  setTimeout(checkShift, 600);
+}
+
+/* Cetak ringkasan tutup kasir ke printer Bluetooth bila tersambung */
+async function printShift(d) {
+  if (!Printer.connected()) return;
+  try {
+    var b = new Printer.Builder();
+    b.init().align(1).bold(true).line('TUTUP KASIR').bold(false).line(U.business_name || '').align(0).rule();
+    b.pair('Kasir', d.user_name || '');
+    b.pair('Buka', new Date(d.opened_at).toLocaleString('id-ID'));
+    b.pair('Tutup', new Date().toLocaleString('id-ID'));
+    b.pair('Transaksi', String(d.tx_count)).rule();
+    var rp = function (n) { return 'Rp ' + Math.round(Number(n) || 0).toLocaleString('id-ID'); };
+    b.pair('Kas awal', rp(d.opening_cash));
+    b.pair('Tunai', rp(d.cash_sales));
+    b.pair('Refund tunai', rp(d.cash_refunds));
+    b.bold(true).pair('Seharusnya', rp(d.expected_cash)).bold(false);
+    b.pair('Di laci', rp(d.closing_cash));
+    b.bold(true).pair('Selisih', rp(d.difference)).bold(false).rule();
+    b.pair('QRIS', rp(d.qris_sales)).feed(4);
+    await Printer.printRaw(b.bytes());
+  } catch (e) {}
+}
+
+renderHeldCount();
+renderNet();
+load().then(function () { checkShift(); syncQueue(); });
 </script>
 </body>
 </html>

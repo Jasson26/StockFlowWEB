@@ -1,0 +1,21 @@
+{
+  "name": "StockFlow — Kasir & Stok",
+  "short_name": "StockFlow",
+  "description": "Kasir, stok, dan laporan untuk warung, kafe, dan toko kecil.",
+  "start_url": "./pos.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F8FAFC",
+  "theme_color": "#1F2937",
+  "lang": "id",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Kasir", "url": "./pos.html" },
+    { "name": "Riwayat", "url": "./orders.html" }
+  ]
+}

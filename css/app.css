@@ -1004,3 +1004,26 @@ html[data-theme='dark'] .feat-ico { color: var(--text); }
 .ao-qty { min-width: 34px; text-align: center; font-weight: 700; }
 .addon-ed { display: flex; flex-direction: column; gap: 8px; }
 .addon-ed .ae-row { display: grid; grid-template-columns: 1fr 120px 36px; gap: 8px; }
+
+/* ---------- Pengingat langganan ---------- */
+.sub-banner { display: flex; align-items: center; gap: 12px; margin: 12px 20px 0; padding: 11px 14px;
+              border-radius: 12px; font-size: 13.5px; line-height: 1.45; border: 1px solid; }
+.sub-banner > div { flex: 1; min-width: 0; }
+.sub-banner .btn { flex: none; }
+.sub-banner.warn { background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.35); color: var(--text); }
+.sub-banner.off  { background: rgba(185,28,28,.08); border-color: rgba(185,28,28,.30); color: var(--text); }
+.sub-banner.off .ico { color: var(--danger); }
+.sub-banner.warn .ico { color: #B45309; }
+@media (max-width: 620px) { .sub-banner { flex-wrap: wrap; margin: 10px 12px 0; } .sub-banner .btn { width: 100%; } }
+
+/* ---------- Kasir: diskon baris, pesanan tersimpan, status jaringan ---------- */
+.citem-disc { border: 0; background: none; padding: 0; font: inherit; font-size: 11.5px; font-weight: 600;
+              color: var(--accent); cursor: pointer; }
+.citem-disc:hover { text-decoration: underline; }
+.held-row, .rf-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.held-row:last-child, .rf-row:last-child { border-bottom: 0; }
+.net-pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 99px; cursor: pointer; white-space: nowrap; }
+.net-pill.off  { background: rgba(100,116,139,.15); color: var(--text-mid); }
+.net-pill.wait { background: rgba(245,158,11,.15); color: #B45309; }
+.net-pill.bad  { background: rgba(185,28,28,.12); color: var(--danger); }
+#heldBtn { gap: 4px; font-weight: 700; }
