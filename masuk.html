@@ -8,11 +8,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="img/favicon-32.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<script src="js/boot.js?v=20261113a"></script>
+<script src="js/boot.js?v=20261113c"></script>
 <meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Masuk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261113a">
+<link rel="stylesheet" href="css/app.css?v=20261113c">
 </head>
 <body>
 
@@ -24,9 +24,16 @@
 
     <div style="position:relative;z-index:1">
       <h2>Kelola toko Anda, dari mana saja.</h2>
-      <p>Sistem kasir dan manajemen inventaris untuk UMKM Indonesia.
+      <p>Kasir, stok, dan laporan untuk warung, kafe, dan toko.
          Berjalan di HP, tablet, dan komputer.</p>
       <div class="auth-feats" id="artFeats"></div>
+      <div class="auth-peek" aria-hidden="true">
+        <div class="ap-l">UANG MASUK HARI INI</div>
+        <div class="ap-big">Rp 1.284.000</div>
+        <span class="ap-up">&#9650; 12% vs kemarin</span>
+        <div class="ap-bars"><i style="height:25%"></i><i style="height:40%"></i><i style="height:62%"></i><i style="height:44%"></i><i style="height:30%"></i><i style="height:55%"></i><i style="height:92%" class="pk"></i><i style="height:66%"></i><i style="height:38%"></i></div>
+        <div class="ap-row"><span>Untung bersih</span><b>Rp 512.400</b></div>
+      </div>
     </div>
 
     <div class="auth-art-foot">
@@ -221,21 +228,21 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261113a"></script>
-<script src="js/config.js?v=20261113a"></script>
-<script src="js/demo.js?v=20261113a"></script>
-<script src="js/api.js?v=20261113a"></script>
-<script src="js/auth.js?v=20261113a"></script>
-<script src="js/ui.js?v=20261113a"></script>
+<script src="js/icons.js?v=20261113c"></script>
+<script src="js/config.js?v=20261113c"></script>
+<script src="js/demo.js?v=20261113c"></script>
+<script src="js/api.js?v=20261113c"></script>
+<script src="js/auth.js?v=20261113c"></script>
+<script src="js/ui.js?v=20261113c"></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 document.getElementById('artLogo').innerHTML  = Icons.logo(26);
 document.getElementById('formLogo').innerHTML = Icons.logo(30);
 document.getElementById('artFeats').innerHTML = [
-  ['pos',   'Kasir cepat dengan grid produk'],
-  ['qr',    'QRIS resmi, terkonfirmasi otomatis'],
-  ['box',   'Stok terpotong tiap transaksi'],
-  ['shield','Data tiap toko terisolasi'],
+  ['pos',   'Kasir cepat, add-on & diskon per menu'],
+  ['qr',    'QRIS semua e-wallet, struk otomatis'],
+  ['chart', 'Untung bersih terlihat tiap malam'],
+  ['shield','Data tiap toko terkunci, hanya untuk Anda'],
 ].map(function (f) {
   return '<div class="auth-feat"><i>' + Icons.svg(f[0], 15) + '</i>' + f[1] + '</div>';
 }).join('');

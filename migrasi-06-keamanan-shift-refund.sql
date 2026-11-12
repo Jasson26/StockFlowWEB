@@ -614,3 +614,13 @@ grant execute on function check_activation_code(text) to anon, authenticated;
 
 -- Fungsi tanpa search_path tetap dikunci ke schema public
 alter function norm_code(text) set search_path = public;
+
+-- Browser yang masih memakai halaman lama (tanpa kode aktivasi) mendapat
+-- pesan yang jelas, bukan error "function not found".
+create or replace function setup_owner(p_business_name text, p_name text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  raise exception 'Halaman Anda versi lama. Tekan Ctrl+Shift+R (atau tutup lalu buka lagi), kemudian isi kode aktivasi.';
+end $$;
+revoke execute on function setup_owner(text, text) from public, anon;
+grant  execute on function setup_owner(text, text) to authenticated;

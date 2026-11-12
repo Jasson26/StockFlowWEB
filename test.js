@@ -1376,6 +1376,25 @@ section('[37] Keamanan v5.6 + shift, open bill, diskon baris, refund, offline/PW
 }
 
 /* ============================================================ */
+section('[38] Halaman depan & masuk hasil riset');
+{
+  const R = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
+  const ix = R('index.html'), lc = R('css/landing.css'), ac = R('css/app.css'), ms = R('masuk.html');
+  ok('hero dua kolom: teks + tampilan produk', /class="wrap hero2-grid"/.test(ix) && /class="hero2-visual"/.test(ix) && /hero2-grid \{ display: grid; grid-template-columns: 1fr 1\.08fr/.test(lc));
+  ok('kasir di hero bisa diketuk', /id="dGrid"/.test(ix) && /id="dPay"/.test(ix));
+  ok('strip fakta tanpa klaim jumlah pelanggan palsu', /class="strip"/.test(ix) && !/pebisnis|merchant|pengguna aktif/i.test(ix.split('class="strip"')[1].split('</section>')[0]));
+  ok('baris fitur berselang dengan tampilan nyata', (ix.match(/class="frow( rev)? rise"/g) || []).length === 4);
+  ok('tab "cocok untuk"', /id="segTabs"/.test(ix) && /Kedai kopi/.test(ix) && /Laundry/.test(ix));
+  ok('tetap tanpa tombol Daftar / Lihat demo di hero', !/Daftarkan toko|Lihat demo/.test(ix.split('class="strip"')[0]));
+  ok('harga tetap Rp 39rb ke WhatsApp', /price-big">Rp 39rb/.test(ix) && /wa\.me\/6285609339578/.test(ix));
+  ok('FAQ offline sudah benar', /Transaksi tunai tetap bisa jalan/.test(ix) && !/Siapkan tethering/.test(ix));
+  ok('FAQ cara daftar lewat kode', /kode aktivasi/.test(ix));
+  ok('panel kiri masuk tidak ikut mode gelap', /\.auth-art \{\s*\/\*[^*]*\*\/\s*background:\s*radial-gradient/.test(ac) && !/\.auth-art \{\s*background: var\(--ink\)/.test(ac));
+  ok('cuplikan laporan di halaman masuk', /class="auth-peek"/.test(ms));
+  ok('config berisi project asli (bukan placeholder)', !/GANTI-INI/.test(R('js/config.js').split('/* ====== Jangan ubah')[0].split('*/').slice(-1)[0]));
+}
+
+/* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')
                   : ('SEMUA LULUS — ' + pass + ' tes');
 console.log('\n' + '='.repeat(56));

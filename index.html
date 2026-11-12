@@ -8,14 +8,14 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="img/favicon-32.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<script src="js/boot.js?v=20261113a"></script>
+<script src="js/boot.js?v=20261113c"></script>
 <meta name="theme-color" content="#1F2937">
 <title>StockFlow: Kasir &amp; Stok untuk Warung Indonesia</title>
 <meta name="description" content="Aplikasi kasir dan inventori untuk warung, kafe dan toko kecil, mulai Rp 39rb per bulan. Terima QRIS yang terkonfirmasi otomatis, cetak struk ke printer Bluetooth, stok terpotong sendiri. Dibuka dari HP, tanpa install.">
 <meta property="og:title" content="StockFlow: Kasir &amp; Stok untuk Warung Indonesia">
 <meta property="og:description" content="Catat penjualan, pantau stok, terima QRIS. Mulai Rp 39rb/bulan, dibuka dari HP.">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="css/landing.css?v=20261113a">
+<link rel="stylesheet" href="css/landing.css?v=20261113c">
 </head>
 <body>
 
@@ -27,8 +27,8 @@
     <a href="index.html" class="brand" aria-label="StockFlow"><span id="navLogo" class="brand-mark"></span><span class="brand-word">StockFlow</span></a>
     <div class="spacer"></div>
     <div class="nav-links">
-      <a href="#cara">Cara kerja</a>
       <a href="#fitur">Fitur</a>
+      <a href="#cocok">Cocok untuk</a>
       <a href="#harga">Harga</a>
       <a href="#tanya">Tanya jawab</a>
     </div>
@@ -38,84 +38,204 @@
 
 <main id="utama">
 
-<!-- ============ HERO ============ -->
-<header class="wrap hero">
-  <div class="hero-bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
-  <div class="mascot-stage" aria-hidden="true">
-    <div class="bubble" id="bubble">Struk siap!</div>
-    <div class="mascot" id="mascotHero"></div>
-    <span class="float f1">Rp</span>
-    <span class="float f2">QRIS</span>
-    <span class="float f3">+1</span>
+<!-- ============ HERO: teks kiri, produk kanan ============ -->
+<header class="hero2">
+  <div class="hero2-bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+  <div class="wrap hero2-grid">
+    <div class="hero2-copy">
+      <span class="eyebrow"><i class="dot"></i>Aplikasi kasir untuk warung, kafe &amp; toko</span>
+      <h1>Kasir dan stok warung Anda, <span class="hl">rapi</span> di satu tempat</h1>
+      <p class="lead">
+        Catat penjualan, terima QRIS, cetak struk, dan lihat untung setiap malam.
+        Langsung dari HP atau laptop yang sudah Anda punya.
+      </p>
+      <ul class="ticks">
+        <li>Tanpa install</li>
+        <li>QRIS semua e-wallet</li>
+        <li>Struk Bluetooth</li>
+        <li>Tetap jalan saat offline</li>
+      </ul>
+      <div class="hero2-acts">
+        <a href="https://wa.me/6285609339578?text=Halo%2C%20saya%20tertarik%20berlangganan%20StockFlow%20untuk%20toko%20saya." target="_blank" rel="noopener" class="btn btn-wa btn-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.66 15l-1.3 4.76 4.88-1.28A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-2.9.76.78-2.83-.2-.31A8.2 8.2 0 1 1 12 20.2zm4.5-6.14c-.25-.12-1.46-.72-1.69-.8-.23-.08-.39-.12-.56.12-.16.25-.64.8-.79.97-.14.16-.29.18-.54.06a6.7 6.7 0 0 1-3.32-2.9c-.25-.43.25-.4.71-1.33.08-.16.04-.3-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.4-.42-.56-.42h-.48a.92.92 0 0 0-.66.31 2.78 2.78 0 0 0-.87 2.07 4.83 4.83 0 0 0 1 2.56 11 11 0 0 0 4.24 3.75c1.58.68 2.2.74 2.99.62.48-.07 1.46-.6 1.67-1.18.2-.58.2-1.07.14-1.18-.06-.1-.22-.16-.47-.28z"/></svg>
+          Tanya lewat WhatsApp
+        </a>
+        <a href="#harga" class="link-arrow">Lihat harga <span aria-hidden="true">&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- Produk: tablet berisi kasir yang bisa diketuk -->
+    <div class="hero2-visual" aria-label="Contoh tampilan kasir StockFlow">
+      <div class="peek" aria-hidden="true">
+        <div class="bubble" id="bubble">Struk siap!</div>
+        <div class="mascot" id="mascotHero"></div>
+      </div>
+
+      <div class="device">
+        <div class="device-screen">
+          <div class="demo-top">
+            <span class="demo-brand">S</span><b>Kasir</b>
+            <span class="demo-pill">Kedai Senja</span>
+          </div>
+          <div class="demo-shell">
+            <div class="demo-left" data-ui>
+              <div class="u-pgrid" id="dGrid"></div>
+            </div>
+            <div class="demo-right" data-ui>
+              <div class="u-head">Keranjang</div>
+              <div id="dCart" style="flex:1"></div>
+              <div class="u-total"><span>Total</span><span class="u-num" id="dTotal">Rp 0</span></div>
+              <div class="demo-foot"><button class="demo-pay" id="dPay" type="button">Bayar</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="float-card fc-qris" aria-hidden="true">
+        <span class="fc-ico ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>
+        <div><b>QRIS lunas</b><small>GoPay · Rp 36.000</small></div>
+      </div>
+      <div class="float-card fc-stock" aria-hidden="true">
+        <span class="fc-ico">&#9650;</span>
+        <div><b>Untung hari ini</b><small>Rp 512.400 · naik 12%</small></div>
+      </div>
+    </div>
   </div>
-  <h1>Kasir dan stok warung Anda, <span class="hl">rapi</span> di satu tempat</h1>
-  <p>
-    Catat penjualan, pantau stok, dan terima pembayaran QRIS yang terkonfirmasi
-    sendiri. Dibuka dari HP yang sudah Anda punya, tanpa install apa pun.
-  </p>
 </header>
 
-<!-- ============ PRATINJAU ============ -->
-<div class="wrap">
-  <div class="shot rise">
-    <div class="shot-bar">
-      <span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span>
-      <span class="shot-url">stockflow &rsaquo; Kasir</span>
-    </div>
-    <div class="demo-shell">
-      <div class="demo-left">
-        <div data-ui>
-          <div class="u-head">Pilih produk</div>
-          <div class="u-pgrid" id="dGrid"></div>
-        </div>
-      </div>
-      <div class="demo-right">
-        <div data-ui style="flex:1;display:flex;flex-direction:column">
-          <div class="u-head">Keranjang</div>
-          <div id="dCart" style="flex:1"></div>
-          <div class="u-total"><span>Total</span><span class="u-num" id="dTotal">Rp 0</span></div>
-        </div>
-        <div class="demo-foot">
-          <button class="btn btn-primary" style="width:100%" id="dPay">Bayar</button>
-        </div>
-      </div>
-    </div>
+<!-- ============ STRIP KEPERCAYAAN (fakta produk, bukan klaim) ============ -->
+<section class="strip">
+  <div class="wrap strip-grid">
+    <div><b>0</b><span>aplikasi yang perlu diinstal</span></div>
+    <div><b>1</b><span>QR untuk semua e-wallet &amp; m-banking</span></div>
+    <div><b>58mm</b><span>struk langsung dari printer Bluetooth</span></div>
+    <div><b>100%</b><span>uang QRIS masuk ke rekening Anda</span></div>
   </div>
-</div>
+</section>
 
-<!-- ============ CARA KERJA ============ -->
-<section class="sec tint" id="cara">
+<!-- ============ FITUR UTAMA: baris berselang teks + tampilan ============ -->
+<section class="sec" id="fitur">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Tiga langkah, selesai</h2>
-      <p>Alurnya sama seperti kasir biasa, hanya pencatatannya otomatis.</p>
+    <div class="sec-head left">
+      <span class="kicker">Fitur</span>
+      <h2>Semua yang dibutuhkan meja kasir</h2>
+      <p>Bukan daftar fitur panjang yang jarang dipakai. Ini yang benar-benar dipakai tiap hari.</p>
     </div>
-    <div class="steps">
-      <div class="step rise">
-        <h3>Pilih barang</h3>
-        <p>Ketuk produk di layar, atau scan barcode dengan alat scanner biasa.
-           Totalnya dihitung sendiri.</p>
+
+    <div class="frow rise">
+      <div class="frow-copy">
+        <span class="kicker">Kasir</span>
+        <h3>Pesanan rumit tetap cepat</h3>
+        <p>Pilih menu, tambah topping, kasih diskon, lalu bayar. Pesanan meja bisa disimpan dulu dan dibayar belakangan.</p>
+        <ul class="ticks small">
+          <li>Add-on per produk (extra shot, keju, level pedas)</li>
+          <li>Diskon per barang, rupiah atau persen</li>
+          <li>Simpan pesanan / open bill per meja</li>
+        </ul>
       </div>
-      <div class="step rise">
-        <h3>Pembeli bayar</h3>
-        <p>Tunai dengan kembalian otomatis, atau tunjukkan QRIS.
-           Pembayaran QRIS terkonfirmasi sendiri tanpa cek mutasi.</p>
+      <div class="frow-ui" data-ui>
+        <div class="mock">
+          <div class="mock-hd"><b>Keranjang</b><span class="mtag">Meja 3</span></div>
+          <div class="u-row"><div class="u-grow"><div class="u-name">Kopi Susu Gula Aren</div><div class="u-sub">+ Extra shot · + Oat milk</div></div><span class="u-num">Rp 29.000</span></div>
+          <div class="u-row"><div class="u-grow"><div class="u-name">Roti Bakar Coklat</div><div class="u-sub">Diskon 10% <span class="mdisc">−Rp 1.200</span></div></div><span class="u-num">Rp 10.800</span></div>
+          <div class="u-row"><div class="u-grow"><div class="u-name">Es Teh Manis × 2</div></div><span class="u-num">Rp 12.000</span></div>
+          <div class="u-total"><span>Total</span><span class="u-num">Rp 51.800</span></div>
+        </div>
       </div>
-      <div class="step rise">
-        <h3>Selesai</h3>
-        <p>Stok langsung berkurang dan struk tercetak ke printer Bluetooth.
-           Laporannya tersusun sendiri.</p>
+    </div>
+
+    <div class="frow rev rise">
+      <div class="frow-copy">
+        <span class="kicker">Pembayaran</span>
+        <h3>Bayar apa saja, struk keluar sendiri</h3>
+        <p>Tunai dengan kembalian otomatis, atau QRIS yang bisa dibayar pakai e-wallet dan m-banking apa pun. Begitu lunas, struk langsung tercetak lengkap dengan nomor antrian.</p>
+        <ul class="ticks small">
+          <li>QRIS terkonfirmasi otomatis, tanpa cek mutasi</li>
+          <li>Printer thermal 58mm lewat Bluetooth</li>
+          <li>Nomor antrian otomatis, mulai lagi tiap hari</li>
+        </ul>
+      </div>
+      <div class="frow-ui">
+        <div class="mock receipt-mock">
+          <div class="rm-c"><b>Kedai Senja</b><small>13 Nov 2026 · 19.42</small></div>
+          <div class="rm-q"><small>NO. ANTRIAN</small><b>017</b></div>
+          <div class="rm-r"><span>Kopi Susu (+Extra shot)</span><span>29.000</span></div>
+          <div class="rm-r"><span>Es Teh Manis ×2</span><span>12.000</span></div>
+          <div class="rm-r b"><span>TOTAL</span><span>Rp 41.000</span></div>
+          <div class="rm-r"><span>QRIS · GoPay</span><span>Lunas</span></div>
+          <div class="rm-c"><small>Terima kasih, sampai jumpa!</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frow rise">
+      <div class="frow-copy">
+        <span class="kicker">Laporan</span>
+        <h3>Tahu untungnya setiap malam</h3>
+        <p>Laporan ditulis dalam bahasa sehari-hari: uang masuk, modal, pengeluaran, dan berapa yang benar-benar Anda dapat. Dibandingkan otomatis dengan kemarin.</p>
+        <ul class="ticks small">
+          <li>Untung bersih setelah modal &amp; biaya</li>
+          <li>Jam paling ramai dan produk paling laku</li>
+          <li>Porsi tunai vs QRIS, ekspor CSV</li>
+        </ul>
+      </div>
+      <div class="frow-ui">
+        <div class="mock report-mock">
+          <div class="rp-l">UANG MASUK HARI INI</div>
+          <div class="rp-big">Rp 1.284.000</div>
+          <span class="rp-up">&#9650; 12% vs kemarin</span>
+          <div class="rp-bars" aria-hidden="true">
+            <i style="height:22%"></i><i style="height:35%"></i><i style="height:58%"></i><i style="height:40%"></i>
+            <i style="height:30%"></i><i style="height:52%"></i><i style="height:88%" class="pk"></i><i style="height:64%"></i><i style="height:36%"></i>
+          </div>
+          <div class="rp-row"><span>Untung bersih</span><b>Rp 512.400</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frow rev rise">
+      <div class="frow-copy">
+        <span class="kicker">Kontrol</span>
+        <h3>Laci kasir selalu cocok</h3>
+        <p>Kasir membuka dan menutup shift dengan menghitung uang di laci. Selisih langsung terlihat, dan setiap perubahan harga, void, atau refund tercatat di log yang tidak bisa dihapus.</p>
+        <ul class="ticks small">
+          <li>Buka / tutup kasir dengan hitungan selisih</li>
+          <li>Karyawan masuk pakai kode, tanpa email</li>
+          <li>Log aktivitas: siapa mengubah apa, kapan</li>
+        </ul>
+      </div>
+      <div class="frow-ui">
+        <div class="mock shift-mock">
+          <div class="mock-hd"><b>Tutup kasir</b><span class="mtag">Rina · shift sore</span></div>
+          <div class="sm-r"><span>Kas awal</span><span>Rp 200.000</span></div>
+          <div class="sm-r"><span>Penjualan tunai</span><span>+Rp 850.000</span></div>
+          <div class="sm-r b"><span>Seharusnya di laci</span><span>Rp 1.050.000</span></div>
+          <div class="sm-r"><span>Uang di laci</span><span>Rp 1.050.000</span></div>
+          <div class="sm-ok"><svg width="15" height="15" style="vertical-align:-2px;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>Pas, tidak ada selisih</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ FITUR ============ -->
-<section class="sec" id="fitur">
+<!-- ============ COCOK UNTUK ============ -->
+<section class="sec tint" id="cocok">
   <div class="wrap">
     <div class="sec-head">
-      <h2>Yang Anda dapat</h2>
-      <p>Dibuat dari kebutuhan warung, kafe, dan toko kecil.</p>
+      <span class="kicker">Cocok untuk</span>
+      <h2>Dibuat untuk usaha seperti punya Anda</h2>
+    </div>
+    <div class="seg-tabs" role="tablist" id="segTabs"></div>
+    <div class="seg-panel rise" id="segPanel"></div>
+  </div>
+</section>
+
+<!-- ============ FITUR LAIN ============ -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Dan juga</span>
+      <h2>Hal kecil yang bikin tenang</h2>
     </div>
     <div class="grid3" id="feats"></div>
   </div>
@@ -125,27 +245,20 @@
 <section class="sec tint">
   <div class="wrap">
     <div class="sec-head">
+      <span class="kicker">QRIS</span>
       <h2>Satu QR untuk semua dompet digital</h2>
-      <p>
-        QRIS adalah standar Bank Indonesia. Satu kode yang sama bisa dipindai dengan
-        aplikasi apa pun, dan nominalnya sudah terisi sehingga pembeli tidak bisa salah ketik.
-      </p>
+      <p>QRIS adalah standar Bank Indonesia. Satu kode bisa dipindai aplikasi apa pun, dan nominalnya sudah terisi sehingga pembeli tidak bisa salah ketik.</p>
     </div>
     <div class="wallets marquee"><div class="track">
       <span class="wallet">GoPay</span><span class="wallet">OVO</span>
       <span class="wallet">DANA</span><span class="wallet">ShopeePay</span>
       <span class="wallet">LinkAja</span><span class="wallet">BCA mobile</span>
       <span class="wallet">Livin&rsquo;</span><span class="wallet">BRImo</span>
-    
       <span class="wallet" aria-hidden="true">GoPay</span><span class="wallet" aria-hidden="true">OVO</span>
       <span class="wallet" aria-hidden="true">DANA</span><span class="wallet" aria-hidden="true">ShopeePay</span>
       <span class="wallet" aria-hidden="true">LinkAja</span><span class="wallet" aria-hidden="true">BCA mobile</span>
       <span class="wallet" aria-hidden="true">Livin&rsquo;</span><span class="wallet" aria-hidden="true">BRImo</span>
     </div></div>
-    <p style="text-align:center;margin-top:30px;font-size:15px;color:var(--text-mid);max-width:52ch;margin-inline:auto">
-      Dana masuk langsung ke rekening Anda. Setiap toko memakai akun pembayarannya
-      sendiri, jadi uang tidak pernah singgah di kami.
-    </p>
   </div>
 </section>
 
@@ -153,8 +266,9 @@
 <section class="sec" id="harga">
   <div class="wrap">
     <div class="sec-head">
-      <h2>Harga sederhana</h2>
-      <p>Satu paket, semua fitur. Tanpa biaya tersembunyi.</p>
+      <span class="kicker">Harga</span>
+      <h2>Satu paket, semua fitur</h2>
+      <p>Tanpa biaya tersembunyi. Tanpa beli mesin kasir.</p>
     </div>
 
     <div class="price rise">
@@ -181,52 +295,47 @@
 <!-- ============ TANYA JAWAB ============ -->
 <section class="sec tint" id="tanya">
   <div class="wrap">
-    <div class="sec-head"><h2>Tanya jawab</h2></div>
+    <div class="sec-head"><span class="kicker">Tanya jawab</span><h2>Yang sering ditanyakan</h2></div>
 
     <div class="faq">
       <details name="faq">
+        <summary><span class="q">Bagaimana cara mulai pakai?</span><span class="pm"></span></summary>
+        <div class="a">Chat kami lewat WhatsApp. Setelah berlangganan, Anda menerima kode aktivasi
+          dan link pendaftaran yang kodenya sudah terisi. Daftar, isi produk, dan toko siap jualan.</div>
+      </details>
+      <details name="faq">
         <summary><span class="q">Uangnya masuk ke rekening siapa?</span><span class="pm"></span></summary>
-        <div class="a">Ke rekening Anda sendiri. Setiap toko memasang akun pembayarannya
+        <div class="a">Ke rekening Anda sendiri. Setiap toko memakai akun pembayarannya
           masing-masing, jadi dana tidak pernah singgah di kami.</div>
       </details>
-
       <details name="faq">
         <summary><span class="q">Perlu beli mesin kasir baru?</span><span class="pm"></span></summary>
-        <div class="a">Tidak. StockFlow berjalan di browser, jadi HP yang sekarang Anda pakai
-          sudah cukup. Tidak ada aplikasi yang perlu dipasang.</div>
+        <div class="a">Tidak. StockFlow berjalan di browser, jadi HP, tablet, atau laptop yang sekarang
+          Anda pakai sudah cukup. Bisa juga dipasang di layar utama HP seperti aplikasi.</div>
       </details>
-
+      <details name="faq">
+        <summary><span class="q">Kalau internet mati bagaimana?</span><span class="pm"></span></summary>
+        <div class="a">Transaksi tunai tetap bisa jalan. Datanya disimpan di HP lalu terkirim
+          otomatis begitu internet kembali, tanpa tercatat dobel.</div>
+      </details>
       <details name="faq">
         <summary><span class="q">Printer apa yang cocok?</span><span class="pm"></span></summary>
         <div class="a">Printer thermal 58mm dengan Bluetooth 4.0 (BLE) dan perintah ESC/POS.
-          Cek kemasannya: kalau tertulis Bluetooth 2.0/4.0, hampir pasti bisa.
-          Fitur ini belum tersedia di iPhone.</div>
+          Kalau di kemasannya tertulis Bluetooth 2.0/4.0, hampir pasti bisa. Belum tersedia di iPhone.</div>
       </details>
-
       <details name="faq">
         <summary><span class="q">Karyawan bisa lihat omzet saya?</span><span class="pm"></span></summary>
-        <div class="a">Tidak. Karyawan hanya bisa membuka kasir, riwayat, dan catat barang rusak
-          (wajib foto bukti). Produk, stok, dan laporan hanya untuk owner, dan penguncian
-          itu ada di database, bukan sekadar disembunyikan.</div>
+        <div class="a">Tidak. Karyawan hanya membuka kasir, riwayat, dan catat barang rusak (wajib foto).
+          Produk, stok, dan laporan khusus owner, dan penguncian itu ada di database.</div>
       </details>
-
-      <details name="faq">
-        <summary><span class="q">Kalau internet mati bagaimana?</span><span class="pm"></span></summary>
-        <div class="a">Transaksi butuh internet karena datanya tersimpan di server supaya aman
-          dan bisa dibuka dari perangkat lain. Siapkan tethering HP sebagai cadangan.</div>
-      </details>
-
       <details name="faq">
         <summary><span class="q">Data saya bisa dibawa keluar?</span><span class="pm"></span></summary>
-        <div class="a">Bisa, kapan saja. Unduh seluruh data dalam satu berkas, atau transaksi
-          saja sebagai CSV. Kalau ingin berhenti, akun beserta isinya bisa dihapus
-          permanen sendiri.</div>
+        <div class="a">Bisa, kapan saja. Unduh seluruh data dalam satu berkas atau transaksi sebagai CSV.
+          Akun beserta isinya juga bisa dihapus permanen sendiri.</div>
       </details>
     </div>
   </div>
 </section>
-
-
 
 </main>
 
@@ -238,13 +347,13 @@
 <footer class="foot">
   <div class="foot-in">
     <div class="foot-about">
-      <a href="index.html" class="brand"><span id="footLogo"></span><span>StockFlow</span></a>
-      <p>Kasir dan inventori untuk warung, kafe dan toko kecil di Indonesia.</p>
+      <a href="index.html" class="brand"><span id="footLogo"></span><span class="brand-word sm">StockFlow</span></a>
+      <p>Kasir dan inventori untuk warung, kafe, dan toko kecil di Indonesia.</p>
     </div>
     <div class="foot-col">
       <b>Produk</b>
-      <a href="#cara">Cara kerja</a>
       <a href="#fitur">Fitur</a>
+      <a href="#cocok">Cocok untuk</a>
       <a href="#harga">Harga</a>
     </div>
     <div class="foot-col">
@@ -262,7 +371,7 @@
   <div class="foot-last">&copy; <span id="yr"></span> StockFlow</div>
 </footer>
 
-<script src="js/icons.js?v=20261113a"></script>
+<script src="js/icons.js?v=20261113c"></script>
 <script>
 document.getElementById('navLogo').innerHTML  = Icons.logo(40);
 
@@ -327,7 +436,7 @@ document.getElementById('mascotPeek').innerHTML = struki(true);
 
 /* Maskot melirik ke arah kursor */
 (function () {
-  var stage = document.querySelector('.mascot-stage');
+  var stage = document.querySelector('.peek');
   if (!stage || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   window.addEventListener('pointermove', function (e) {
     var eyes = stage.querySelector('.st-eyes');
@@ -339,29 +448,53 @@ document.getElementById('mascotPeek').innerHTML = struki(true);
   }, { passive: true });
 })();
 
-document.getElementById('footLogo').innerHTML = Icons.logo(26);
+document.getElementById('footLogo').innerHTML = Icons.logo(28);
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 var rp = function (n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); };
 
 /* ---------- Kartu fitur ---------- */
 document.getElementById('feats').innerHTML = [
-  ['pos', 'Kasir yang cepat',
-   'Grid produk dengan foto, pencarian, dan dukungan scanner barcode. Kembalian dihitung otomatis.'],
-  ['box', 'Stok selalu akurat',
-   'Setiap penjualan langsung memotong stok. Catat barang masuk, keluar, dan hasil stock opname di satu tempat.'],
-  ['chart', 'Tahu untung ruginya',
-   'Omzet, laba kotor, dan laba bersih setelah biaya. Lengkap dengan produk terlaris dan peringatan stok menipis.'],
-  ['printer', 'Struk langsung cetak',
-   'Terhubung ke printer thermal Bluetooth. Bisa diatur agar struk keluar sendiri setiap transaksi selesai.'],
-  ['users', 'Karyawan tanpa email',
-   'Owner cukup buat username, sistem memberi kode unik. Karyawan masuk dengan kode itu dan tidak bisa keluar tanpa izin owner.'],
-  ['shield', 'Data toko terkunci',
-   'Pembatasan ada di database, bukan sekadar disembunyikan. Data toko lain tidak bisa terbaca.'],
+  ['box', 'Stok terpotong sendiri', 'Setiap penjualan mengurangi stok. Barang masuk, stock opname, dan barang rusak (dengan foto bukti) tercatat rapi.'],
+  ['users', 'Karyawan tanpa email', 'Owner cukup buat username, sistem memberi kode. Karyawan tidak bisa keluar tanpa izin owner.'],
+  ['shield', 'Aman sampai ke database', 'Harga dihitung ulang di server, data tiap toko terkunci, dan admin wajib verifikasi 2 langkah.'],
+  ['refresh', 'Tetap jalan saat offline', 'Internet putus? Transaksi tunai disimpan di HP dan terkirim otomatis saat sinyal kembali.'],
+  ['receipt', 'Refund sebagian', 'Pembeli mengembalikan satu dari tiga barang? Refund barang itu saja, stok kembali sendiri.'],
+  ['download', 'Data milik Anda', 'Unduh semua data atau transaksi sebagai CSV kapan saja. Berhenti langganan pun data tetap bisa dibawa.'],
 ].map(function (f) {
   return '<div class="card rise"><div class="card-ico">' + Icons.svg(f[0], 19) + '</div>' +
     '<h3>' + f[1] + '</h3><p>' + f[2] + '</p></div>';
 }).join('');
+
+/* ---------- Cocok untuk (tab) ---------- */
+(function () {
+  var SEG = [
+    { id: 'kopi', label: 'Kedai kopi', h: 'Pesanan custom tanpa salah catat',
+      t: 'Gula, susu, extra shot, semua jadi add-on yang tinggal dicentang. Pesanan meja disimpan dulu, dibayar saat selesai.',
+      b: ['Add-on & diskon per menu', 'Simpan pesanan per meja', 'Nomor antrian di struk'] },
+    { id: 'makan', label: 'Warung makan', h: 'Ramai jam makan siang? Tetap rapi',
+      t: 'Ketuk menu, terima tunai atau QRIS, struk keluar sendiri. Di akhir hari langsung tahu menu apa yang paling laku.',
+      b: ['Kembalian dihitung otomatis', 'Jam paling ramai di laporan', 'Tutup kasir dengan selisih kas'] },
+    { id: 'toko', label: 'Toko kelontong', h: 'Stok ratusan barang tetap terpantau',
+      t: 'Setiap penjualan memotong stok. Barang yang hampir habis muncul di laporan, perubahan harga tercatat lengkap.',
+      b: ['Peringatan stok menipis', 'Barang masuk & stock opname', 'Log perubahan harga'] },
+    { id: 'jasa', label: 'Laundry & jasa', h: 'Catat layanan, bukan cuma barang',
+      t: 'Layanan jadi produk dengan harga dan add-on (express, setrika saja). Pembayaran QRIS masuk langsung ke rekening.',
+      b: ['Add-on untuk opsi layanan', 'QRIS terkonfirmasi otomatis', 'Riwayat per pelanggan'] },
+  ];
+  var tabs = document.getElementById('segTabs'), panel = document.getElementById('segPanel');
+  function show(id) {
+    var s = SEG.find(function (x) { return x.id === id; }) || SEG[0];
+    tabs.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b.dataset.id === s.id); b.setAttribute('aria-selected', b.dataset.id === s.id); });
+    panel.innerHTML = '<div><h3>' + s.h + '</h3><p>' + s.t + '</p></div>' +
+      '<ul class="ticks">' + s.b.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>';
+  }
+  tabs.innerHTML = SEG.map(function (s) {
+    return '<button type="button" role="tab" data-id="' + s.id + '">' + s.label + '</button>';
+  }).join('');
+  tabs.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) show(b.dataset.id); });
+  show('kopi');
+})();
 
 /* ---------- Daftar yang termasuk ---------- */
 document.getElementById('priceList').innerHTML = [
@@ -379,12 +512,12 @@ document.getElementById('priceList').innerHTML = [
    ============================================================ */
 (function demo() {
   var MENU = [
-    { n: 'Kopi Susu Gula Aren', p: 18000, s: 40 },
-    { n: 'Es Teh Manis',        p: 6000,  s: 80 },
-    { n: 'Americano',           p: 15000, s: 35 },
-    { n: 'Nasi Goreng Spesial', p: 25000, s: 25 },
-    { n: 'Ayam Geprek',         p: 22000, s: 18 },
-    { n: 'Kentang Goreng',      p: 15000, s: 22 },
+    { n: 'Kopi Susu', p: 18000, s: 40, c: '#F5E6D3' },
+    { n: 'Es Teh',    p: 6000,  s: 80, c: '#FDF2C4' },
+    { n: 'Americano', p: 15000, s: 35, c: '#E8DCCF' },
+    { n: 'Nasi Goreng', p: 25000, s: 25, c: '#FCE1C7' },
+    { n: 'Ayam Geprek', p: 22000, s: 18, c: '#FAD4CC' },
+    { n: 'Roti Bakar',  p: 12000, s: 22, c: '#F3E3C3' },
   ];
   var cart = {};
 
@@ -394,10 +527,9 @@ document.getElementById('priceList').innerHTML = [
   var elPay   = document.getElementById('dPay');
 
   elGrid.innerHTML = MENU.map(function (m, i) {
-    return '<button class="u-pcard" type="button" data-i="' + i + '" ' +
-      'style="text-align:left;cursor:pointer" aria-label="Tambah ' + m.n + '">' +
+    return '<button class="u-pcard" type="button" data-i="' + i + '" aria-label="Tambah ' + m.n + '">' +
+      '<span class="u-img" style="background:' + m.c + '"></span>' +
       '<div class="u-name">' + m.n + '</div>' +
-      '<div class="u-sub">Stok ' + m.s + '</div>' +
       '<div class="u-num">' + rp(m.p) + '</div></button>';
   }).join('');
 
@@ -411,7 +543,7 @@ document.getElementById('priceList').innerHTML = [
             '<span class="u-sub">&times;' + cart[i] + '</span>' +
             '<span class="u-num">' + rp(MENU[i].p * cart[i]) + '</span></div>';
         }).join('')
-      : '<div class="u-row"><span class="u-grow u-sub">Ketuk produk di sebelah untuk menambahkan.</span></div>';
+      : '<div class="u-row"><span class="u-grow u-sub">Coba ketuk menu di kiri.</span></div>';
 
     elTotal.textContent = rp(total);
     elPay.disabled = !keys.length;
@@ -428,7 +560,9 @@ document.getElementById('priceList').innerHTML = [
   elPay.addEventListener('click', function () {
     cart = {};
     render();
-    elPay.textContent = 'Lunas, stok terpotong';
+    elPay.textContent = 'Lunas ✓';
+    var q = document.querySelector('.fc-qris');
+    if (q) { q.classList.remove('pop'); void q.offsetWidth; q.classList.add('pop'); }
     setTimeout(function () { elPay.textContent = 'Bayar'; }, 1800);
   });
 

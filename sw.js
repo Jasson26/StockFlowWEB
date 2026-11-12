@@ -5,7 +5,7 @@
    • Data (Supabase) TIDAK pernah disimpan di sini; transaksi
      offline ditangani pos.html lewat antrean di localStorage.
    ============================================================ */
-const VERSION = 'sf-20261113a';
+const VERSION = 'sf-20261113c';
 const SHELL = [
   './', 'index.html', 'masuk.html', 'pos.html', 'orders.html', 'products.html',
   'inventory.html', 'damaged.html', 'reports.html', 'users.html', 'settings.html',

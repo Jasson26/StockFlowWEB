@@ -545,3 +545,221 @@ h1, h2, h3 { letter-spacing: -0.025em; line-height: 1.15; font-weight: 700; }
 }
 html, body { overflow-x: clip; }
 .hero-bg { inset: -40px 0 0; }
+
+/* ============================================================
+   v6 — tata letak hasil riset situs kasir (Moka, Majoo, Pawoon,
+   Qasir, Loyverse, Square): hero dua kolom dengan produk di kanan,
+   strip fakta, baris fitur berselang dengan tampilan nyata,
+   tab "cocok untuk", lalu harga & tanya jawab.
+   ============================================================ */
+:root {
+  --brand-2: #6366F1;
+  --lav: #F6F3FF;
+  --lav-2: #EEE8FF;
+}
+body { color: var(--text); }
+h1, h2, h3 { color: #0F172A; }
+
+/* ---------- Label kecil di atas judul ---------- */
+.kicker {
+  display: inline-block; font-size: 12.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--brand); margin-bottom: 10px;
+}
+.sec-head.left { text-align: left; margin-left: 0; }
+.sec-head h2 { letter-spacing: -.03em; }
+.sec.tint { background: var(--lav); border-color: var(--lav-2); }
+
+/* ---------- Centang ---------- */
+.ticks { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.ticks li { position: relative; padding-left: 24px; font-size: 14.5px; color: var(--text-mid); font-weight: 550; }
+.ticks li::before {
+  content: ''; position: absolute; left: 0; top: 3px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--brand) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-8'/%3E%3C/svg%3E") center/11px no-repeat;
+}
+.ticks.small { flex-direction: column; gap: 9px; margin-top: 18px; }
+.ticks.small li { font-size: 14.5px; }
+
+/* ---------- HERO ---------- */
+.hero2 { position: relative; isolation: isolate; padding: 64px 0 72px; overflow: hidden; }
+.hero2-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1200px 500px at 85% 10%, var(--lav-2), transparent 60%),
+              linear-gradient(180deg, #FBFAFF 0%, #FFFFFF 100%); }
+.hero2-bg .blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; animation: drift 16s ease-in-out infinite; }
+.hero2-bg .b1 { width: 420px; height: 420px; right: 4%; top: 10%; background: #DDD6FE; }
+.hero2-bg .b2 { width: 300px; height: 300px; right: 30%; bottom: -60px; background: #C7D2FE; animation-delay: -6s; }
+
+.hero2-grid { display: grid; grid-template-columns: 1fr 1.08fr; gap: 56px; align-items: center; }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 650; color: var(--brand);
+  background: #fff; border: 1px solid var(--lav-2); border-radius: 99px; padding: 6px 13px;
+  box-shadow: 0 2px 8px rgba(124,58,237,.08); margin-bottom: 20px;
+}
+.eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #22C55E; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+.hero2 h1 {
+  font-size: clamp(34px, 4.6vw, 56px); line-height: 1.06; letter-spacing: -.035em;
+  margin-bottom: 18px; text-wrap: balance;
+}
+.hero2 .hl {
+  background: linear-gradient(90deg, #7C3AED, #4F46E5);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero2 .lead { font-size: clamp(16.5px, 1.6vw, 19px); color: var(--text-mid); max-width: 48ch; margin-bottom: 22px; line-height: 1.6; }
+.hero2 .ticks { margin-bottom: 30px; }
+.hero2-acts { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.link-arrow { font-weight: 650; color: var(--text); text-decoration: none; font-size: 15.5px; }
+.link-arrow span { display: inline-block; transition: transform .15s; }
+.link-arrow:hover span { transform: translateX(4px); }
+
+/* Visual produk */
+.hero2-visual { position: relative; padding: 34px 10px 30px 26px; }
+.device {
+  position: relative; border-radius: 26px; padding: 12px;
+  background: linear-gradient(145deg, #1F2937, #0B1220);
+  box-shadow: 0 40px 80px -20px rgba(49,46,129,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
+  transform: perspective(1600px) rotateY(-6deg) rotateX(2deg);
+  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.hero2-visual:hover .device { transform: perspective(1600px) rotateY(-2deg) rotateX(1deg); }
+.device-screen { background: #F8FAFC; border-radius: 16px; overflow: hidden; }
+.demo-top { display: flex; align-items: center; gap: 9px; padding: 10px 14px; background: #fff; border-bottom: 1px solid var(--border); font-size: 13px; }
+.demo-brand { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: var(--brand); color: #fff;
+  font: italic 700 14px Georgia, serif; }
+.demo-pill { margin-left: auto; font-size: 11.5px; font-weight: 650; background: var(--lav); color: var(--brand); padding: 3px 9px; border-radius: 99px; }
+.demo-shell { display: grid; grid-template-columns: 1fr 210px; min-height: 300px; }
+.demo-left { border-right: 1px solid var(--border); background: #F8FAFC; }
+.demo-right { background: #fff; display: flex; flex-direction: column; }
+[data-ui] .u-pgrid { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; }
+[data-ui] .u-pcard {
+  background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 7px; text-align: left; cursor: pointer;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+}
+[data-ui] .u-pcard:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15,23,42,.08); border-color: #DDD6FE; }
+[data-ui] .u-pcard:active { transform: scale(.97); }
+[data-ui] .u-img { display: block; height: 44px; border-radius: 7px; margin-bottom: 6px; }
+[data-ui] .u-pcard .u-name { font-size: 12px; font-weight: 600; }
+[data-ui] .u-pcard .u-num { font-size: 12.5px; margin-top: 1px; }
+.demo-right [data-ui], .demo-right.u-wrap { font-size: 12.5px; }
+.demo-right .u-row { padding: 7px 11px; font-size: 12.5px; }
+.demo-right .u-total { font-size: 15px; padding: 10px 11px; }
+.demo-foot { padding: 0 11px 11px; }
+.demo-pay { width: 100%; border: 0; border-radius: 9px; padding: 10px; font: inherit; font-weight: 700; font-size: 14px;
+  color: #fff; background: linear-gradient(90deg, #7C3AED, #4F46E5); cursor: pointer; box-shadow: 0 6px 14px rgba(124,58,237,.3); }
+.demo-pay:disabled { opacity: .45; cursor: default; box-shadow: none; }
+
+.float-card {
+  position: absolute; display: flex; align-items: center; gap: 10px; z-index: 3;
+  background: #fff; border-radius: 14px; padding: 10px 14px 10px 10px;
+  box-shadow: 0 18px 40px -10px rgba(15,23,42,.25), 0 0 0 1px rgba(15,23,42,.04);
+  font-size: 13px; animation: st-float 5s ease-in-out infinite;
+}
+.float-card b { display: block; font-size: 13.5px; }
+.float-card small { color: var(--text-mid); font-size: 12px; }
+.fc-ico { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; background: var(--lav); color: var(--brand); font-size: 13px; }
+.fc-ico.ok { background: #DCFCE7; color: #15803D; }
+.fc-qris  { right: -6px; top: 6px; }
+.fc-stock { left: -8px; bottom: 0; animation-delay: -2.5s; }
+.float-card.pop { animation: fc-pop .6s cubic-bezier(.2,1.6,.4,1), st-float 5s ease-in-out .6s infinite; }
+@keyframes fc-pop { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+
+/* Maskot mengintip dari atas tablet */
+.peek { position: absolute; left: 34px; top: -40px; width: 92px; height: 104px; z-index: 2; }
+.peek .mascot { width: 92px; height: 104px; margin: 0; }
+.peek .bubble { left: 86px; top: -2px; }
+
+/* ---------- STRIP FAKTA ---------- */
+.strip { border-block: 1px solid var(--border); background: #fff; }
+.strip-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.strip-grid > div { padding: 26px 18px; border-left: 1px solid var(--border); }
+.strip-grid > div:first-child { border-left: 0; }
+.strip-grid b { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.03em;
+  background: linear-gradient(90deg, #7C3AED, #4F46E5); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.strip-grid span { font-size: 14px; color: var(--text-mid); }
+
+/* ---------- BARIS FITUR ---------- */
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; padding: 44px 0; }
+.frow + .frow { border-top: 1px dashed var(--border); }
+.frow.rev .frow-copy { order: 2; }
+.frow-copy h3 { font-size: clamp(24px, 2.6vw, 32px); letter-spacing: -.03em; margin-bottom: 12px; line-height: 1.15; }
+.frow-copy p { font-size: 16.5px; color: var(--text-mid); line-height: 1.65; max-width: 46ch; }
+.frow-ui { position: relative; padding: 28px; border-radius: 22px;
+  background: radial-gradient(120% 120% at 100% 0%, var(--lav-2), var(--lav) 60%); }
+.mock { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 50px -18px rgba(49,46,129,.28), 0 0 0 1px rgba(15,23,42,.05);
+  font-size: 14px; max-width: 420px; margin: 0 auto; }
+.mock-hd { display: flex; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+.mock-hd b { flex: 1; }
+.mtag { font-size: 12px; font-weight: 650; padding: 3px 10px; border-radius: 99px; background: var(--lav); color: var(--brand); }
+.mock .u-row { padding: 11px 16px; }
+.mock .u-name { font-weight: 600; }
+.mdisc { color: #B91C1C; font-weight: 600; margin-left: 4px; }
+
+.receipt-mock { max-width: 300px; padding: 20px 20px 16px; font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-size: 13px;
+  -webkit-mask: radial-gradient(circle 7px at 50% 100%, transparent 98%, #000) bottom/18px 100% repeat-x; mask: radial-gradient(circle 7px at 50% 100%, transparent 98%, #000) bottom/18px 100% repeat-x; padding-bottom: 26px; }
+.rm-c { text-align: center; padding: 4px 0 10px; border-bottom: 1px dashed #CBD5E1; }
+.rm-c b { display: block; font-size: 15px; } .rm-c small { color: var(--text-mid); }
+.rm-c:last-child { border: 0; padding-top: 10px; }
+.rm-q { text-align: center; padding: 10px 0; border-bottom: 1px dashed #CBD5E1; }
+.rm-q small { display: block; letter-spacing: .14em; font-size: 10.5px; color: var(--text-mid); }
+.rm-q b { font-size: 34px; line-height: 1.1; }
+.rm-r { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; }
+.rm-r.b { font-weight: 800; font-size: 15px; border-top: 1px dashed #CBD5E1; margin-top: 4px; padding-top: 9px; }
+
+.report-mock { padding: 22px; color: #fff; background: linear-gradient(135deg, #1F2937 0%, #312E81 60%, #6D28D9 100%); }
+.rp-l { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; opacity: .7; }
+.rp-big { font-size: 34px; font-weight: 800; letter-spacing: -.03em; margin: 2px 0 8px; }
+.rp-up { display: inline-block; font-size: 12px; font-weight: 700; color: #86EFAC; background: rgba(255,255,255,.12); padding: 3px 9px; border-radius: 99px; }
+.rp-bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; margin: 18px 0 14px; }
+.rp-bars i { flex: 1; border-radius: 5px 5px 2px 2px; background: rgba(255,255,255,.28); }
+.rp-bars i.pk { background: linear-gradient(180deg, #C4B5FD, #A78BFA); }
+.rp-row { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); font-size: 14px; }
+.rp-row b { color: #86EFAC; }
+
+.shift-mock .sm-r { display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.shift-mock .sm-r.b { font-weight: 800; background: var(--surface); }
+.sm-ok { padding: 12px 16px; font-weight: 700; color: #15803D; background: #F0FDF4; }
+
+/* ---------- COCOK UNTUK ---------- */
+.seg-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.seg-tabs button { font-size: 14.5px; font-weight: 650; padding: 10px 18px; border-radius: 99px; background: #fff;
+  border: 1px solid var(--lav-2); color: var(--text-mid); transition: all .15s; }
+.seg-tabs button:hover { color: var(--text); border-color: #C4B5FD; }
+.seg-tabs button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.seg-panel { max-width: 860px; margin: 0 auto; background: #fff; border-radius: 20px; padding: 30px 32px;
+  display: grid; grid-template-columns: 1.3fr 1fr; gap: 30px; align-items: center;
+  box-shadow: 0 20px 50px -24px rgba(49,46,129,.25); border: 1px solid var(--lav-2); }
+.seg-panel h3 { font-size: 22px; letter-spacing: -.02em; margin-bottom: 8px; }
+.seg-panel p { color: var(--text-mid); font-size: 15.5px; line-height: 1.65; }
+.seg-panel .ticks { flex-direction: column; }
+
+/* ---------- Merek di kaki ---------- */
+.brand-word.sm { font-size: 20px !important; }
+
+/* ---------- Responsif ---------- */
+@media (max-width: 980px) {
+  .hero2-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero2 { padding-top: 44px; }
+  .device { transform: none; }
+  .frow, .frow.rev { grid-template-columns: 1fr; gap: 28px; }
+  .frow.rev .frow-copy { order: 0; }
+  .seg-panel { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .strip-grid { grid-template-columns: 1fr 1fr; }
+  .strip-grid > div:nth-child(3) { border-left: 0; }
+  .strip-grid > div:nth-child(n+3) { border-top: 1px solid var(--border); }
+}
+@media (max-width: 560px) {
+  .demo-shell { grid-template-columns: 1fr; }
+  .demo-left { border-right: 0; border-bottom: 1px solid var(--border); }
+  .hero2-visual { padding: 30px 0 34px; }
+  .peek { left: 14px; transform: scale(.85); transform-origin: left bottom; }
+  .fc-qris { right: 0; top: -4px; } .fc-stock { left: 0; bottom: -6px; }
+  .float-card { padding: 8px 12px 8px 8px; }
+  .seg-panel { padding: 22px; }
+  .hero2-acts .btn { width: 100%; }
+  .frow-ui { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .float-card, .hero2-bg .blob { animation: none !important; }
+  .device { transition: none; }
+}

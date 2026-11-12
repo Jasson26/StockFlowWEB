@@ -23,7 +23,7 @@
    file ini. Keduanya hanya hidup di environment Edge Function.
    ============================================================ */
 
-let SUPABASE_URL      = 'https://epqlcuwyhkhjavtwlihl.supabase.co/rest/v1';
+let SUPABASE_URL      = 'https://epqlcuwyhkhjavtwlihl.supabase.co';
 let SUPABASE_ANON_KEY = 'sb_publishable_I6wyVmbF_ozk2WYNy1sNRA_X1Yi-aCo';
 
 /* ====== Jangan ubah di bawah ini ======
