@@ -905,7 +905,7 @@ const masukSrc2 = fs.readFileSync(path.join(SRC, 'masuk.html'), 'utf8');
 
 ok('beranda.html tidak ada lagi', !fs.existsSync(path.join(SRC, 'beranda.html')));
 ok('Beranda hilang dari menu', !/id: 'beranda'/.test(uiSrc2));
-ok('login mengarah ke kasir', /location\.replace\('pos\.html'\)/.test(masukSrc2));
+ok('login mengarah ke kasir (admin ke panel Admin)', /home: \(\) => \{[^}]*'pos\.html'/.test(fs.readFileSync(path.join(SRC, 'js/auth.js'), 'utf8')) && /Auth\.home\(\)/.test(masukSrc2));
 ok('guard owner-only jatuh ke kasir', /ownerOnly[^\n]*pos\.html/.test(authSrc));
 
 /* Tidak boleh ada tautan menggantung ke halaman yang sudah dihapus */
@@ -1392,6 +1392,20 @@ section('[38] Halaman depan & masuk hasil riset');
   ok('panel kiri masuk tidak ikut mode gelap', /\.auth-art \{\s*\/\*[^*]*\*\/\s*background:\s*radial-gradient/.test(ac) && !/\.auth-art \{\s*background: var\(--ink\)/.test(ac));
   ok('cuplikan laporan di halaman masuk', /class="auth-peek"/.test(ms));
   ok('config berisi project asli (bukan placeholder)', !/GANTI-INI/.test(R('js/config.js').split('/* ====== Jangan ubah')[0].split('*/').slice(-1)[0]));
+}
+
+/* ============================================================ */
+section('[39] Akun khusus admin (tanpa toko)');
+{
+  const R = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
+  const au = R('js/auth.js'), ui = R('js/ui.js'), ad = R('admin.html'), ms = R('masuk.html');
+  ok('admin tanpa toko dikenali saat masuk', /admin_only: true/.test(au) && /am_i_admin/.test(au));
+  ok('admin tanpa toko dianggap sudah masuk', /!!p\.business_id \|\| !!p\.admin_only/.test(au));
+  ok('admin tanpa toko tidak diminta membuat toko', /!p\.business_id && !p\.admin_only/.test(au));
+  ok('admin tanpa toko hanya boleh di panel Admin', /admin_only && !\/admin\\\.html\$\/\.test\(location\.pathname\)/.test(au));
+  ok('setelah masuk diarahkan ke halaman yang tepat', (ms.match(/Auth\.home\(\)/g) || []).length >= 5);
+  ok('menu admin tanpa toko hanya berisi Admin', /u\.admin_only\s*\? MENU\.filter\(\(m\) => m\.id === 'admin'\)/.test(ui));
+  ok('2FA bisa diaktifkan langsung di panel Admin', /Auth\.mfaEnroll\(\)/.test(ad) && /Auth\.mfaConfirm/.test(ad));
 }
 
 /* ============================================================ */

@@ -148,7 +148,9 @@ const UI = (function () {
     const u = Auth.user() || {};
     const isOwner = u.role === 'owner';
     const isAdmin = !!u.is_admin;
-    const visible = MENU.filter((m) => (!m.owner || isOwner) && (!m.admin || isAdmin));
+    const visible = u.admin_only
+      ? MENU.filter((m) => m.id === 'admin')
+      : MENU.filter((m) => (!m.owner || isOwner) && (!m.admin || isAdmin));
 
     const link = (m) =>
       '<a href="' + m.href + '" class="sb-item' + (m.id === active ? ' on' : '') + '">' +
@@ -182,7 +184,7 @@ const UI = (function () {
         '<div class="sb-foot"><div class="sb-user">' +
           '<div class="sb-avatar">' + initials(u.name) + '</div>' +
           '<div class="sb-uinfo"><div class="sb-uname">' + esc(u.name || '') + '</div>' +
-          '<div class="sb-urole">' + (isOwner ? 'Owner' : 'Staff') + '</div></div>' +
+          '<div class="sb-urole">' + (u.admin_only ? 'Admin' : isOwner ? 'Owner' : 'Staff') + '</div></div>' +
           '<button class="btn btn-ghost btn-icon btn-sm" onclick="Auth.logout()" title="Keluar">' +
             ic('logout', 17) + '</button>' +
         '</div></div>' +
@@ -222,7 +224,8 @@ const UI = (function () {
   function openMore() {
     const u = Auth.user() || {};
     const own = u.role === 'owner';
-    const items = MENU.filter((m) => !m.sec && !(m.tab === true || (m.tab === 'staff' && !own)) && (!m.owner || own) && (!m.admin || u.is_admin));
+    const items = u.admin_only ? MENU.filter((m) => m.id === 'admin')
+      : MENU.filter((m) => !m.sec && !(m.tab === true || (m.tab === 'staff' && !own)) && (!m.owner || own) && (!m.admin || u.is_admin));
     const wrap = document.createElement('div');
     wrap.className = 'modal open';
     wrap.innerHTML =

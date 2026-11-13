@@ -88,6 +88,17 @@ const Auth = (function () {
        aktif: sesi baru terbit setelah link diklik, sehingga setup_owner
        belum sempat jalan saat mendaftar. Bukan error — tinggal diselesaikan. */
     if (e1 || !prof) {
+      /* Akun khusus admin platform: tidak punya toko, hanya membuka panel Admin */
+      const adm = await API.rpc('am_i_admin', {});
+      if (!adm.error && adm.data && adm.data.admin) {
+        const old = readProf() || {};
+        writeProf({
+          name: 'Admin StockFlow', role: 'admin', business_id: null,
+          business_name: 'Admin StockFlow', is_admin: true, admin_only: true,
+          email: old.email || '',
+        });
+        return { ok: true, adminOnly: true };
+      }
       return {
         ok: false,
         needSetup: true,
@@ -150,9 +161,11 @@ const Auth = (function () {
     token,
     /* Profil yang baru berisi email saja belum lengkap — akun Auth sudah ada
        tapi tokonya belum dibuat. Jangan dianggap sudah masuk. */
-    isLogged: () => { const p = readProf(); return !!readTok() && !!p && !!p.business_id; },
-    /* Punya sesi Auth tapi belum punya toko */
-    needsSetup: () => { const p = readProf(); return !!readTok() && (!p || !p.business_id); },
+    isLogged: () => { const p = readProf(); return !!readTok() && !!p && (!!p.business_id || !!p.admin_only); },
+    /* Punya sesi Auth tapi belum punya toko (akun khusus admin dikecualikan) */
+    needsSetup: () => { const p = readProf(); return !!readTok() && (!p || (!p.business_id && !p.admin_only)); },
+    /* Halaman awal setelah masuk */
+    home: () => { const p = readProf(); return p && p.admin_only ? 'admin.html' : 'pos.html'; },
     isOwner: () => { const p = readProf(); return !!p && p.role === 'owner'; },
     isAdmin: () => { const p = readProf(); return !!p && !!p.is_admin; },
     /* Status langganan toko: { active, permanent, daysLeft, until } */
@@ -476,6 +489,10 @@ const Auth = (function () {
     /* Pasang di awal setiap halaman internal */
     guard(ownerOnly) {
       if (!readTok() || !readProf()) { location.replace('masuk.html'); return false; }
+      /* Akun khusus admin tidak punya toko: hanya boleh di panel Admin */
+      if (readProf().admin_only && !/admin\.html$/.test(location.pathname)) {
+        location.replace('admin.html'); return false;
+      }
       if (ownerOnly && !Auth.isOwner()) { location.replace('pos.html'); return false; }
       return true;
     },

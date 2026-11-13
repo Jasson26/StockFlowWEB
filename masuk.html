@@ -8,11 +8,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="img/favicon-32.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<script src="js/boot.js?v=20261113c"></script>
+<script src="js/boot.js?v=20261113d"></script>
 <meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Masuk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261113c">
+<link rel="stylesheet" href="css/app.css?v=20261113d">
 </head>
 <body>
 
@@ -228,12 +228,12 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261113c"></script>
-<script src="js/config.js?v=20261113c"></script>
-<script src="js/demo.js?v=20261113c"></script>
-<script src="js/api.js?v=20261113c"></script>
-<script src="js/auth.js?v=20261113c"></script>
-<script src="js/ui.js?v=20261113c"></script>
+<script src="js/icons.js?v=20261113d"></script>
+<script src="js/config.js?v=20261113d"></script>
+<script src="js/demo.js?v=20261113d"></script>
+<script src="js/api.js?v=20261113d"></script>
+<script src="js/auth.js?v=20261113d"></script>
+<script src="js/ui.js?v=20261113d"></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 document.getElementById('artLogo').innerHTML  = Icons.logo(26);
@@ -247,7 +247,7 @@ document.getElementById('artFeats').innerHTML = [
   return '<div class="auth-feat"><i>' + Icons.svg(f[0], 15) + '</i>' + f[1] + '</div>';
 }).join('');
 
-if (Auth.isLogged()) location.replace('pos.html');
+if (Auth.isLogged()) location.replace(Auth.home());
 
 /* Datang dari link konfirmasi email: sesi ada, toko belum dibuat.
    Langsung tawarkan penyelesaiannya daripada memaksa login ulang. */
@@ -306,7 +306,7 @@ async function doSetup() {
 
   if (r.ok) {
     UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'pos.html'; }, 450);
+    setTimeout(function () { location.href = Auth.home(); }, 450);
   } else {
     UI.toast(r.msg, 'error');
   }
@@ -328,7 +328,7 @@ async function doLogin() {
 
   if (r.ok) {
     UI.toast('Selamat datang!', 'ok');
-    setTimeout(function () { location.href = 'pos.html'; }, 350);
+    setTimeout(function () { location.href = Auth.home(); }, 350);
   } else if (r.needMfa) {
     show('vMfa');
     setTimeout(function () { document.getElementById('mfaCode').focus(); }, 60);
@@ -349,7 +349,7 @@ async function doMfa() {
   UI.loading(false); btn.disabled = false;
   if (r.ok) {
     UI.toast('Selamat datang!', 'ok');
-    setTimeout(function () { location.href = 'pos.html'; }, 350);
+    setTimeout(function () { location.href = Auth.home(); }, 350);
   } else if (r.needSetup) {
     showSetup();
   } else {
@@ -372,7 +372,7 @@ async function doStaffLogin() {
 
   if (r.ok) {
     UI.toast('Selamat bekerja!', 'ok');
-    setTimeout(function () { location.href = 'pos.html'; }, 350);
+    setTimeout(function () { location.href = Auth.home(); }, 350);
   } else {
     UI.toast(r.msg, 'error');
   }
@@ -402,7 +402,7 @@ async function doSignup() {
 
   if (r.ok) {
     UI.toast('Toko berhasil dibuat!', 'ok');
-    setTimeout(function () { location.href = 'pos.html'; }, 450);
+    setTimeout(function () { location.href = Auth.home(); }, 450);
   } else if (r.needConfirm) {
     UI.toast(r.msg, 'warn');
     show('vLogin');
