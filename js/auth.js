@@ -316,6 +316,22 @@ const Auth = (function () {
       } catch (e) { return 'aal1'; }
     },
 
+    /* QR dari Supabase bisa datang sebagai SVG mentah ("<svg ...>") atau sebagai
+       "data:image/svg+xml;utf-8,<svg ...>" yang belum di-encode. Keduanya diubah
+       menjadi alamat gambar yang aman (tanda # di warna tidak memotong alamat). */
+    qrSrc(qr) {
+      qr = String(qr || '').trim();
+      if (!qr) return '';
+      let svg = null;
+      if (qr.charAt(0) === '<') svg = qr;
+      else {
+        const m = /^data:image\/svg\+xml(?:;charset=[^;,]+|;utf-?8)?(;base64)?,([\s\S]*)$/i.exec(qr);
+        if (m && !m[1]) svg = /%3C/i.test(m[2].slice(0, 12)) ? decodeURIComponent(m[2]) : m[2];
+        else return qr;                       // base64 / format lain: sudah aman
+      }
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    },
+
     /* Aturan password: minimal 8 karakter, ada huruf dan angka */
     passwordIssue(pw) {
       pw = String(pw || '');

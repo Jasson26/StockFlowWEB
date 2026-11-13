@@ -8,11 +8,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="img/favicon-32.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<script src="js/boot.js?v=20261113d"></script>
+<script src="js/boot.js?v=20261113f"></script>
 <meta name="theme-color" content="#1F2937">
 <meta name="robots" content="noindex">
 <title>Masuk — StockFlow</title>
-<link rel="stylesheet" href="css/app.css?v=20261113d">
+<link rel="stylesheet" href="css/app.css?v=20261113f">
 </head>
 <body>
 
@@ -228,12 +228,12 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=20261113d"></script>
-<script src="js/config.js?v=20261113d"></script>
-<script src="js/demo.js?v=20261113d"></script>
-<script src="js/api.js?v=20261113d"></script>
-<script src="js/auth.js?v=20261113d"></script>
-<script src="js/ui.js?v=20261113d"></script>
+<script src="js/icons.js?v=20261113f"></script>
+<script src="js/config.js?v=20261113f"></script>
+<script src="js/demo.js?v=20261113f"></script>
+<script src="js/api.js?v=20261113f"></script>
+<script src="js/auth.js?v=20261113f"></script>
+<script src="js/ui.js?v=20261113f"></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 document.getElementById('artLogo').innerHTML  = Icons.logo(26);
@@ -430,7 +430,14 @@ function startDemo() {
 }
 
 /* Sesi tertinggal dari konfirmasi email — lanjutkan pembuatan toko */
-if (_resumeSetup) showSetup();
+/* Sebelum meminta "lengkapi toko", cek ulang ke server: bisa jadi akun ini
+   baru saja dijadikan admin, atau tokonya sudah dibuat di perangkat lain. */
+if (_resumeSetup) {
+  Auth.reload().then(function (r) {
+    if (r && r.ok) location.replace(Auth.home());
+    else showSetup();
+  }).catch(showSetup);
+}
 
 /* Masuk otomatis setelah mode demo menyala */
 if (Demo.on() && new URLSearchParams(location.search).get('autologin')) {
