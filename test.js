@@ -1409,6 +1409,16 @@ section('[39] Akun khusus admin (tanpa toko)');
 }
 
 /* ============================================================ */
+section('[40] Admin terpisah dari toko');
+{
+  const R = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
+  const au = R('js/auth.js'), ui = R('js/ui.js');
+  ok('admin dicek lebih dulu dari toko', au.indexOf("const adm0 = await API.rpc('am_i_admin'") < au.indexOf(".select('id,business_id,name,role,active')"));
+  ok('tampilan admin tanpa sidebar & tabbar', /if \(u\.admin_only\) \{[\s\S]{0,200}class="admin-top"/.test(ui) && /admin-only/.test(R('css/app.css')));
+  ok('profil admin lama dipaksa masuk ulang', /is_admin && !readProf\(\)\.admin_only/.test(au));
+}
+
+/* ============================================================ */
 const head = fail ? ('GAGAL — ' + pass + ' lulus, ' + fail + ' gagal')
                   : ('SEMUA LULUS — ' + pass + ' tes');
 console.log('\n' + '='.repeat(56));

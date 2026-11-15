@@ -1046,3 +1046,21 @@ html[data-theme='dark'] .feat-ico { color: var(--text); }
 .net-pill.wait { background: rgba(245,158,11,.15); color: #B45309; }
 .net-pill.bad  { background: rgba(185,28,28,.12); color: var(--danger); }
 #heldBtn { gap: 4px; font-weight: 700; }
+
+/* ---------- Tampilan khusus akun admin (tanpa sidebar) ---------- */
+.app.admin-only { display: block; min-height: 100dvh; background: var(--bg); }
+.admin-top {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 12px;
+  height: 60px; padding: 0 24px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.admin-chip { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 99px; background: rgba(124,58,237,.12); color: var(--brand); }
+.admin-mail { font-size: 13px; color: var(--text-mid); }
+.admin-main { max-width: 1180px; margin: 0 auto; }
+.admin-main .content { padding-top: 24px; }
+@media (max-width: 620px) { .admin-top { padding: 0 14px; } }
+.admin-brand { display: flex; align-items: center; gap: 8px; }
+.admin-word { font: italic 700 20px Georgia, 'Times New Roman', serif; color: var(--brand); letter-spacing: -.02em; }
+.admin-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }

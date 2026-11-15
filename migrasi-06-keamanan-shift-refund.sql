@@ -624,3 +624,32 @@ begin
 end $$;
 revoke execute on function setup_owner(text, text) from public, anon;
 grant  execute on function setup_owner(text, text) to authenticated;
+
+-- ============================================================
+-- 07: daftar toko di panel Admin tidak menampilkan toko milik akun admin
+-- ============================================================
+create or replace function admin_list_businesses()
+returns table (
+  id uuid, name text, owner_name text, owner_email text, phone text,
+  created_at timestamptz, active_until timestamptz, suspended boolean,
+  products bigint, orders_30d bigint, last_order timestamptz, staff bigint
+) language plpgsql stable security definer set search_path = public as $$
+begin
+  if not is_platform_admin() then raise exception 'Khusus admin'; end if;
+  return query
+  select b.id, b.name,
+         (select p.name from profiles p where p.business_id = b.id and p.role = 'owner' order by p.created_at limit 1),
+         (select u.email::text from profiles p join auth.users u on u.id = p.id
+           where p.business_id = b.id and p.role = 'owner' order by p.created_at limit 1),
+         b.phone, b.created_at, b.active_until, b.suspended,
+         (select count(*) from products x where x.business_id = b.id),
+         (select count(*) from orders o where o.business_id = b.id and o.status = 'paid' and o.created_at > now() - interval '30 days'),
+         (select max(o.created_at) from orders o where o.business_id = b.id),
+         (select count(*) from profiles p where p.business_id = b.id and p.role = 'staff')
+    from businesses b
+   where not exists (select 1 from profiles p join platform_admins a on a.user_id = p.id
+                      where p.business_id = b.id)
+   order by b.created_at desc;
+end $$;
+revoke execute on function admin_list_businesses() from public, anon;
+grant  execute on function admin_list_businesses() to authenticated;

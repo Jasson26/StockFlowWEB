@@ -81,12 +81,22 @@ const Auth = (function () {
 
   /* ---------- Muat profil + info toko ---------- */
   async function loadProfile() {
+    /* Akun admin platform SELALU masuk sebagai admin saja, walau sempat
+       punya toko. Admin tidak memakai kasir, jadi tidak boleh tercampur. */
+    const adm0 = await API.rpc('am_i_admin', {});
+    if (!adm0.error && adm0.data && adm0.data.admin) {
+      const old0 = readProf() || {};
+      writeProf({
+        name: 'Admin StockFlow', role: 'admin', business_id: null,
+        business_name: 'Admin StockFlow', is_admin: true, admin_only: true,
+        email: old0.email || '',
+      });
+      return { ok: true, adminOnly: true };
+    }
+
     const { data: prof, error: e1 } = await API.from('profiles')
       .select('id,business_id,name,role,active').limit(1).maybeSingle();
 
-    /* Akun Auth ada tapi belum punya profil. Terjadi kalau konfirmasi email
-       aktif: sesi baru terbit setelah link diklik, sehingga setup_owner
-       belum sempat jalan saat mendaftar. Bukan error — tinggal diselesaikan. */
     if (e1 || !prof) {
       /* Akun khusus admin platform: tidak punya toko, hanya membuka panel Admin */
       const adm = await API.rpc('am_i_admin', {});
@@ -505,6 +515,11 @@ const Auth = (function () {
     /* Pasang di awal setiap halaman internal */
     guard(ownerOnly) {
       if (!readTok() || !readProf()) { location.replace('masuk.html'); return false; }
+      /* Profil tersimpan dari versi lama (admin yang tercampur dengan toko):
+         minta masuk ulang sekali supaya statusnya dibaca ulang dari server */
+      if (readProf().is_admin && !readProf().admin_only) {
+        wipe(); location.replace('masuk.html'); return false;
+      }
       /* Akun khusus admin tidak punya toko: hanya boleh di panel Admin */
       if (readProf().admin_only && !/admin\.html$/.test(location.pathname)) {
         location.replace('admin.html'); return false;

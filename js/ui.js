@@ -174,6 +174,24 @@ const UI = (function () {
     if (!host) return;
     const inner = host.innerHTML;
 
+    /* Akun admin: tampilan polos tanpa sidebar & tabbar, hanya panel Admin */
+    if (u.admin_only) {
+      host.className = 'app admin-only';
+      host.innerHTML =
+        '<header class="admin-top">' +
+          '<div class="admin-brand">' + (typeof Icons !== 'undefined' ? Icons.logo(28) : '') +
+            '<span class="admin-word">StockFlow</span></div>' +
+          '<span class="admin-chip">Admin</span>' +
+          '<div class="admin-right">' +
+            (u.email ? '<span class="admin-mail hide-mobile">' + esc(u.email) + '</span>' : '') +
+            '<button class="btn btn-sm" onclick="Auth.logout()">' + ic('logout', 15) + '<span>Keluar</span></button>' +
+          '</div>' +
+        '</header>' +
+        '<main class="admin-main">' + inner + '</main>';
+      hydrateIcons(document);
+      return;
+    }
+
     host.className = 'app';
     host.innerHTML =
       '<aside class="sidebar">' +
